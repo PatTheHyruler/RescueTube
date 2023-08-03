@@ -1,4 +1,6 @@
-namespace Domain.Base;
+using Contracts.Domain;
+
+namespace Base.Domain;
 
 public abstract class AbstractIdDatabaseEntity : AbstractIdDatabaseEntity<Guid>, IIdDatabaseEntity
 {

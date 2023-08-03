@@ -40,8 +40,4 @@ Desktop.ini
 *appsettings*.json
 !appsettings.*[Ee]xample*.json
 
-WebApp/ffmpeg
-WebApp/yt-dlp
 .env
-
-WebApp/Logs/

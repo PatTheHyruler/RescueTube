@@ -1,4 +1,4 @@
-namespace DAL.Contracts;
+namespace Contracts.DAL;
 
 public interface IBaseUnitOfWork : IDisposable, IAsyncDisposable
 {

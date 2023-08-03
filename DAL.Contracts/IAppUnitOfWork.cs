@@ -1,3 +1,4 @@
+using Contracts.DAL;
 using DAL.Contracts.Repositories.Identity;
 
 namespace DAL.Contracts;

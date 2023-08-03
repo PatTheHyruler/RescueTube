@@ -1,16 +1,21 @@
+using AutoMapper;
+using Base.DAL.EF;
 using DAL.Contracts;
 using DAL.Contracts.Repositories.Identity;
 using DAL.EF.DbContexts;
 using DAL.EF.Repositories.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DAL.EF;
 
 public class AppUnitOfWork : BaseUnitOfWork<AbstractAppDbContext>, IAppUnitOfWork
 {
-    public AppUnitOfWork(AbstractAppDbContext dbContext) : base(dbContext)
+    private readonly IServiceProvider _services;
+    
+    public AppUnitOfWork(AbstractAppDbContext dbContext, IServiceProvider services) : base(dbContext)
     {
+        _services = services;
     }
 
-    private IUserRepository? _users;
-    public IUserRepository Users => _users ??= new UserRepository(DbContext, this);
+    public IUserRepository Users => _services.GetRequiredService<IUserRepository>();
 }

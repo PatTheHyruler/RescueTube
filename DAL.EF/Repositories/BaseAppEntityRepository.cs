@@ -1,26 +1,18 @@
+using AutoMapper;
+using Base.DAL.EF;
+using Contracts.Domain;
 using DAL.Contracts;
 using DAL.EF.DbContexts;
-using Microsoft.EntityFrameworkCore;
 
 namespace DAL.EF.Repositories;
 
-public abstract class BaseAppEntityRepository<TDomainEntity> where TDomainEntity : class
+public class BaseAppEntityRepository<TDomainEntity, TEntity> :
+    BaseEntityRepository<TDomainEntity, TEntity, AbstractAppDbContext, IAppUnitOfWork>
+    where TDomainEntity : class, IIdDatabaseEntity<Guid>
+    where TEntity : class, IIdDatabaseEntity<Guid>
 {
-    protected BaseAppEntityRepository(AbstractAppDbContext dbContext, IAppUnitOfWork uow)
+    protected BaseAppEntityRepository(AbstractAppDbContext dbContext, IMapper mapper, IAppUnitOfWork uow) :
+        base(dbContext, mapper, uow)
     {
-        DbContext = dbContext;
-        Uow = uow;
     }
-
-    protected AbstractAppDbContext DbContext { get; }
-    protected IAppUnitOfWork Uow { get; }
-    
-    protected DbSet<TDomainEntity> Entities =>
-        DbContext
-            .GetType()
-            .GetProperties()
-            .FirstOrDefault(pi => pi.PropertyType == typeof(DbSet<TDomainEntity>))
-            ?.GetValue(DbContext) as DbSet<TDomainEntity> ??
-        throw new ApplicationException(
-            $"Failed to fetch DbSet for Entity type {typeof(TDomainEntity)} from {typeof(DbContext)}");
 }

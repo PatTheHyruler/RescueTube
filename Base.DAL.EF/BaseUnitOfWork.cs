@@ -1,7 +1,7 @@
-using DAL.Contracts;
+using Contracts.DAL;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.EF;
+namespace Base.DAL.EF;
 
 public class BaseUnitOfWork<TDbContext> : IBaseUnitOfWork where TDbContext : DbContext
 {

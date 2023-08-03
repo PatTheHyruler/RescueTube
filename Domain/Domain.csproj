@@ -10,4 +10,12 @@
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.9" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Base\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Contracts.Domain\Contracts.Domain.csproj" />
+    </ItemGroup>
+
 </Project>

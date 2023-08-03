@@ -1,5 +1,4 @@
 using Asp.Versioning.ApiExplorer;
-using DAL.Contracts;
 using DAL.EF;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.Options;
@@ -11,17 +10,34 @@ using ApiVersion = Asp.Versioning.ApiVersion;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration, new ConfigurationReaderOptions { SectionName = "Logging:Serilog"})
-    .CreateLogger();
-
 // Add services to the container.
 
-builder.Services.AddAppDbContext(builder.Configuration);
-builder.Services.AddScoped<IAppUnitOfWork, AppUnitOfWork>();
+builder.Logging.ClearProviders();
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration, new ConfigurationReaderOptions { SectionName = "Logging:Serilog" })
+    .CreateLogger();
+builder.Logging.AddSerilog();
+builder.Services.AddSingleton(Log.Logger);
+
+var useHttpLogging = builder.Configuration.GetValue<bool>("Logging:HTTP:Enabled");
+if (useHttpLogging)
+{
+    builder.Services.AddHttpLogging(logging => { logging.LoggingFields = HttpLoggingFields.All; });
+}
+
+builder.Services.AddDbPersistenceEf(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddMvc(); // For Swagger
+
+builder.Services.AddAutoMapper((serviceProvider, mapperConfigurationExpression) =>
+    {
+        var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+        mapperConfigurationExpression.AddProfile(new Public.DTO.AutoMapperConfig(httpContextAccessor));
+    },
+    typeof(DAL.DTO.AutoMapperConfig),
+    typeof(BLL.DTO.AutoMapperConfig)
+);
 
 var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
 {
@@ -37,13 +53,6 @@ apiVersioningBuilder.AddApiExplorer(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddSerilog();
-var useHttpLogging = builder.Configuration.GetValue<bool>("Logging:HTTP:Enabled");
-if (useHttpLogging)
-{
-    builder.Services.AddHttpLogging(logging => { logging.LoggingFields = HttpLoggingFields.All; });
-}
 
 var app = builder.Build();
 
