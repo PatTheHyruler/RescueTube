@@ -1,4 +1,7 @@
+using System.Text.Json.Serialization;
+using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using BLL.Identity;
 using DAL.EF;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.Options;
@@ -6,7 +9,6 @@ using Serilog;
 using Serilog.Settings.Configuration;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebApp;
-using ApiVersion = Asp.Versioning.ApiVersion;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +29,8 @@ if (useHttpLogging)
 
 builder.Services.AddDbPersistenceEf(builder.Configuration);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddMvc(); // For Swagger
 
 builder.Services.AddAutoMapper((serviceProvider, mapperConfigurationExpression) =>
@@ -38,6 +41,10 @@ builder.Services.AddAutoMapper((serviceProvider, mapperConfigurationExpression) 
     typeof(DAL.DTO.AutoMapperConfig),
     typeof(BLL.DTO.AutoMapperConfig)
 );
+
+builder.AddCustomIdentity();
+
+builder.Services.AddLocalization();
 
 var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
 {
@@ -60,6 +67,7 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

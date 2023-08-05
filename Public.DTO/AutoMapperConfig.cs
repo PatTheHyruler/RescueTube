@@ -1,6 +1,5 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
-using Public.DTO.Extensions;
 
 #pragma warning disable CS1591
 
@@ -14,7 +13,7 @@ public class AutoMapperConfig : Profile
     {
         _httpContextAccessor = httpContextAccessor;
 
-        this.AddUserMap();
+        CreateMap<BLL.DTO.Entities.Identity.User, v1.Identity.User>();
     }
 
     private string GetWebsiteUrl()

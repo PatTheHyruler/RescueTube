@@ -1,6 +1,8 @@
+using Contracts.DAL;
+using DAL.DTO.Entities.Identity;
+
 namespace DAL.Contracts.Repositories.Identity;
 
-public interface IUserRepository
+public interface IUserRepository : IBaseEntityRepository<Domain.Identity.User, User>
 {
-    public Task<ICollection<Domain.Identity.User>> GetAllTest();
 }

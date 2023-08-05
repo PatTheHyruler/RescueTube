@@ -11,6 +11,7 @@
       <ProjectReference Include="..\DAL.Contracts\DAL.Contracts.csproj" />
       <ProjectReference Include="..\DAL.DTO\DAL.DTO.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
+      <ProjectReference Include="..\Validation\Validation.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -31,6 +31,8 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
             );
         }
 
+        options.SupportNonNullableReferenceTypes();
+        
         // Use FQN for DTO descriptions
         options.CustomSchemaIds(t => t.FullName);
 

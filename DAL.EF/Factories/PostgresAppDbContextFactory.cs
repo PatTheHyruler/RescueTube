@@ -20,9 +20,11 @@ public class PostgresAppDbContextFactory : IDesignTimeDbContextFactory<PostgresA
             .Build();
 
         var services = new ServiceCollection()
-            .AddDbPersistenceEf(configuration)
-            .BuildServiceProvider();
+            .AddSingleton<IConfiguration>(configuration)
+            .AddDbPersistenceEf(configuration);
 
-        return services.GetRequiredService<PostgresAppDbContext>();
+        var serviceProvider = services.BuildServiceProvider();
+
+        return serviceProvider.GetRequiredService<PostgresAppDbContext>();
     }
 }

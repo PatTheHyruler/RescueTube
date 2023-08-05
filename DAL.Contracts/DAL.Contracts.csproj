@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Contracts.DAL\Contracts.DAL.csproj" />
+      <ProjectReference Include="..\DAL.DTO\DAL.DTO.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
     </ItemGroup>
 

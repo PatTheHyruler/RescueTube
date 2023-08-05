@@ -18,5 +18,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BLL.DTO\BLL.DTO.csproj" />
+      <ProjectReference Include="..\ConfigDefaults\ConfigDefaults.csproj" />
     </ItemGroup>
 </Project>

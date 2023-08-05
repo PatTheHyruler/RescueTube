@@ -1,3 +1,4 @@
+using DAL.Contracts.Repositories.Identity;
 using DAL.EF.Repositories.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -7,6 +8,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddEfRepositories(this IServiceCollection serviceCollection)
     {
-        return serviceCollection.AddUserRepository();
+        return serviceCollection
+            .AddScoped<IUserRepository, UserRepository>()
+            .AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
     }
 }

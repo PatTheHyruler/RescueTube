@@ -11,6 +11,8 @@ namespace DAL.EF.DbContexts;
 public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, IdentityUserClaim<Guid>, UserRole,
     IdentityUserLogin<Guid>, IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
 {
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = default!;
+
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
 
