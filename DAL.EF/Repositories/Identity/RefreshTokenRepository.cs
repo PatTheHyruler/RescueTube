@@ -1,5 +1,5 @@
-using System.Linq.Expressions;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using DAL.Contracts;
 using DAL.Contracts.Repositories.Identity;
 using DAL.DTO.Entities.Identity;
@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DAL.EF.Repositories.Identity;
 
-public class RefreshTokenRepository : BaseAppEntityRepository<Domain.Identity.RefreshToken, RefreshToken>,
+public class RefreshTokenRepository : BaseAppEntityRepository<Domain.Entities.Identity.RefreshToken, RefreshToken>,
     IRefreshTokenRepository
 {
     public RefreshTokenRepository(AbstractAppDbContext dbContext, IMapper mapper, IAppUnitOfWork uow) : base(dbContext,
@@ -16,42 +16,30 @@ public class RefreshTokenRepository : BaseAppEntityRepository<Domain.Identity.Re
     {
     }
 
-    protected override Domain.Identity.RefreshToken AfterMap(RefreshToken entity, Domain.Identity.RefreshToken mapped)
+    public async Task<ICollection<RefreshToken>> GetAllValidAsync(Guid userId, string refreshToken, string jwtHash)
     {
-        mapped.User = Uow.Users.GetTrackedEntity(entity.UserId);
-
-        return mapped;
+        return await Entities
+            .Where(e => e.UserId == userId && e.Token == refreshToken &&
+                        e.JwtHash == jwtHash && e.ExpiresAt > DateTime.UtcNow)
+            .ProjectTo<RefreshToken>(Mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 
-    public async Task<ICollection<RefreshToken>> GetAllByUserIdAsync(Guid userId,
-        params Expression<Func<Domain.Identity.RefreshToken, bool>>[] filters)
+    public Task ExecuteDeleteUserRefreshTokensAsync(Guid userId, string refreshToken, string jwtHash)
     {
-        var newFilters = new List<Expression<Func<Domain.Identity.RefreshToken, bool>>>
-        {
-            rt => rt.UserId == userId
-        };
-        newFilters.AddRange(filters);
-        return await GetAllAsync(newFilters.ToArray());
-    }
-
-    public async Task<ICollection<RefreshToken>> GetAllFullyExpiredByUserIdAsync(Guid userId)
-    {
-        return (await GetAllByUserIdAsync(userId)).Where(r => r.IsFullyExpired).ToList();
-    }
-
-    public async Task<ICollection<RefreshToken>> GetAllValidByUserIdAndRefreshTokenAsync(Guid userId,
-        string refreshToken)
-    {
-        return await GetAllByUserIdAsync(userId, r =>
-            (r.RefreshToken == refreshToken && r.ExpiresAt > DateTime.UtcNow) ||
-            (r.PreviousRefreshToken == refreshToken && r.PreviousExpiresAt > DateTime.UtcNow));
-    }
-
-    public async Task ExecuteDeleteUserRefreshTokensAsync(Guid userId, string refreshToken)
-    {
-        await Entities
+        return Entities
             .Where(r => r.UserId == userId &&
-                r.RefreshToken == refreshToken || r.PreviousRefreshToken == refreshToken)
+                        r.Token == refreshToken && r.JwtHash == jwtHash)
             .ExecuteDeleteAsync();
+    }
+
+    public override void Update(RefreshToken entity)
+    {
+        Update(entity,
+            e => e.UserId,
+            e => e.Token,
+            e => e.JwtHash,
+            e => e.ExpiresAt
+        );
     }
 }

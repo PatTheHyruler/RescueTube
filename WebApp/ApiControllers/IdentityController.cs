@@ -100,7 +100,7 @@ public class IdentityController : ControllerBase
             return Ok(new JwtResponse
             {
                 Jwt = jwtResult.Jwt,
-                RefreshToken = jwtResult.RefreshToken.RefreshToken,
+                RefreshToken = jwtResult.RefreshToken.Token,
                 RefreshTokenExpiresAt = jwtResult.RefreshToken.ExpiresAt,
             });
         }
@@ -154,7 +154,7 @@ public class IdentityController : ControllerBase
             return Ok(new JwtResponse
             {
                 Jwt = jwtResult.Jwt,
-                RefreshToken = jwtResult.RefreshToken.RefreshToken,
+                RefreshToken = jwtResult.RefreshToken.Token,
                 RefreshTokenExpiresAt = jwtResult.RefreshToken.ExpiresAt,
             });
         }

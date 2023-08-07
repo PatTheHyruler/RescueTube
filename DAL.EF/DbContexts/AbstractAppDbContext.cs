@@ -1,8 +1,13 @@
 using DAL.Contracts;
-using Domain.Identity;
+using DAL.EF.Converters;
+using Domain.Entities;
+using Domain.Entities.Identity;
+using Domain.Entities.Localization;
+using Domain.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -12,6 +17,15 @@ public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, Identity
     IdentityUserLogin<Guid>, IdentityRoleClaim<Guid>, IdentityUserToken<Guid>>
 {
     public DbSet<RefreshToken> RefreshTokens { get; set; } = default!;
+
+    public DbSet<Author> Authors { get; set; } = default!;
+    public DbSet<AuthorStatisticSnapshot> AuthorStatisticSnapshots { get; set; } = default!;
+    public DbSet<AuthorImage> AuthorImages { get; set; } = default!;
+
+    public DbSet<Image> Images { get; set; } = default!;
+    
+    public DbSet<TextTranslation> TextTranslations { get; set; } = default!;
+    public DbSet<TextTranslationKey> TextTranslationKeys { get; set; } = default!;
 
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
@@ -37,6 +51,24 @@ public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, Identity
             .HasOne(e => e.Role)
             .WithMany(e => e.UserRoles)
             .HasForeignKey(e => e.RoleId);
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        configurationBuilder
+            .Properties<EPlatform>()
+            .HaveConversion<EnumToStringConverter<EPlatform>>();
+        configurationBuilder
+            .Properties<EImageType>()
+            .HaveConversion<EnumToStringConverter<EImageType>>();
+        configurationBuilder
+            .Properties<EPrivacyStatus>()
+            .HaveConversion<EnumToStringConverter<EPrivacyStatus>>();
+        configurationBuilder
+            .Properties<DateTime>()
+            .HaveConversion<DateTimeConverter>();
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

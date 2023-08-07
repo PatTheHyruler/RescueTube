@@ -2,17 +2,15 @@ using Base.Domain;
 
 namespace BLL.DTO.Entities.Identity;
 
-public class RefreshToken : BaseRefreshToken
+public class RefreshToken : AbstractIdDatabaseEntity
 {
-    public RefreshToken(TimeSpan expiresIn) : base(expiresIn)
-    {
-    }
+    public Guid UserId { get; set; }
 
-    public RefreshToken() : this(7)
-    {
-    }
-    
-    public RefreshToken(int expiresInDays) : base(TimeSpan.FromDays(expiresInDays))
-    {
-    }
+    public string Token { get; set; } = Guid.NewGuid().ToString();
+
+    public DateTime ExpiresAt { get; set; }
+
+    public string JwtHash { get; set; } = default!;
+
+    public bool IsExpired => ExpiresAt <= DateTime.UtcNow;
 }

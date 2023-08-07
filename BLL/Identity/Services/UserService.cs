@@ -33,7 +33,7 @@ public class UserService : BaseIdentityService
 
         var result =
             await UserManager.CreateAsync(
-                Uow.Users.Map(
+                _mapper.Map<Domain.Entities.Identity.User>(
                     _mapper.Map<DAL.DTO.Entities.Identity.User>(user)),
                 password);
         if (!result.Succeeded)
@@ -80,7 +80,7 @@ public class UserService : BaseIdentityService
         var claimsPrincipal = await SignInManager.CreateUserPrincipalAsync(user);
         var jwt = TokenService.GenerateJwt(claimsPrincipal, expiresInSeconds);
 
-        var refreshToken = TokenService.CreateAndAddRefreshToken(user.Id);
+        var refreshToken = TokenService.CreateAndAddRefreshToken(user.Id, jwt);
 
         return new JwtResult
         {

@@ -6,9 +6,9 @@ using DAL.EF.DbContexts;
 
 namespace DAL.EF.Repositories;
 
-public class BaseAppEntityRepository<TDomainEntity, TEntity> :
+public abstract class BaseAppEntityRepository<TDomainEntity, TEntity> :
     BaseEntityRepository<TDomainEntity, TEntity, AbstractAppDbContext, IAppUnitOfWork>
-    where TDomainEntity : class, IIdDatabaseEntity<Guid>
+    where TDomainEntity : class, IIdDatabaseEntity<Guid>, new()
     where TEntity : class, IIdDatabaseEntity<Guid>
 {
     protected BaseAppEntityRepository(AbstractAppDbContext dbContext, IMapper mapper, IAppUnitOfWork uow) :

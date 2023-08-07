@@ -4,15 +4,38 @@ using AutoMapper.QueryableExtensions;
 using Contracts.DAL;
 using Contracts.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Base.DAL.EF;
 
-public class BaseEntityRepository<TDomainEntity, TEntity, TKey, TDbContext, TUow> :
-    IBaseEntityRepository<TDomainEntity, TEntity, TKey>
-    where TDomainEntity : class, IIdDatabaseEntity<TKey>
+/// <summary>
+/// Base class for repository classes that serve as an abstraction between
+/// Entity Framework Core's DbSet/DbContext and the rest of the application.
+/// </summary>
+/// <remarks>
+/// Regarding updates:<br/><br/>
+/// 
+/// Because EF Core doesn't track entities remapped to DTOs using ProjectTo,
+/// the entry will get modified and redundant data will be submitted.<br/>
+/// Presumably only querying required data using ProjectTo is still worth it,
+/// since likely most queries will be reads?<br/>
+/// TODO: Test this assumption maybe?
+/// <br/><br/>
+/// 
+/// This behaviour also avoids uncertainty regarding whether
+/// fetch or update should take priority.
+/// Fetched data is not tracked by the change tracker, only added/updated/removed data is.<br/>
+/// This also means that in a situation where an entity is fetched and updated (but not yet committed),
+/// performing another fetch will return the non-updated values from the database, not the modified in-memory state.
+/// Whether this behaviour is desirable is debatable.<br/>
+/// TODO: Figure out whether submitting some unnecessary data sometimes is more performant than manually re-adding fetched data to the change tracker.
+/// </remarks>
+public abstract class BaseEntityRepository<TDomainEntity, TDtoEntity, TKey, TDbContext, TUow> :
+    IBaseEntityRepository<TDomainEntity, TDtoEntity, TKey>
+    where TDomainEntity : class, IIdDatabaseEntity<TKey>, new()
     where TKey : struct, IEquatable<TKey>
     where TDbContext : DbContext
-    where TEntity : class, IIdDatabaseEntity<TKey>
+    where TDtoEntity : class, IIdDatabaseEntity<TKey>
     where TUow : IBaseUnitOfWork
 {
     public TDbContext DbContext { get; }
@@ -36,11 +59,6 @@ public class BaseEntityRepository<TDomainEntity, TEntity, TKey, TDbContext, TUow
         throw new ApplicationException(
             $"Failed to fetch DbSet for Entity type {typeof(TDomainEntity)} from {typeof(DbContext)}");
 
-    protected virtual TDomainEntity AfterMap(TEntity entity, TDomainEntity mapped)
-    {
-        return mapped;
-    }
-
     protected virtual TQueryable IncludeDefaults<TQueryable>(TQueryable queryable)
         where TQueryable : IQueryable<TDomainEntity>
     {
@@ -49,79 +67,63 @@ public class BaseEntityRepository<TDomainEntity, TEntity, TKey, TDbContext, TUow
 
     protected IQueryable<TDomainEntity> EntitiesWithDefaults => IncludeDefaults(Entities);
 
-    public TDomainEntity Map(TEntity entity)
+    public async Task<TDtoEntity?> GetByIdAsync(TKey id)
     {
-        return AfterMap(entity, Mapper.Map<TEntity, TDomainEntity>(entity)!);
+        return await EntitiesWithDefaults.ProjectTo<TDtoEntity>(Mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(e => e.Id.Equals(id));
     }
 
-    public TDomainEntity Map(TEntity entity, TDomainEntity domainEntity)
+    protected IQueryable<TDomainEntity> ApplyFilters(IQueryable<TDomainEntity> query,
+        params Expression<Func<TDomainEntity, bool>>[] filters)
     {
-        return AfterMap(entity, Mapper.Map(entity, domainEntity));
-    }
-
-    public async Task<TEntity?> GetByIdAsync(TKey id)
-    {
-        return AttachIfNotAttached(await EntitiesWithDefaults.ProjectTo<TEntity>(Mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync(e => e.Id.Equals(id)));
-    }
-
-    protected IQueryable<TDomainEntity> GetAll(params Expression<Func<TDomainEntity, bool>>[] filters)
-    {
-        IQueryable<TDomainEntity> result = Entities;
-
         foreach (var filter in filters)
         {
-            result = result.Where(filter);
+            query = query.Where(filter);
         }
 
-        return result;
+        return query;
     }
 
-    public async Task<ICollection<TEntity>> GetAllAsync(params Expression<Func<TDomainEntity, bool>>[] filters)
+    protected IQueryable<TDomainEntity> ApplyFilters(params Expression<Func<TDomainEntity, bool>>[] filters)
     {
-        var result = IncludeDefaults(GetAll(filters));
-        return AttachIfNotAttached<ICollection<TEntity>, TEntity>(
-            await Mapper.ProjectTo<TEntity>(result).ToListAsync());
+        return ApplyFilters(Entities, filters);
     }
 
-    protected TAddEntity AddBase<TAddEntity>(TAddEntity entity,
-        Func<TAddEntity, TDomainEntity, TDomainEntity> mapTo, Func<TAddEntity, TDomainEntity> map)
-        where TAddEntity : IIdDatabaseEntity<TKey>
+    public Task<ICollection<TDtoEntity>> GetAllAsync(params Expression<Func<TDomainEntity, bool>>[] filters)
     {
-        var trackedEntity = GetTrackedEntity(entity.Id);
-        if (trackedEntity != null)
-        {
-            if (DbContext.ChangeTracker.AutoDetectChangesEnabled)
-            {
-                mapTo(entity, trackedEntity);
-            }
-            else
-            {
-                Entities.Update(mapTo(entity, trackedEntity));
-            }
-        }
-        else
-        {
-            Entities.Add(map(entity));
-        }
+        return GetAllAsync(default, filters);
+    }
 
+    public async Task<ICollection<TDtoEntity>> GetAllAsync(CancellationToken ct = default, params Expression<Func<TDomainEntity, bool>>[] filters)
+    {
+        var result = IncludeDefaults(ApplyFilters(filters));
+        return await Mapper.ProjectTo<TDtoEntity>(result).ToListAsync(cancellationToken: ct);
+    }
+
+    public TDtoEntity Add(TDtoEntity entity)
+    {
+        Entities.Add(Mapper.Map<TDomainEntity>(entity));
         return entity;
     }
 
-    public TEntity Add(TEntity entity)
+    public void Remove(TKey id)
     {
-        return AddBase(entity, Map, Map);
+        Remove(GetUpdatableEntry(id).Entity);
     }
 
-    public void Remove(TEntity entity)
+    public void Remove(TDtoEntity entity)
     {
-        Remove(GetTrackedEntity(entity) ??
-               Mapper.Map<TEntity, TDomainEntity>(entity)!); // TODO: Should this throw if entity is not tracked?
+        Remove(entity.Id);
     }
 
     private void Remove(TDomainEntity entity)
     {
         Entities.Remove(entity);
+    }
+
+    public async Task ExecuteDeleteAsync(TKey id, CancellationToken ct = default)
+    {
+        await Entities.Where(e => e.Id.Equals(id)).ExecuteDeleteAsync(ct);
     }
 
     public async Task RemoveAsync(TKey id)
@@ -130,58 +132,43 @@ public class BaseEntityRepository<TDomainEntity, TEntity, TKey, TDbContext, TUow
                throw new ApplicationException($"Failed to delete entity with ID {id} - entity not found!"));
     }
 
-    protected void UpdateBase<TUpdateEntity>(TUpdateEntity entity,
-        Func<TUpdateEntity, TDomainEntity, TDomainEntity> mapTo, Func<TUpdateEntity, TDomainEntity> map)
-        where TUpdateEntity : IIdDatabaseEntity<TKey>
+    public abstract void Update(TDtoEntity entity);
+
+    protected void Update<TCustomDtoEntity>(TCustomDtoEntity entity, params Expression<Func<TDomainEntity, object?>>[] changedPropertyExpressions)
+        where TCustomDtoEntity : IIdDatabaseEntity<TKey>
     {
-        var trackedEntity = GetTrackedEntity(entity.Id);
-        if (trackedEntity != null)
-        {
-            mapTo(entity, trackedEntity);
-        }
-        else
-        {
-            Entities.Update(map(entity));
-        }
+        Update(Mapper.Map<TDomainEntity>(entity), changedPropertyExpressions);
     }
 
-    public virtual void Update(TEntity entity)
+    protected void Update(TDomainEntity values,
+        params Expression<Func<TDomainEntity, object?>>[] changedPropertyExpressions)
     {
-        UpdateBase(entity, Map, Map);
+        var entry = GetUpdatableEntry(values.Id);
+        entry.Update(values, changedPropertyExpressions);
     }
 
-    public async Task<bool> ExistsAsync(TKey id)
+    public async Task<bool> ExistsAsync(TKey id, CancellationToken ct = default)
     {
-        return await Entities.AnyAsync(e => e.Id.Equals(id));
+        return await Entities.AnyAsync(e => e.Id.Equals(id), cancellationToken: ct);
     }
 
-    public TDomainEntity? GetTrackedEntity(TEntity entity) =>
-        GetTrackedEntity(entity.Id);
-
-    public TDomainEntity? GetTrackedEntity(TKey id) => DbContext.GetTrackedEntity<TDomainEntity, TKey>(id);
-
-    protected TCustomEntityCollection AttachIfNotAttached<TCustomEntityCollection, TCustomEntity>(
-        TCustomEntityCollection entities)
-        where TCustomEntityCollection : ICollection<TCustomEntity>
-        where TCustomEntity : class, IIdDatabaseEntity<TKey>
+    private EntityEntry<TDomainEntity> GetUpdatableEntry(TKey id)
     {
-        return entities.AttachIfNotAttached<TCustomEntityCollection, TCustomEntity, TDomainEntity, TKey>(Mapper,
-            DbContext);
+        return DbContext.GetUpdatableEntry<TDomainEntity, TKey>(id);
     }
 
-    protected TCustomEntity? AttachIfNotAttached<TCustomEntity>(TCustomEntity? entity)
-        where TCustomEntity : class, IIdDatabaseEntity<TKey>
+    public Task SaveChangesAsync()
     {
-        return entity.AttachIfNotAttached<TCustomEntity, TDomainEntity, TKey>(Mapper, DbContext);
+        return DbContext.SaveChangesAsync();
     }
 }
 
-public class BaseEntityRepository<TDomainEntity, TEntity, TDbContext, TUow> :
-    BaseEntityRepository<TDomainEntity, TEntity, Guid, TDbContext, TUow>,
-    IBaseEntityRepository<TDomainEntity, TEntity>
-    where TEntity : class, IIdDatabaseEntity<Guid>
+public abstract class BaseEntityRepository<TDomainEntity, TDtoEntity, TDbContext, TUow> :
+    BaseEntityRepository<TDomainEntity, TDtoEntity, Guid, TDbContext, TUow>,
+    IBaseEntityRepository<TDomainEntity, TDtoEntity>
+    where TDtoEntity : class, IIdDatabaseEntity<Guid>
     where TDbContext : DbContext
-    where TDomainEntity : class, IIdDatabaseEntity<Guid>
+    where TDomainEntity : class, IIdDatabaseEntity<Guid>, new()
     where TUow : IBaseUnitOfWork
 {
     public BaseEntityRepository(TDbContext dbContext, IMapper mapper, TUow uow) : base(dbContext, mapper, uow)

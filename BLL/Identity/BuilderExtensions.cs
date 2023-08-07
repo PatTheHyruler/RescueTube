@@ -3,6 +3,7 @@ using BLL.Identity.Options;
 using BLL.Identity.Services;
 using ConfigDefaults;
 using DAL.EF.DbContexts;
+using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -37,11 +38,11 @@ public static class BuilderExtensions
                              new[] { "Failed to read JWT options" });
 
         services.AddHttpContextAccessor(); // This is added in .AddIdentity(), but not in .AddIdentityCore(), so adding it manually just in case it doesn't get registered elsewhere.
-        services.AddIdentityCore<Domain.Identity.User>()
-            .AddRoles<Domain.Identity.Role>()
+        services.AddIdentityCore<User>()
+            .AddRoles<Role>()
             .AddEntityFrameworkStores<AbstractAppDbContext>()
             .AddDefaultTokenProviders();
-        services.AddScoped<SignInManager<Domain.Identity.User>>();
+        services.AddScoped<SignInManager<User>>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

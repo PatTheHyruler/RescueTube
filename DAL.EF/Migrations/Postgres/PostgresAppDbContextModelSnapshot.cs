@@ -22,7 +22,126 @@ namespace DAL.EF.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Domain.Identity.RefreshToken", b =>
+            modelBuilder.Entity("Domain.Entities.Author", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AddedToArchiveAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("BioId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("IdOnPlatform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFetchOfficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastFetchUnofficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastSuccessfulFetchOfficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastSuccessfulFetchUnofficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PrivacyStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PrivacyStatusOnPlatform")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BioId");
+
+                    b.HasIndex("Platform", "IdOnPlatform");
+
+                    b.ToTable("Authors");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AuthorImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ImageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ImageType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastFetched")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidSince")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("ImageId");
+
+                    b.ToTable("AuthorImages");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AuthorStatisticSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long?>("FollowerCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("PaidFollowerCount")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.ToTable("AuthorStatisticSnapshots");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Identity.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -31,29 +150,25 @@ namespace DAL.EF.Migrations
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("PreviousExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("PreviousRefreshToken")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("RefreshToken")
+                    b.Property<string>("JwtHash")
                         .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                        .HasColumnType("text");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "Token", "JwtHash", "ExpiresAt");
 
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("Domain.Identity.Role", b =>
+            modelBuilder.Entity("Domain.Entities.Identity.Role", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -80,7 +195,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Identity.User", b =>
+            modelBuilder.Entity("Domain.Entities.Identity.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -148,7 +263,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Identity.UserRole", b =>
+            modelBuilder.Entity("Domain.Entities.Identity.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -161,6 +276,88 @@ namespace DAL.EF.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Image", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Hash")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IdOnPlatform")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LocalFilePath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Quality")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Images");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Localization.TextTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Culture")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("KeyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ValidSince")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KeyId", "Culture", "ValidUntil", "ValidSince");
+
+                    b.ToTable("TextTranslations");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Localization.TextTranslationKey", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TextTranslationKeys");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -251,9 +448,50 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Identity.RefreshToken", b =>
+            modelBuilder.Entity("Domain.Entities.Author", b =>
                 {
-                    b.HasOne("Domain.Identity.User", "User")
+                    b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Bio")
+                        .WithMany()
+                        .HasForeignKey("BioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bio");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AuthorImage", b =>
+                {
+                    b.HasOne("Domain.Entities.Author", "Author")
+                        .WithMany("AuthorImages")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Image");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AuthorStatisticSnapshot", b =>
+                {
+                    b.HasOne("Domain.Entities.Author", "Author")
+                        .WithMany("AuthorStatisticSnapshots")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Identity.RefreshToken", b =>
+                {
+                    b.HasOne("Domain.Entities.Identity.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -262,15 +500,15 @@ namespace DAL.EF.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Identity.UserRole", b =>
+            modelBuilder.Entity("Domain.Entities.Identity.UserRole", b =>
                 {
-                    b.HasOne("Domain.Identity.Role", "Role")
+                    b.HasOne("Domain.Entities.Identity.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Identity.User", "User")
+                    b.HasOne("Domain.Entities.Identity.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -281,9 +519,20 @@ namespace DAL.EF.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Localization.TextTranslation", b =>
+                {
+                    b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Key")
+                        .WithMany("Translations")
+                        .HasForeignKey("KeyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Key");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Identity.Role", null)
+                    b.HasOne("Domain.Entities.Identity.Role", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -292,7 +541,7 @@ namespace DAL.EF.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Identity.User", null)
+                    b.HasOne("Domain.Entities.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -301,7 +550,7 @@ namespace DAL.EF.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Identity.User", null)
+                    b.HasOne("Domain.Entities.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -310,21 +559,33 @@ namespace DAL.EF.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Identity.User", null)
+                    b.HasOne("Domain.Entities.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Identity.Role", b =>
+            modelBuilder.Entity("Domain.Entities.Author", b =>
+                {
+                    b.Navigation("AuthorImages");
+
+                    b.Navigation("AuthorStatisticSnapshots");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Identity.Role", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Domain.Identity.User", b =>
+            modelBuilder.Entity("Domain.Entities.Identity.User", b =>
                 {
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Localization.TextTranslationKey", b =>
+                {
+                    b.Navigation("Translations");
                 });
 #pragma warning restore 612, 618
         }

@@ -26,16 +26,29 @@ public class TokenService : BaseIdentityService
     /// </summary>
     /// <remarks>Requires calling SaveChanges().</remarks>
     /// <param name="userId">The ID of the user to create a refresh token for.</param>
+    /// <param name="jwt">The JWT to create a refresh token for.</param>
     /// <returns>The created refresh token.</returns>
-    public RefreshToken CreateAndAddRefreshToken(Guid userId)
+    public RefreshToken CreateAndAddRefreshToken(Guid userId, string jwt)
     {
         var dalRefreshToken = new DAL.DTO.Entities.Identity.RefreshToken(
-            TimeSpan.FromDays(_jwtBearerOptions.RefreshTokenExpiresInDays))
-        {
-            UserId = userId,
-        };
+            TimeSpan.FromDays(_jwtBearerOptions.RefreshTokenExpiresInDays),
+            HashJwt(jwt),
+            userId);
         Uow.RefreshTokens.Add(dalRefreshToken);
         return _mapper.Map<RefreshToken>(dalRefreshToken);
+    }
+
+    private static string HashJwt(string jwt)
+    {
+        using var sha = new System.Security.Cryptography.HMACSHA256();
+        var textBytes = System.Text.Encoding.UTF8.GetBytes(jwt);
+        var hashBytes = sha.ComputeHash(textBytes);
+
+        var hash = BitConverter
+            .ToString(hashBytes)
+            .Replace("-", string.Empty);
+
+        return hash;
     }
 
     /// <summary>
@@ -113,7 +126,7 @@ public class TokenService : BaseIdentityService
                    ?? throw new InvalidJwtException();
 
         var userRefreshTokens = await Uow.RefreshTokens
-            .GetAllValidByUserIdAndRefreshTokenAsync(user.Id, refreshToken);
+            .GetAllValidAsync(user.Id, refreshToken, HashJwt(jwt));
         if (userRefreshTokens.Count == 0)
         {
             throw new InvalidRefreshTokenException();
@@ -123,15 +136,17 @@ public class TokenService : BaseIdentityService
         jwt = GenerateJwt(claimsPrincipal, expiresInSeconds);
 
         var userRefreshToken = userRefreshTokens.Single();
-        userRefreshToken.Refresh(
-            TimeSpan.FromMinutes(_jwtBearerOptions.ExtendOldRefreshTokenExpirationByMinutes),
-            TimeSpan.FromDays(_jwtBearerOptions.RefreshTokenExpiresInDays));
+        userRefreshToken.ExpiresAt =
+            userRefreshToken.ExpiresAt.AddMinutes(
+                _jwtBearerOptions.ExtendOldRefreshTokenExpirationByMinutes);
         Uow.RefreshTokens.Update(userRefreshToken);
+
+        var newRefreshToken = CreateAndAddRefreshToken(user.Id, jwt);
 
         return new JwtResult
         {
             Jwt = jwt,
-            RefreshToken = _mapper.Map<RefreshToken>(userRefreshToken),
+            RefreshToken = _mapper.Map<RefreshToken>(newRefreshToken),
         };
     }
 
@@ -169,6 +184,6 @@ public class TokenService : BaseIdentityService
         }
 
         var userId = principal.GetUserIdIfExists() ?? throw new InvalidJwtException();
-        await Uow.RefreshTokens.ExecuteDeleteUserRefreshTokensAsync(userId, refreshToken);
+        await Uow.RefreshTokens.ExecuteDeleteUserRefreshTokensAsync(userId, refreshToken, jwt);
     }
 }

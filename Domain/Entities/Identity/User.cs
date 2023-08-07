@@ -1,7 +1,7 @@
 using Contracts.Domain;
 using Microsoft.AspNetCore.Identity;
 
-namespace Domain.Identity;
+namespace Domain.Entities.Identity;
 
 public class User : IdentityUser<Guid>, IIdDatabaseEntity
 {
