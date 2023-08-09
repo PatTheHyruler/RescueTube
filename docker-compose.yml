@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  db:
+    container_name: rescue_tube_db
+    image: "postgres:15.2-bullseye"
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      # external:internal
+      - "5433:5432"
+    volumes:
+      - db-postgres-volume:/var/lib/postgresql/data
+    logging:
+      options: 
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  db-postgres-volume:

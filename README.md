@@ -6,3 +6,17 @@ Started as a university homework project, the code for which can be found here:
 * [TypeScript frontends (React & Vue)](https://github.com/mipaat/icd0006-22-23-s)
 
 Currently WIP copying and rewriting the original project.
+
+## DB
+Start local dev DB:
+`docker compose up db -d`
+
+## Dotnet tools
+`dotnet tool restore`
+
+## Migrations
+(In solution root directory)
+* Add migration: `dotnet ef migrations add --context PostgresAppDbContext MigrationName --project DAL.EF --startup-project WebApp`
+* Remove migration: `dotnet ef migrations remove --context PostgresAppDbContext --project DAL.EF --startup-project WebApp`
+* Update to latest migration: `dotnet ef database update --context PostgresAppDbContext --project DAL.EF --startup-project WebApp`
+* Add migration: `dotnet ef database update --context PostgresAppDbContext MigrationName --project DAL.EF --startup-project WebApp`

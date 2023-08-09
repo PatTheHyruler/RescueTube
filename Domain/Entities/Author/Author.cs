@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities;
 
-[Index(nameof(Platform), nameof(IdOnPlatform))]
+[Index(nameof(Platform), nameof(IdOnPlatform), IsUnique = true)]
 public class Author : AbstractIdDatabaseEntity, IMainArchiveEntity
 {
     public string? UserName { get; set; }
