@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using Base.Domain;
 using Domain.Contracts;
 using Domain.Entities.Localization;
@@ -34,4 +35,14 @@ public class Author : AbstractIdDatabaseEntity, IMainArchiveEntity
     public DateTime? LastFetchOfficial { get; set; }
     public DateTime? LastSuccessfulFetchOfficial { get; set; }
     public DateTime AddedToArchiveAt { get; set; }
+
+    public ICollection<VideoAuthor>? VideoAuthors { get; set; }
+
+    [InverseProperty(nameof(Category.Creator))]
+    public ICollection<Category>? CreatedCategories { get; set; }
+    [InverseProperty(nameof(VideoCategory.AssignedBy))]
+    public ICollection<VideoCategory>? AssignedVideoCategories { get; set; }
+
+    public ICollection<StatusChangeEvent>? StatusChangeEvents { get; set; }
+    public ICollection<EntityAccessPermission>? EntityAccessPermissions { get; set; }
 }
