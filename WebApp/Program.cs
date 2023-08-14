@@ -33,15 +33,6 @@ builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddMvc(); // For Swagger
 
-builder.Services.AddAutoMapper((serviceProvider, mapperConfigurationExpression) =>
-    {
-        var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-        mapperConfigurationExpression.AddProfile(new Public.DTO.AutoMapperConfig(httpContextAccessor));
-    },
-    typeof(DAL.DTO.AutoMapperConfig),
-    typeof(BLL.DTO.AutoMapperConfig)
-);
-
 builder.AddCustomIdentity();
 
 builder.Services.AddLocalization();

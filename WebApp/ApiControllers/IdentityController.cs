@@ -1,5 +1,4 @@
 using Asp.Versioning;
-using AutoMapper;
 using BLL.DTO.Exceptions.Identity;
 using BLL.Identity.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +18,6 @@ namespace WebApp.ApiControllers;
 public class IdentityController : ControllerBase
 {
     private readonly ILogger<IdentityController> _logger;
-    private readonly IMapper _mapper;
     private readonly UserService _userService;
     private readonly TokenService _tokenService;
     private readonly Random _rnd = new();
@@ -27,11 +25,10 @@ public class IdentityController : ControllerBase
     /// <summary>
     /// Initializes a new instance of the <see cref="IdentityController"/> class.
     /// </summary>
-    public IdentityController(ILogger<IdentityController> logger, IMapper mapper, UserService userService,
+    public IdentityController(ILogger<IdentityController> logger, UserService userService,
         TokenService tokenService)
     {
         _logger = logger;
-        _mapper = mapper;
         _userService = userService;
         _tokenService = tokenService;
     }
@@ -53,7 +50,7 @@ public class IdentityController : ControllerBase
         try
         {
             var user = await _userService.RegisterUserAsync(registrationData.Username, registrationData.Password);
-            return Ok(_mapper.Map<User>(user));
+            return Ok(user.ToApiV1User());
         }
         catch (RegistrationDisabledException)
         {

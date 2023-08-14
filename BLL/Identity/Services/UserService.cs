@@ -1,6 +1,6 @@
-using AutoMapper;
 using BLL.DTO.Entities.Identity;
 using BLL.DTO.Exceptions.Identity;
+using BLL.DTO.Mappers;
 using BLL.Identity.Base;
 using BLL.Identity.Options;
 using Microsoft.Extensions.Options;
@@ -10,7 +10,6 @@ namespace BLL.Identity.Services;
 public class UserService : BaseIdentityService
 {
     private readonly RegistrationOptions _registrationOptions;
-    private readonly IMapper _mapper;
 
     /// <summary>
     /// Registers a new user account.
@@ -33,8 +32,7 @@ public class UserService : BaseIdentityService
 
         var result =
             await UserManager.CreateAsync(
-                _mapper.Map<Domain.Entities.Identity.User>(
-                    _mapper.Map<DAL.DTO.Entities.Identity.User>(user)),
+                user.ToDomainUser(),
                 password);
         if (!result.Succeeded)
         {
@@ -89,10 +87,8 @@ public class UserService : BaseIdentityService
         };
     }
 
-    public UserService(IServiceProvider services, IOptionsSnapshot<RegistrationOptions> registrationOptions,
-        IMapper mapper) : base(services)
+    public UserService(IServiceProvider services, IOptionsSnapshot<RegistrationOptions> registrationOptions) : base(services)
     {
         _registrationOptions = registrationOptions.Value;
-        _mapper = mapper;
     }
 }

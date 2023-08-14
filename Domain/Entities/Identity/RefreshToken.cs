@@ -14,6 +14,4 @@ public class RefreshToken : AbstractIdDatabaseEntity
     public DateTime ExpiresAt { get; set; }
 
     public string JwtHash { get; set; } = default!;
-
-    public bool IsExpired => ExpiresAt <= DateTime.UtcNow;
 }

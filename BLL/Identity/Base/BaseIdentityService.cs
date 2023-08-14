@@ -1,5 +1,5 @@
 using BLL.Identity.Services;
-using DAL.Contracts;
+using DAL.EF.DbContexts;
 using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,8 +15,8 @@ public abstract class BaseIdentityService
         Services = services;
     }
 
-    private IAppUnitOfWork? _uow;
-    protected IAppUnitOfWork Uow => _uow ??= Services.GetRequiredService<IAppUnitOfWork>();
+    private AbstractAppDbContext? _ctx;
+    protected AbstractAppDbContext Ctx => _ctx ??= Services.GetRequiredService<AbstractAppDbContext>();
 
     private UserManager<User>? _userManager;
     protected UserManager<User> UserManager => _userManager ??= Services.GetRequiredService<UserManager<User>>();
@@ -30,8 +30,8 @@ public abstract class BaseIdentityService
     private TokenService? _tokenService;
     public TokenService TokenService => _tokenService ??= Services.GetRequiredService<TokenService>();
 
-    public async Task<int> SaveChangesAsync()
+    public async Task SaveChangesAsync()
     {
-        return await Uow.SaveChangesAsync();
+        await Ctx.SaveChangesAsync();
     }
 }

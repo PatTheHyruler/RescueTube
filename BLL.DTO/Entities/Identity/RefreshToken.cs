@@ -13,4 +13,15 @@ public class RefreshToken : AbstractIdDatabaseEntity
     public string JwtHash { get; set; } = default!;
 
     public bool IsExpired => ExpiresAt <= DateTime.UtcNow;
+
+    public RefreshToken()
+    {
+    }
+
+    public RefreshToken(TimeSpan expiresIn, string jwtHash, Guid userId)
+    {
+        ExpiresAt = DateTime.UtcNow.AddMilliseconds(expiresIn.TotalMilliseconds);
+        JwtHash = jwtHash;
+        UserId = userId;
+    }
 }

@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using AutoMapper;
 using BLL.DTO.Entities.Identity;
 using BLL.DTO.Exceptions.Identity;
+using BLL.DTO.Mappers;
 using BLL.Identity.Base;
 using BLL.Identity.Options;
+using DAL.EF.Extensions.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace BLL.Identity.Services;
@@ -12,12 +14,10 @@ namespace BLL.Identity.Services;
 public class TokenService : BaseIdentityService
 {
     private readonly JwtBearerOptions _jwtBearerOptions;
-    private readonly IMapper _mapper;
 
-    public TokenService(IServiceProvider services, IOptions<JwtBearerOptions> jwtBearerOptions, IMapper mapper) :
+    public TokenService(IServiceProvider services, IOptions<JwtBearerOptions> jwtBearerOptions) :
         base(services)
     {
-        _mapper = mapper;
         _jwtBearerOptions = jwtBearerOptions.Value;
     }
 
@@ -30,12 +30,12 @@ public class TokenService : BaseIdentityService
     /// <returns>The created refresh token.</returns>
     public RefreshToken CreateAndAddRefreshToken(Guid userId, string jwt)
     {
-        var dalRefreshToken = new DAL.DTO.Entities.Identity.RefreshToken(
+        var token = new RefreshToken(
             TimeSpan.FromDays(_jwtBearerOptions.RefreshTokenExpiresInDays),
             HashJwt(jwt),
             userId);
-        Uow.RefreshTokens.Add(dalRefreshToken);
-        return _mapper.Map<RefreshToken>(dalRefreshToken);
+        Ctx.RefreshTokens.Add(token.ToDomainToken());
+        return token;
     }
 
     private static string HashJwt(string jwt)
@@ -125,8 +125,9 @@ public class TokenService : BaseIdentityService
         var user = await UserManager.FindByNameAsync(userName)
                    ?? throw new InvalidJwtException();
 
-        var userRefreshTokens = await Uow.RefreshTokens
-            .GetAllValidAsync(user.Id, refreshToken, HashJwt(jwt));
+        var userRefreshTokens = await Ctx.RefreshTokens
+            .FilterValid(user.Id, refreshToken, HashJwt(jwt))
+            .ToListAsync();
         if (userRefreshTokens.Count == 0)
         {
             throw new InvalidRefreshTokenException();
@@ -139,14 +140,13 @@ public class TokenService : BaseIdentityService
         userRefreshToken.ExpiresAt =
             userRefreshToken.ExpiresAt.AddMinutes(
                 _jwtBearerOptions.ExtendOldRefreshTokenExpirationByMinutes);
-        Uow.RefreshTokens.Update(userRefreshToken);
 
         var newRefreshToken = CreateAndAddRefreshToken(user.Id, jwt);
 
         return new JwtResult
         {
             Jwt = jwt,
-            RefreshToken = _mapper.Map<RefreshToken>(newRefreshToken),
+            RefreshToken = newRefreshToken,
         };
     }
 
@@ -184,6 +184,9 @@ public class TokenService : BaseIdentityService
         }
 
         var userId = principal.GetUserIdIfExists() ?? throw new InvalidJwtException();
-        await Uow.RefreshTokens.ExecuteDeleteUserRefreshTokensAsync(userId, refreshToken, jwt);
+        var jwtHash = HashJwt(jwt);
+        await Ctx.RefreshTokens
+            .Filter(userId, refreshToken, jwtHash)
+            .ExecuteDeleteAsync();
     }
 }

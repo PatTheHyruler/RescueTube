@@ -7,12 +7,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AutoMapper" Version="12.0.1" />
+      <PackageReference Include="Riok.Mapperly" Version="3.0.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Base.Domain\Base.Domain.csproj" />
-      <ProjectReference Include="..\DAL.DTO\DAL.DTO.csproj" />
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Identity.Core">
+        <HintPath>..\..\..\..\.nuget\packages\microsoft.extensions.identity.core\7.0.9\lib\net7.0\Microsoft.Extensions.Identity.Core.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

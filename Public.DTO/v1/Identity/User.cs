@@ -1,3 +1,5 @@
+using Riok.Mapperly.Abstractions;
+
 namespace Public.DTO.v1.Identity;
 
 /// <summary>
@@ -19,3 +21,11 @@ public class User
     /// </summary>
     public bool IsApproved { get; set; }
 }
+
+#pragma warning disable CS1591
+[Mapper]
+public static partial class UserMapper
+{
+    public static partial User ToApiV1User(this BLL.DTO.Entities.Identity.User user);
+}
+#pragma warning restore CS1591

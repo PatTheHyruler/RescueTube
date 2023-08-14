@@ -9,7 +9,7 @@ namespace Tests.Base.DAL.EF.Sample.Repositories;
 
 public class TreeRepository : BaseEntityRepository<Tree, TreeDto, SampleDbContext, AppUow>
 {
-    public TreeRepository(SampleDbContext dbContext, IMapper mapper, AppUow uow) : base(dbContext, mapper, uow)
+    public TreeRepository(SampleDbContext dbContext, IMapper mapper, AppUow uow) : base(dbContext, uow)
     {
     }
 
