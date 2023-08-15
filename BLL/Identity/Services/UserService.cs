@@ -1,8 +1,9 @@
 using BLL.DTO.Entities.Identity;
 using BLL.DTO.Exceptions.Identity;
-using BLL.DTO.Mappers;
 using BLL.Identity.Base;
 using BLL.Identity.Options;
+using Domain.Entities.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 
 namespace BLL.Identity.Services;
@@ -32,7 +33,7 @@ public class UserService : BaseIdentityService
 
         var result =
             await UserManager.CreateAsync(
-                user.ToDomainUser(),
+                user,
                 password);
         if (!result.Succeeded)
         {
@@ -40,6 +41,22 @@ public class UserService : BaseIdentityService
         }
 
         return user;
+    }
+
+    public async Task<SignInResult> SignInIdentityCookieAsync(string username, string password, bool isPersistent)
+    {
+        var user = await SignInManager.UserManager.FindByNameAsync(username);
+        return await SignInIdentityCookieAsync(user, password, isPersistent);
+    }
+
+    public async Task<SignInResult> SignInIdentityCookieAsync(User? user, string password, bool isPersistent)
+    {
+        return user switch
+        {
+            { IsApproved: false } => SignInResult.NotAllowed,
+            null => SignInResult.Failed,
+            _ => await SignInManager.PasswordSignInAsync(user, password, isPersistent, false),
+        };
     }
 
     /// <summary>
@@ -87,7 +104,8 @@ public class UserService : BaseIdentityService
         };
     }
 
-    public UserService(IServiceProvider services, IOptionsSnapshot<RegistrationOptions> registrationOptions) : base(services)
+    public UserService(IServiceProvider services, IOptionsSnapshot<RegistrationOptions> registrationOptions) :
+        base(services)
     {
         _registrationOptions = registrationOptions.Value;
     }

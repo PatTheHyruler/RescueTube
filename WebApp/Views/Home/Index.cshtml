@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="text-center">
+    @if (User.Identity is {IsAuthenticated: true })
+    {
+        <div>Hi, you are logged in (placeholder)</div>
+    }
+    else
+    {
+        <div>Hi, please log in (placeholder)</div>
+    }
+</div>

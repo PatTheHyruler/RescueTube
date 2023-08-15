@@ -39,6 +39,8 @@ public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, UserClai
     public DbSet<EntityAccessPermission> EntityAccessPermissions { get; set; } = default!;
     public DbSet<StatusChangeEvent> StatusChangeEvents { get; set; } = default!;
 
+    public DbSet<Submission> Submissions { get; set; } = default!;
+
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
 
@@ -85,6 +87,9 @@ public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, UserClai
         configurationBuilder
             .Properties<EAuthorRole>()
             .HaveConversion<EnumToStringConverter<EAuthorRole>>();
+        configurationBuilder
+            .Properties<EEntityType>()
+            .HaveConversion<EnumToStringConverter<EEntityType>>();
 
         configurationBuilder
             .Properties<DateTime>()

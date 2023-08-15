@@ -1,0 +1,38 @@
+@using Microsoft.AspNetCore.Identity
+@using Domain.Entities.Identity
+@using Microsoft.Extensions.Options
+@using BLL.Identity.Options
+@inject SignInManager<User> SignInManager
+@inject IOptionsSnapshot<RegistrationOptions> RegistrationOptions
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" title="Manage">Hi, @User.Identity?.Name</a>
+        </li>
+        <li class="nav-item">
+            <form id="logout-form" class="form-inline" asp-controller="Account" asp-action="Logout">
+                <button type="submit" class="nav-link btn btn-link text-dark">Log out</button>
+            </form>
+        </li>
+    }
+    else
+    {
+        @if (RegistrationOptions.Value.Allowed)
+        {
+            <li class="nav-item">
+                <a class="nav-link text-dark"
+                   asp-controller="Account" asp-action="Login">
+                    Register
+                </a>
+            </li>
+        }
+        <li class="nav-item">
+            <a class="nav-link text-dark"
+               asp-controller="Account" asp-action="Login">
+                Login
+            </a>
+        </li>
+    }
+</ul>

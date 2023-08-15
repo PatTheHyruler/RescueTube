@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using BLL;
 using BLL.Identity;
 using DAL.EF;
 using Microsoft.AspNetCore.HttpLogging;
@@ -31,9 +32,10 @@ builder.Services.AddDbPersistenceEf(builder.Configuration);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddMvc(); // For Swagger
+builder.Services.AddMvc();
 
 builder.AddCustomIdentity();
+builder.Services.AddBll();
 
 builder.Services.AddLocalization();
 
@@ -56,12 +58,21 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
+app.SeedIdentity();
+
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id:guid?}");
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>

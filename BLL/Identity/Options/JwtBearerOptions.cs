@@ -5,7 +5,7 @@ namespace BLL.Identity.Options;
 
 public class JwtBearerOptions
 {
-    public const string Section = "JWT";
+    public const string Section = "Auth:JWT";
 
     [Required] [MinLength(16)] public string Key { get; set; } = default!;
     [Required] public string Issuer { get; set; } = default!;

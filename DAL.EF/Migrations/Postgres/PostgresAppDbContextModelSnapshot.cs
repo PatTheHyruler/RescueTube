@@ -599,6 +599,56 @@ namespace DAL.EF.Migrations
                     b.ToTable("StatusChangeEvents");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Submission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AddedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ApprovedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("GrantAccess")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("IdOnPlatform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("VideoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddedById");
+
+                    b.HasIndex("ApprovedById");
+
+                    b.HasIndex("VideoId");
+
+                    b.ToTable("Submissions");
+                });
+
             modelBuilder.Entity("Domain.Entities.Video", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1068,6 +1118,31 @@ namespace DAL.EF.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Author");
+
+                    b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Submission", b =>
+                {
+                    b.HasOne("Domain.Entities.Identity.User", "AddedBy")
+                        .WithMany()
+                        .HasForeignKey("AddedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Identity.User", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AddedBy");
+
+                    b.Navigation("ApprovedBy");
 
                     b.Navigation("Video");
                 });

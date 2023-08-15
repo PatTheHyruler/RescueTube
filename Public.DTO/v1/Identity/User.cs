@@ -26,6 +26,6 @@ public class User
 [Mapper]
 public static partial class UserMapper
 {
-    public static partial User ToApiV1User(this BLL.DTO.Entities.Identity.User user);
+    public static partial User ToApiV1User(this Domain.Entities.Identity.User user);
 }
 #pragma warning restore CS1591
