@@ -1,6 +1,5 @@
 using BLL.DTO.Entities.Identity;
 using BLL.DTO.Exceptions.Identity;
-using BLL.Identity.Base;
 using BLL.Identity.Options;
 using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -8,8 +7,9 @@ using Microsoft.Extensions.Options;
 
 namespace BLL.Identity.Services;
 
-public class UserService : BaseIdentityService
+public class UserService
 {
+    private readonly IdentityUow _identityUow;
     private readonly RegistrationOptions _registrationOptions;
 
     /// <summary>
@@ -32,7 +32,7 @@ public class UserService : BaseIdentityService
         };
 
         var result =
-            await UserManager.CreateAsync(
+            await _identityUow.UserManager.CreateAsync(
                 user,
                 password);
         if (!result.Succeeded)
@@ -45,7 +45,7 @@ public class UserService : BaseIdentityService
 
     public async Task<SignInResult> SignInIdentityCookieAsync(string username, string password, bool isPersistent)
     {
-        var user = await SignInManager.UserManager.FindByNameAsync(username);
+        var user = await _identityUow.UserManager.FindByNameAsync(username);
         return await SignInIdentityCookieAsync(user, password, isPersistent);
     }
 
@@ -55,7 +55,7 @@ public class UserService : BaseIdentityService
         {
             { IsApproved: false } => SignInResult.NotAllowed,
             null => SignInResult.Failed,
-            _ => await SignInManager.PasswordSignInAsync(user, password, isPersistent, false),
+            _ => await _identityUow.SignInManager.PasswordSignInAsync(user, password, isPersistent, false),
         };
     }
 
@@ -73,13 +73,13 @@ public class UserService : BaseIdentityService
     /// <exception cref="InvalidJwtExpirationRequestedException">Requested JWT expiration time is invalid.</exception>
     public async Task<JwtResult> SignInJwtAsync(string username, string password, int? expiresInSeconds = null)
     {
-        var user = await UserManager.FindByNameAsync(username);
+        var user = await _identityUow.UserManager.FindByNameAsync(username);
         if (user == null)
         {
             throw new UserNotFoundException(username);
         }
 
-        var result = await UserManager.CheckPasswordAsync(user, password);
+        var result = await _identityUow.UserManager.CheckPasswordAsync(user, password);
         if (!result)
         {
             throw new WrongPasswordException(username);
@@ -92,10 +92,10 @@ public class UserService : BaseIdentityService
 
         // TODO: Background service for deleting expired refresh tokens?
 
-        var claimsPrincipal = await SignInManager.CreateUserPrincipalAsync(user);
-        var jwt = TokenService.GenerateJwt(claimsPrincipal, expiresInSeconds);
+        var claimsPrincipal = await _identityUow.SignInManager.CreateUserPrincipalAsync(user);
+        var jwt = _identityUow.TokenService.GenerateJwt(claimsPrincipal, expiresInSeconds);
 
-        var refreshToken = TokenService.CreateAndAddRefreshToken(user.Id, jwt);
+        var refreshToken = _identityUow.TokenService.CreateAndAddRefreshToken(user.Id, jwt);
 
         return new JwtResult
         {
@@ -104,9 +104,9 @@ public class UserService : BaseIdentityService
         };
     }
 
-    public UserService(IServiceProvider services, IOptionsSnapshot<RegistrationOptions> registrationOptions) :
-        base(services)
+    public UserService(IOptionsSnapshot<RegistrationOptions> registrationOptions, IdentityUow identityUow)
     {
+        _identityUow = identityUow;
         _registrationOptions = registrationOptions.Value;
     }
 }

@@ -1,4 +1,3 @@
-using System.Text;
 using BLL.Identity.Options;
 using BLL.Identity.Services;
 using ConfigDefaults;
@@ -9,11 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Validation;
-using JwtBearerOptions = BLL.Identity.Options.JwtBearerOptions;
 
 namespace BLL.Identity;
 
@@ -24,10 +20,8 @@ public static class SetupExtensions
         var services = builder.Services;
         var configuration = builder.Configuration;
 
-        var jwtSection = configuration.GetRequiredSection(JwtBearerOptions.Section);
         var cookieSection = configuration.GetRequiredSection(CookieAuthOptions.Section);
         services
-            .AddOptionsFull<JwtBearerOptions>(jwtSection)
             .AddOptionsFull<RegistrationOptions>(configuration.GetSection(RegistrationOptions.Section))
             .AddOptions<IdentityOptions>()
             .Configure(options => options.Password.RequiredLength = IdentityDefaults.PasswordMinLength)
@@ -35,9 +29,6 @@ public static class SetupExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart().Services
             .AddOptionsFull<CookieAuthOptions>(cookieSection);
-        var jwtOptions = jwtSection.Get<JwtBearerOptions>()
-                         ?? throw new OptionsValidationException(JwtBearerOptions.Section, typeof(JwtBearerOptions),
-                             new[] { "Failed to read JWT options" });
         var cookieOptions = cookieSection.Get<CookieAuthOptions>()
                             ?? throw new OptionsValidationException(CookieAuthOptions.Section,
                                 typeof(CookieAuthOptions),
@@ -69,19 +60,6 @@ public static class SetupExtensions
             });
         services.Configure<SecurityStampValidatorOptions>(o =>
             o.ValidationInterval = cookieOptions.ValidationInterval);
-        services.AddAuthentication()
-            .AddJwtBearer(options =>
-            {
-                options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
-                options.SaveToken = false;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidIssuer = jwtOptions.Issuer,
-                    ValidAudience = jwtOptions.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
-                    ClockSkew = TimeSpan.FromSeconds(5),
-                };
-            });
 
         builder.Services.AddSeeding();
 
@@ -94,6 +72,7 @@ public static class SetupExtensions
 
     private static void AddIdentityUowAndServices(this IServiceCollection services)
     {
+        services.AddScoped<IdentityUow>();
         services.AddIdentityServices();
     }
 

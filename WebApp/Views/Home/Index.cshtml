@@ -1,14 +1,15 @@
+@using BLL.Identity
 @{
     ViewData["Title"] = "Home";
 }
 
 <div class="text-center">
-    @if (User.Identity is {IsAuthenticated: true })
+    @if (RoleNames.AllowedToSubmitRolesList.Any(r => User.IsInRole(r)))
     {
-        <div>Hi, you are logged in (placeholder)</div>
+        <partial name="_SubmitLinkPartial"/>
     }
     else
     {
-        <div>Hi, please log in (placeholder)</div>
+        <div>Hi, please log in</div>
     }
 </div>

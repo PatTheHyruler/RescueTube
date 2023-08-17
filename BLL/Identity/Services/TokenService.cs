@@ -3,7 +3,6 @@ using System.Security.Claims;
 using BLL.DTO.Entities.Identity;
 using BLL.DTO.Exceptions.Identity;
 using BLL.DTO.Mappers;
-using BLL.Identity.Base;
 using BLL.Identity.Options;
 using DAL.EF.Extensions.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,13 +10,17 @@ using Microsoft.Extensions.Options;
 
 namespace BLL.Identity.Services;
 
-public class TokenService : BaseIdentityService
+/// <summary>
+/// For use later when adding API support. Requires review.
+/// </summary>
+public class TokenService
 {
+    private readonly IdentityUow _identityUow;
     private readonly JwtBearerOptions _jwtBearerOptions;
 
-    public TokenService(IServiceProvider services, IOptions<JwtBearerOptions> jwtBearerOptions) :
-        base(services)
+    public TokenService(IOptions<JwtBearerOptions> jwtBearerOptions, IdentityUow identityUow)
     {
+        _identityUow = identityUow;
         _jwtBearerOptions = jwtBearerOptions.Value;
     }
 
@@ -34,7 +37,7 @@ public class TokenService : BaseIdentityService
             TimeSpan.FromDays(_jwtBearerOptions.RefreshTokenExpiresInDays),
             HashJwt(jwt),
             userId);
-        Ctx.RefreshTokens.Add(token.ToDomainToken());
+        _identityUow.Ctx.RefreshTokens.Add(token.ToDomainToken());
         return token;
     }
 
@@ -122,10 +125,10 @@ public class TokenService : BaseIdentityService
 
         var userName = jwtToken.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value
                        ?? throw new InvalidJwtException();
-        var user = await UserManager.FindByNameAsync(userName)
+        var user = await _identityUow.UserManager.FindByNameAsync(userName)
                    ?? throw new InvalidJwtException();
 
-        var userRefreshTokens = await Ctx.RefreshTokens
+        var userRefreshTokens = await _identityUow.Ctx.RefreshTokens
             .FilterValid(user.Id, refreshToken, HashJwt(jwt))
             .ToListAsync();
         if (userRefreshTokens.Count == 0)
@@ -133,7 +136,7 @@ public class TokenService : BaseIdentityService
             throw new InvalidRefreshTokenException();
         }
 
-        var claimsPrincipal = await SignInManager.CreateUserPrincipalAsync(user);
+        var claimsPrincipal = await _identityUow.SignInManager.CreateUserPrincipalAsync(user);
         jwt = GenerateJwt(claimsPrincipal, expiresInSeconds);
 
         var userRefreshToken = userRefreshTokens.Single();
@@ -185,7 +188,7 @@ public class TokenService : BaseIdentityService
 
         var userId = principal.GetUserIdIfExists() ?? throw new InvalidJwtException();
         var jwtHash = HashJwt(jwt);
-        await Ctx.RefreshTokens
+        await _identityUow.Ctx.RefreshTokens
             .Filter(userId, refreshToken, jwtHash)
             .ExecuteDeleteAsync();
     }

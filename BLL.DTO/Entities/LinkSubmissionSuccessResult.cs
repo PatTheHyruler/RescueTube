@@ -1,9 +1,8 @@
-namespace Public.DTO.v1;
+using Domain.Enums;
 
-/// <summary>
-/// Information about the result of a URL submission to the archive.
-/// </summary>
-public class LinkSubmissionResult
+namespace BLL.DTO.Entities;
+
+public class LinkSubmissionSuccessResult
 {
     public Guid SubmissionId { get; set; }
     public EEntityType Type { get; set; }

@@ -12,11 +12,6 @@ public class SubmissionService
 {
     private readonly IEnumerable<IPlatformSubmissionHandler> _submissionHandlers;
 
-    private static readonly string[] AllowedToAutoSubmitRoles = {
-        RoleNames.SuperAdmin,
-        RoleNames.Admin,
-    };
-
     public SubmissionService(IEnumerable<IPlatformSubmissionHandler> submissionHandlers)
     {
         _submissionHandlers = submissionHandlers;
@@ -24,15 +19,16 @@ public class SubmissionService
 
     private static bool IsAllowedToAutoSubmit(IPrincipal user)
     {
-        return AllowedToAutoSubmitRoles.Any(user.IsInRole);
+        return RoleNames.AllowedToAutoSubmitRolesList.Any(user.IsInRole);
     }
 
-    public Task<LinkSubmissionResult> SubmitGenericLinkAsync(string url, ClaimsPrincipal user)
+    /// <exception cref="UnrecognizedUrlException">URL was not recognized and can't be archived.</exception>
+    public Task<LinkSubmissionSuccessResult> SubmitGenericLinkAsync(string url, ClaimsPrincipal user)
     {
         return SubmitGenericLinkAsync(url, user.GetUserId(), IsAllowedToAutoSubmit(user));
     }
 
-    private async Task<LinkSubmissionResult> SubmitGenericLinkAsync(string url, Guid submitterId, bool autoSubmit)
+    private async Task<LinkSubmissionSuccessResult> SubmitGenericLinkAsync(string url, Guid submitterId, bool autoSubmit)
     {
         foreach (var submissionHandler in _submissionHandlers)
         {
