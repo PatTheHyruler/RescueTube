@@ -17,6 +17,7 @@ public class ServiceUow
     public AbstractAppDbContext Ctx => _ctx ??= _services.GetRequiredService<AbstractAppDbContext>();
 
     public SubmissionService SubmissionService => _services.GetRequiredService<SubmissionService>();
+    public AuthorizationService AuthorizationService => _services.GetRequiredService<AuthorizationService>();
 
     public Task SaveChangesAsync() => Ctx.SaveChangesAsync();
 }

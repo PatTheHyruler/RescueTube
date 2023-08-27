@@ -10,6 +10,7 @@ public class Image : AbstractIdDatabaseEntity
 
     public string? Key { get; set; }
     public string? Quality { get; set; }
+    public string? Ext { get; set; }
     public string? Url { get; set; }
     public string? LocalFilePath { get; set; }
     public string? Etag { get; set; }

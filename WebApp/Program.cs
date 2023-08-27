@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using BLL;
 using BLL.Identity;
+using BLL.YouTube;
 using DAL.EF;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +36,7 @@ builder.Services.AddMvc();
 
 builder.AddCustomIdentity();
 builder.Services.AddBll();
+builder.Services.AddYouTube();
 
 builder.Services.AddLocalization();
 
@@ -43,6 +45,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 app.SeedIdentity();
+app.SetupYouTube();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

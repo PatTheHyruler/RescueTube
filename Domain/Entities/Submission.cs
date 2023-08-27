@@ -23,4 +23,29 @@ public class Submission : AbstractIdDatabaseEntity
 
     public Guid? VideoId { get; set; }
     public Video? Video { get; set; }
+
+    public Submission()
+    {
+    }
+
+    public Submission(Video video, Guid submitterId, bool autoSubmit) :
+        this(video.IdOnPlatform, video.Platform, EEntityType.Video, submitterId, autoSubmit)
+    {
+        VideoId = video.Id;
+        CompletedAt = DateTime.UtcNow;
+    }
+
+    public Submission(string idOnPlatform, EPlatform platform, EEntityType entityType, Guid submitterId,
+        bool autoSubmit)
+    {
+        Platform = platform;
+        IdOnPlatform = idOnPlatform;
+        EntityType = entityType;
+
+        AddedById = submitterId;
+        AddedAt = DateTime.UtcNow;
+
+        ApprovedById = autoSubmit ? submitterId : null;
+        ApprovedAt = autoSubmit ? DateTime.UtcNow : null;
+    }
 }

@@ -35,6 +35,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BLL.DTO\BLL.DTO.csproj" />
+      <ProjectReference Include="..\BLL.YouTube\BLL.YouTube.csproj" />
       <ProjectReference Include="..\BLL\BLL.csproj" />
       <ProjectReference Include="..\DAL.EF\DAL.EF.csproj" />
     </ItemGroup>

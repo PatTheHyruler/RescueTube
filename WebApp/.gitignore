@@ -1,3 +1,5 @@
-ffmpeg
-yt-dlp
+ffmpeg*
+yt-dlp*
+ffprobe*
+downloads/
 Logs/

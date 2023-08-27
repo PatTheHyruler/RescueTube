@@ -15,7 +15,7 @@ public class Author : AbstractIdDatabaseEntity, IMainArchiveEntity
 
     public ICollection<AuthorStatisticSnapshot>? AuthorStatisticSnapshots { get; set; }
 
-    public Guid BioId { get; set; }
+    public Guid? BioId { get; set; }
     public TextTranslationKey? Bio { get; set; }
 
     public ICollection<AuthorImage>? AuthorImages { get; set; }
