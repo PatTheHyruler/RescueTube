@@ -31,7 +31,7 @@ public class SubmissionsController : Controller
         try
         {
             var successResult = await _serviceUow.SubmissionService.SubmitGenericLinkAsync(model.Link, User);
-            // await _serviceUow.SaveChangesAsync();
+            await _serviceUow.SaveChangesAsync();
             return RedirectToAction(nameof(Details), new { Id = successResult.SubmissionId });
         }
         catch (UnrecognizedUrlException e)

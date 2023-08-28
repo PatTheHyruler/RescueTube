@@ -1,3 +1,4 @@
+using BLL.BackgroundServices;
 using BLL.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Validation;
@@ -14,6 +15,10 @@ public static class BuilderExtensions
 
         services.AddScoped<SubmissionService>();
         services.AddScoped<AuthorizationService>();
+        services.AddScoped<ImageService>();
+
+        services.AddHostedService<ImageBackgroundService>();
+
         return services;
     }
 }

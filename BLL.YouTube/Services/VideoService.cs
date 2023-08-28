@@ -129,9 +129,9 @@ public class VideoService : BaseYouTubeService
 
         Ctx.Videos.Add(video);
 
-        Ctx.RegisterVideoAddedCallback(new PlatformEntityAddedEventArgs(EPlatform.YouTube, videoData.ID));
+        Ctx.RegisterVideoAddedCallback(new PlatformEntityAddedEventArgs(
+            video.Id, EPlatform.YouTube, videoData.ID));
         // TODO: Comments callback subscribe
-        // TODO: Image downloader callback subscribe
         // TODO: Captions downloader callback subscribe
 
         // TODO: Categories, Games

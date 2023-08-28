@@ -79,9 +79,9 @@ public class AuthorService : BaseYouTubeService
                     },
                 }).ToList();
 
-                // TODO: Download images
                 Ctx.Authors.Add(author);
-                Ctx.RegisterAuthorAddedCallback(new PlatformEntityAddedEventArgs(EPlatform.YouTube, author.IdOnPlatform));
+                Ctx.RegisterAuthorAddedCallback(new PlatformEntityAddedEventArgs(
+                    author.Id, EPlatform.YouTube, author.IdOnPlatform));
                 _cachedAuthors.TryAdd(arg.AuthorId, author);
                 authors.Add(author);
             }

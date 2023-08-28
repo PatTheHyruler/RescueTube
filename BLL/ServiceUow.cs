@@ -19,5 +19,7 @@ public class ServiceUow
     public SubmissionService SubmissionService => _services.GetRequiredService<SubmissionService>();
     public AuthorizationService AuthorizationService => _services.GetRequiredService<AuthorizationService>();
 
+    public ImageService ImageService => _services.GetRequiredService<ImageService>();
+
     public Task SaveChangesAsync() => Ctx.SaveChangesAsync();
 }
