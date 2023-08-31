@@ -4,6 +4,7 @@ using DAL.EF.Extensions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using YoutubeDLSharp.Metadata;
 
 namespace BLL.YouTube.Services;
@@ -12,7 +13,7 @@ public class AuthorService : BaseYouTubeService
 {
     private readonly Dictionary<string, Author> _cachedAuthors = new();
 
-    public AuthorService(IServiceProvider services) : base(services)
+    public AuthorService(IServiceProvider services, ILogger<AuthorService> logger) : base(services, logger)
     {
     }
 
@@ -63,21 +64,30 @@ public class AuthorService : BaseYouTubeService
             else
             {
                 var author = arg.NewAuthorFunc();
-                var channel = await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(author.IdOnPlatform);
-                author.AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
+                try
                 {
-                    ImageType = EImageType.ProfilePicture,
-                    LastFetched = DateTime.UtcNow,
-
-                    Image = new Image
+                    var channel = await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(author.IdOnPlatform);
+                    author.AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
                     {
-                        Platform = EPlatform.YouTube,
+                        ImageType = EImageType.ProfilePicture,
+                        LastFetched = DateTime.UtcNow,
 
-                        Width = e.Resolution.Width,
-                        Height = e.Resolution.Height,
-                        Url = e.Url,
-                    },
-                }).ToList();
+                        Image = new Image
+                        {
+                            Platform = EPlatform.YouTube,
+
+                            Width = e.Resolution.Width,
+                            Height = e.Resolution.Height,
+                            Url = e.Url,
+                        },
+                    }).ToList();
+                }
+                catch (Exception e)
+                {
+                    author.FailedExtraDataFetchAttempts++;
+                    Logger.LogError(e, "Error occurred fetching extra author data for {Platform} author {IdOnPlatform}",
+                        EPlatform.YouTube, arg.AuthorId);
+                }
 
                 Ctx.Authors.Add(author);
                 Ctx.RegisterAuthorAddedCallback(new PlatformEntityAddedEventArgs(

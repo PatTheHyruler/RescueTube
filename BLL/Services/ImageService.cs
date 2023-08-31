@@ -4,13 +4,14 @@ using BLL.Base;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BLL.Services;
 
 public class ImageService : BaseService
 {
-    public ImageService(IServiceProvider services) : base(services)
+    public ImageService(IServiceProvider services, ILogger<ImageService> logger) : base(services, logger)
     {
     }
 
@@ -21,6 +22,7 @@ public class ImageService : BaseService
                                                 && e.Url != null)
             .Include(e => e.VideoImages)
             .Include(e => e.AuthorImages)
+            .AsSplitQuery() // TODO: Is this good?
             .ToListAsync(cancellationToken: ct);
         await UpdateImages(images, ct);
     }
@@ -190,16 +192,7 @@ public class ImageService : BaseService
         if (ext != null) return ext;
 
         var mediaType = response.Content.Headers.ContentType?.MediaType;
-        ext = mediaType switch
-        {
-            "image/gif" => "gif",
-            "image/tiff" => "tiff",
-            "image/jpeg" => "jpg",
-            "image/svg+xml" => "svg",
-            "image/png" => "png",
-            "image/x-icon" => "ico",
-            _ => null,
-        };
+        ext = AppPaths.GuessImageFileExtensionFromMediaType(mediaType);
 
         return ext;
     }

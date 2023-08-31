@@ -26,6 +26,45 @@ public static class AppPaths
         return str[..maxLength.Value];
     }
 
+    public static string MakeRelativeFilePath(string filePath, string? directory = null)
+    {
+        var fileUri = new Uri(filePath);
+        directory ??= Directory.GetCurrentDirectory();
+        var referenceUri = new Uri(directory);
+        var relativePath = Uri.UnescapeDataString(referenceUri.MakeRelativeUri(fileUri).ToString());
+
+        var directoryName = Path.GetFileName(directory);
+        if (relativePath.StartsWith(directoryName))
+        {
+            relativePath = relativePath[directoryName.Length..];
+            while (relativePath.StartsWith('/'))
+            {
+                relativePath = relativePath[1..];
+            }
+        }
+
+        return relativePath.Replace('/', Path.DirectorySeparatorChar);
+    }
+
+    public static string? GuessImageFileExtensionFromMediaType(string? mediaType) =>
+        mediaType switch
+        {
+            "image/gif" => "gif",
+            "image/tiff" => "tiff",
+            "image/jpeg" => "jpg",
+            "image/svg+xml" => "svg",
+            "image/png" => "png",
+            "image/x-icon" => "ico",
+            _ => null,
+        };
+
+    public static string GetFilePathWithoutExtension(string filePath)
+    {
+        var filePathSpan = filePath.AsSpan();
+        int length = filePathSpan.LastIndexOf<char>('.');
+        return length >= 0 ? filePathSpan.Slice(0, length).ToString() : filePath;
+    }
+
     private static AppPathOptions OrDefault(this AppPathOptions? options) =>
         options ?? new AppPathOptions();
 }

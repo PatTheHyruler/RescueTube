@@ -1,12 +1,13 @@
 using BLL.Base;
 using DAL.EF.Extensions;
 using Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace BLL.Services;
 
 public class AuthorizationService : BaseService
 {
-    public AuthorizationService(IServiceProvider services) : base(services)
+    public AuthorizationService(IServiceProvider services, ILogger<AuthorizationService> logger) : base(services, logger)
     {
     }
 

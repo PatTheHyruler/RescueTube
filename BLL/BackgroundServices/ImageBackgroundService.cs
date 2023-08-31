@@ -45,7 +45,7 @@ public class ImageBackgroundService : BaseBackgroundService
         {
             if (Interlocked.Read(ref _potentialNewImagesAdded) > 0)
             {
-                await Task.Delay(MinTaskPeriod, ct);
+                await Task.Delay(MinTaskPeriod, ct).ContinueWith(_ => { }); // TODO: Find better way to do this
                 Interlocked.Exchange(ref _potentialNewImagesAdded, 0);
                 await DownloadImagesAsync(ct);
                 continue;
@@ -54,7 +54,7 @@ public class ImageBackgroundService : BaseBackgroundService
             using var cts =
                 CancellationTokenSource.CreateLinkedTokenSource(ct,
                     _potentialNewImagesAddedCancellationTokenSource.Token);
-            await Task.Delay(MaxTaskPeriod, cts.Token);
+            await Task.Delay(MaxTaskPeriod, cts.Token).ContinueWith(_ => { }); // TODO: Find better way to do this
             if (_potentialNewImagesAddedCancellationTokenSource.IsCancellationRequested)
             {
                 _potentialNewImagesAddedCancellationTokenSource.Dispose();

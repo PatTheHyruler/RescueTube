@@ -9,6 +9,7 @@ using BLL.Identity.Services;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace BLL.Services;
 
@@ -54,7 +55,7 @@ public class SubmissionService : BaseService
         return Ctx.Submissions.Add(new Submission(idOnPlatform, platform, entityType, submitterId, autoSubmit)).Entity;
     }
 
-    public SubmissionService(IServiceProvider services) : base(services)
+    public SubmissionService(IServiceProvider services, ILogger<SubmissionService> logger) : base(services, logger)
     {
     }
 }

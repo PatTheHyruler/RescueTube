@@ -27,6 +27,9 @@ public class Video : AbstractIdDatabaseEntity, IMainArchiveEntity
 
     public ICollection<VideoFile>? VideoFiles { get; set; }
 
+    public int FailedDownloadAttempts { get; set; }
+    public int FailedAuthorFetches { get; set; }
+    public string? InfoJsonPath { get; set; }
     public DateTime? LastCommentsFetch { get; set; }
 
     public bool? IsLiveStreamRecording { get; set; }

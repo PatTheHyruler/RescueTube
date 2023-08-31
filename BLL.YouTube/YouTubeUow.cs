@@ -31,12 +31,15 @@ public class YouTubeUow
     private YoutubeClient? _youTubeExplodeClient;
     public YoutubeClient YouTubeExplodeClient => _youTubeExplodeClient ??= new YoutubeClient();
 
-    public static OptionSet DownloadOptions => new()
+    public OptionSet DownloadOptions => new()
     {
         WriteInfoJson = true,
         RestrictFilenames = true,
         TrimFilenames = 180,
-        Output = "(%(channel_id)s) %(uploader).200B/%(upload_date)s - %(title).200B - %(id)s.%(ext)s",
+        Output = Path.Combine(
+            AppPaths.GetVideosDirectory(EPlatform.YouTube, _services.GetService<AppPathOptions>()),
+            "(%(channel_id)s) %(uploader).200B/%(upload_date)s - %(title).200B - %(id)s.%(ext)s"
+        ),
     };
 
     private SubmitService? _submitService;

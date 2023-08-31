@@ -6,6 +6,7 @@ using BLL.YouTube.Utils;
 using DAL.EF.Extensions;
 using Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace BLL.YouTube.Services;
 
@@ -59,7 +60,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
                entityType is EEntityType.Video; // TODO
     }
 
-    public SubmitService(IServiceProvider services) : base(services)
+    public SubmitService(IServiceProvider services, ILogger<SubmitService> logger) : base(services, logger)
     {
     }
 }

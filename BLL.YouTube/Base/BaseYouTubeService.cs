@@ -1,11 +1,12 @@
 using BLL.Base;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace BLL.YouTube.Base;
 
 public class BaseYouTubeService : BaseService
 {
-    public BaseYouTubeService(IServiceProvider services) : base(services)
+    public BaseYouTubeService(IServiceProvider services, ILogger<BaseYouTubeService> logger) : base(services, logger)
     {
     }
 

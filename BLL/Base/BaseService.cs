@@ -14,10 +14,11 @@ public abstract class BaseService
     private AbstractAppDbContext? _ctx;
     public AbstractAppDbContext Ctx => _ctx ??= Services.GetRequiredService<AbstractAppDbContext>();
 
-    public ILogger Logger => Services.GetRequiredService<ILogger>(); 
+    protected readonly ILogger Logger;
 
-    protected BaseService(IServiceProvider services)
+    protected BaseService(IServiceProvider services, ILogger logger)
     {
         Services = services;
+        Logger = logger;
     }
 }

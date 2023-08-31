@@ -30,6 +30,7 @@ public class Author : AbstractIdDatabaseEntity, IMainArchiveEntity
     public bool IsAvailable { get; set; }
     public EPrivacyStatus PrivacyStatus { get; set; }
 
+    public int FailedExtraDataFetchAttempts { get; set; }
     public DateTime? LastFetchUnofficial { get; set; }
     public DateTime? LastSuccessfulFetchUnofficial { get; set; }
     public DateTime? LastFetchOfficial { get; set; }

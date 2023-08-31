@@ -18,6 +18,10 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 builder.Logging.AddSerilog();
 builder.Services.AddSingleton(Log.Logger);
+builder.Services.Configure<HostOptions>(hostOptions =>
+{
+    hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore; // Is this a good idea???
+});
 
 var useHttpLogging = builder.Configuration.GetValue<bool>("Logging:HTTP:Enabled");
 if (useHttpLogging)

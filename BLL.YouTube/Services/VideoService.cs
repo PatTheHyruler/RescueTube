@@ -5,6 +5,7 @@ using BLL.YouTube.Utils;
 using Domain.Entities;
 using Domain.Entities.Localization;
 using Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YoutubeDLSharp.Metadata;
 
@@ -12,7 +13,7 @@ namespace BLL.YouTube.Services;
 
 public class VideoService : BaseYouTubeService
 {
-    public VideoService(IServiceProvider services) : base(services)
+    public VideoService(IServiceProvider services, ILogger<VideoService> logger) : base(services, logger)
     {
     }
 
@@ -124,7 +125,9 @@ public class VideoService : BaseYouTubeService
         }
         catch (Exception e)
         {
-            Logger.LogError(e, "Failed to add author for YouTube video {VideoId}, Author ID {AuthorId} ({AuthorName})", videoData.ID, videoData.ChannelID, videoData.Channel);
+            video.FailedAuthorFetches++;
+            Logger.LogError(e, "Failed to add author for YouTube video {VideoId}, Author ID {AuthorId} ({AuthorName})",
+                videoData.ID, videoData.ChannelID, videoData.Channel);
         }
 
         Ctx.Videos.Add(video);
@@ -137,5 +140,74 @@ public class VideoService : BaseYouTubeService
         // TODO: Categories, Games
 
         return video;
+    }
+
+    public async Task DownloadVideos(IEnumerable<Guid>? videoIds, CancellationToken ct)
+    {
+        if (ct.IsCancellationRequested) return;
+        var query = Ctx.Videos
+            .Where(e => e.Platform == EPlatform.YouTube)
+            .Include(e => e.VideoFiles)
+            .Where(e => e.VideoFiles!.Count == 0 && e.FailedDownloadAttempts == 0);
+        if (videoIds != null)
+        {
+            query = query.Where(e => videoIds.Contains(e.Id));
+        }
+
+        var videos = await query.ToListAsync(cancellationToken: ct);
+
+        foreach (var video in videos)
+        {
+            if (ct.IsCancellationRequested) break;
+            try
+            {
+                await DownloadVideo(video, ct);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "Error occurred downloading {Platform} video {IdOnPlatform}",
+                    video.Platform, video.IdOnPlatform);
+            }
+        }
+    }
+
+    private async Task DownloadVideo(Video video, CancellationToken ct = default)
+    {
+        Logger.LogInformation("Started downloading video {IdOnPlatform} on platform {Platform}",
+            video.IdOnPlatform, video.Platform);
+        var result = await YouTubeUow.YoutubeDl.RunVideoDownload(Url.ToVideoUrl(video.IdOnPlatform), ct: ct,
+            overrideOptions: YouTubeUow.DownloadOptions);
+        if (result.Success)
+        {
+            video.FailedDownloadAttempts = 0;
+            if (video.VideoFiles != null)
+            {
+                foreach (var videoFile in video.VideoFiles)
+                {
+                    if (videoFile.ValidUntil == null || videoFile.ValidUntil > DateTime.UtcNow)
+                    {
+                        videoFile.ValidUntil = DateTime.UtcNow;
+                    }
+                }
+            }
+
+            var videoFilePath = result.Data;
+            var infoJsonPath = AppPaths.GetFilePathWithoutExtension(videoFilePath) + ".info.json";
+            video.InfoJsonPath = AppPaths.MakeRelativeFilePath(infoJsonPath);
+            Ctx.VideoFiles.Add(new VideoFile
+            {
+                FilePath = AppPaths.MakeRelativeFilePath(videoFilePath),
+                ValidSince = DateTime.UtcNow, // Questionable semantics?
+                LastFetched = DateTime.UtcNow,
+                Video = video,
+            });
+        }
+        else
+        {
+            Logger.LogError("Failed to download {Platform} video with ID {IdOnPlatform}.\nErrors: [{Errors}]",
+                EPlatform.YouTube, video.IdOnPlatform,
+                result.ErrorOutput.Length > 0 ? string.Join("\n", result.ErrorOutput) : "Unknown errors");
+            video.FailedDownloadAttempts++;
+        }
     }
 }
