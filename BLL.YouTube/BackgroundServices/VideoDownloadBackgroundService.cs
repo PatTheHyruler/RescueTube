@@ -1,4 +1,4 @@
-using System.Threading.Channels;
+using System.Collections.Concurrent;
 using BLL.Base;
 using DAL.EF.DbContexts;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,23 +8,46 @@ namespace BLL.YouTube.BackgroundServices;
 
 public class VideoDownloadBackgroundService : BaseBackgroundService
 {
-    private readonly Channel<Guid> _videoQueue;
+    private readonly ConcurrentQueue<Guid> _videoQueue;
+    private readonly EventSignaller _signaller;
 
     public VideoDownloadBackgroundService(IServiceProvider services, ILogger<VideoDownloadBackgroundService> logger) :
         base(services, logger)
     {
-        _videoQueue = Channel.CreateUnbounded<Guid>();
+        _signaller = new EventSignaller();
+        _videoQueue = new ConcurrentQueue<Guid>();
     }
 
     private void OnVideoAdded(object? sender, PlatformEntityAddedEventArgs args)
     {
-        _videoQueue.Writer.WriteAsync(args.Id); // Fire and forget
+        _videoQueue.Enqueue(args.Id);
+        _signaller.Signal();
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // TODO: All of this
-        throw new NotImplementedException();
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            if (!_videoQueue.IsEmpty)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                if (stoppingToken.IsCancellationRequested) return;
+                var batchSize = Math.Min(_videoQueue.Count, 10);
+                var ids = new List<Guid>();
+                for (var i = 0; i < batchSize && !_videoQueue.IsEmpty; i++)
+                {
+                    if (_videoQueue.TryDequeue(out var id))
+                    {
+                        ids.Add(id);
+                    } else break;
+                }
+
+                await DownloadVideos(ids, stoppingToken);
+                if (!_videoQueue.IsEmpty) continue;
+            }
+
+            await _signaller.Delay(TimeSpan.FromHours(1), stoppingToken);
+        }
     }
 
     private async Task DownloadVideos(IEnumerable<Guid>? videoIds, CancellationToken ct)
@@ -35,7 +58,24 @@ public class VideoDownloadBackgroundService : BaseBackgroundService
         var youTubeUow = scope.ServiceProvider.GetRequiredService<YouTubeUow>();
 
         await youTubeUow.VideoService.DownloadVideos(videoIds, ct);
-        // ReSharper disable once MethodSupportsCancellation Don't cancel since files might have been downloaded already
-        await dbContext.SaveChangesAsync();
+        await dbContext.SaveChangesAsync(CancellationToken.None);  // Don't cancel since files might have been downloaded already
+    }
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        Context.VideoAdded += OnVideoAdded;
+        return base.StartAsync(cancellationToken);
+    }
+
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        Context.VideoAdded -= OnVideoAdded;
+        return base.StopAsync(cancellationToken);
+    }
+
+    public override void Dispose()
+    {
+        _signaller.Dispose();
+        base.Dispose();
     }
 }

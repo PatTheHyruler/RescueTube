@@ -8,7 +8,7 @@ namespace BLL.BackgroundServices;
 public class ImageBackgroundService : BaseBackgroundService
 {
     private ulong _potentialNewImagesAdded = 1; // Starts at 1 to force a check at startup
-    private CancellationTokenSource _potentialNewImagesAddedCancellationTokenSource;
+    private readonly EventSignaller _signaller;
 
     private static readonly TimeSpan MaxTaskPeriod = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan MinTaskPeriod = TimeSpan.FromSeconds(5);
@@ -16,13 +16,13 @@ public class ImageBackgroundService : BaseBackgroundService
     public ImageBackgroundService(IServiceProvider services, ILogger<ImageBackgroundService> logger) :
         base(services, logger)
     {
-        _potentialNewImagesAddedCancellationTokenSource = new CancellationTokenSource();
+        _signaller = new EventSignaller();
     }
 
     private void OnPotentialNewImages(object? sender, EventArgs args)
     {
         Interlocked.Increment(ref _potentialNewImagesAdded);
-        _potentialNewImagesAddedCancellationTokenSource.Cancel();
+        _signaller.Signal();
     }
 
     public override Task StartAsync(CancellationToken cancellationToken)
@@ -45,22 +45,13 @@ public class ImageBackgroundService : BaseBackgroundService
         {
             if (Interlocked.Read(ref _potentialNewImagesAdded) > 0)
             {
-                await Task.Delay(MinTaskPeriod, ct).ContinueWith(_ => { }); // TODO: Find better way to do this
+                await Task.Delay(MinTaskPeriod, ct).ContinueWith(_ => { }, CancellationToken.None); // TODO: Find better way to do this
                 Interlocked.Exchange(ref _potentialNewImagesAdded, 0);
                 await DownloadImagesAsync(ct);
                 continue;
             }
 
-            using var cts =
-                CancellationTokenSource.CreateLinkedTokenSource(ct,
-                    _potentialNewImagesAddedCancellationTokenSource.Token);
-            await Task.Delay(MaxTaskPeriod, cts.Token).ContinueWith(_ => { }); // TODO: Find better way to do this
-            if (_potentialNewImagesAddedCancellationTokenSource.IsCancellationRequested)
-            {
-                _potentialNewImagesAddedCancellationTokenSource.Dispose();
-                _potentialNewImagesAddedCancellationTokenSource = new CancellationTokenSource();
-                // TODO: Check if the OnPotentialNewImages callbacks actually reference this new cts.
-            }
+            await _signaller.Delay(MaxTaskPeriod, ct);
         }
     }
 
@@ -79,7 +70,7 @@ public class ImageBackgroundService : BaseBackgroundService
 
     public override void Dispose()
     {
-        _potentialNewImagesAddedCancellationTokenSource.Dispose();
+        _signaller.Dispose();
         base.Dispose();
     }
 }

@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using BLL.Contracts;
+using BLL.YouTube.BackgroundServices;
 using BLL.YouTube.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,8 @@ public static class Setup
         services.AddScoped<AuthorService>();
 
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
+
+        services.AddHostedService<VideoDownloadBackgroundService>();
     }
 
     public static void SetupYouTube(this WebApplication app)
