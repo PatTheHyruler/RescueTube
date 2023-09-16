@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using WebApp.ViewModels.Account;
 
-#pragma warning disable CS1591
-
 namespace WebApp.Controllers;
 
 public class AccountController : Controller

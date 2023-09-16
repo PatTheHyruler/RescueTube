@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-#pragma warning disable CS1591
 
 namespace WebApp.ViewModels.Account;
 

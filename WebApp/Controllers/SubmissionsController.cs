@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.ViewModels;
 
-#pragma warning disable CS1591
-
 namespace WebApp.Controllers;
 
 [Authorize(Roles = RoleNames.AllowedToSubmitRoles)]

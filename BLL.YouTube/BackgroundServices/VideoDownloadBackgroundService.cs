@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using BLL.Base;
+using BLL.Utils;
 using DAL.EF.DbContexts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -43,10 +44,16 @@ public class VideoDownloadBackgroundService : BaseBackgroundService
                 }
 
                 await DownloadVideos(ids, stoppingToken);
-                if (!_videoQueue.IsEmpty) continue;
+            }
+            else
+            {
+                await DownloadVideos(null, stoppingToken);
             }
 
-            await _signaller.Delay(TimeSpan.FromHours(1), stoppingToken);
+            if (_videoQueue.IsEmpty)
+            {
+                await _signaller.Delay(TimeSpan.FromHours(1), stoppingToken);
+            }
         }
     }
 

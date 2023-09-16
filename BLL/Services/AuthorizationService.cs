@@ -1,4 +1,6 @@
+using System.Security.Principal;
 using BLL.Base;
+using BLL.Identity;
 using DAL.EF.Extensions;
 using Domain.Entities;
 using Microsoft.Extensions.Logging;
@@ -20,4 +22,7 @@ public class AuthorizationService : BaseService
             VideoId = videoId,
         });
     }
+
+    public static bool IsAllowedToAccessVideoByRole(IPrincipal user) =>
+        user.IsInRole(RoleNames.Admin) || user.IsInRole(RoleNames.SuperAdmin);
 }

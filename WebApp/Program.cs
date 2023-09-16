@@ -5,6 +5,7 @@ using BLL.YouTube;
 using DAL.EF;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 using Serilog;
 using Serilog.Settings.Configuration;
 
@@ -53,6 +54,14 @@ app.SetupYouTube();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+var imagesDirectory = AppPaths.GetImagesDirectory(AppPathOptions.FromConfiguration(app.Configuration));
+var imagesDirectoryPath = Path.Combine(app.Environment.ContentRootPath, imagesDirectory);
+Directory.CreateDirectory(imagesDirectoryPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(imagesDirectoryPath),
+    RequestPath = "/images",
+});
 
 app.UseRouting();
 

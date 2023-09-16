@@ -38,6 +38,7 @@
       <ProjectReference Include="..\BLL.YouTube\BLL.YouTube.csproj" />
       <ProjectReference Include="..\BLL\BLL.csproj" />
       <ProjectReference Include="..\DAL.EF\DAL.EF.csproj" />
+      <ProjectReference Include="..\Resources\Resources.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -45,6 +46,6 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
     </PropertyGroup>
 </Project>

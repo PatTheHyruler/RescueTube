@@ -1,4 +1,4 @@
-namespace BLL.Base;
+namespace BLL.Utils;
 
 public class EventSignaller : IDisposable
 {

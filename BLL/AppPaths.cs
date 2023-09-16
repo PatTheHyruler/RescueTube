@@ -1,6 +1,5 @@
-using System.Text;
-using Domain.Entities;
 using Domain.Enums;
+using Microsoft.Extensions.Configuration;
 
 namespace BLL;
 
@@ -14,6 +13,12 @@ public static class AppPaths
 
     public static string GetImagesDirectory(EPlatform platform, AppPathOptions? options) =>
         Path.Combine(options.OrDefault().Downloads, Images, platform.ToString());
+
+    public static string GetImagesDirectory(AppPathOptions? options) =>
+        Path.Combine(options.OrDefault().Downloads, Images);
+
+    public static string GetPathRelativeToDownloads(string path, AppPathOptions? options) =>
+        Path.GetRelativePath(options.OrDefault().Downloads, path);
 
     public static string ToFileNameSanitized(this string str, int? maxLength = null)
     {
@@ -61,8 +66,8 @@ public static class AppPaths
     public static string GetFilePathWithoutExtension(string filePath)
     {
         var filePathSpan = filePath.AsSpan();
-        int length = filePathSpan.LastIndexOf<char>('.');
-        return length >= 0 ? filePathSpan.Slice(0, length).ToString() : filePath;
+        var length = filePathSpan.LastIndexOf('.');
+        return length >= 0 ? filePathSpan[..length].ToString() : filePath;
     }
 
     private static AppPathOptions OrDefault(this AppPathOptions? options) =>
@@ -74,4 +79,17 @@ public class AppPathOptions
     public const string Section = "Paths";
 
     public string Downloads { get; set; } = "downloads";
+
+    public static AppPathOptions FromConfiguration(IConfiguration configuration)
+    {
+        var appPathOptions = new AppPathOptions();
+        var section = configuration.GetSection(Section);
+        var downloads = section.GetValue<string>(nameof(Downloads));
+        if (downloads != null)
+        {
+            appPathOptions.Downloads = downloads;
+        }
+
+        return appPathOptions;
+    }
 }

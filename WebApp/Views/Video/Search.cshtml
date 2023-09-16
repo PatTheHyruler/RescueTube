@@ -1,0 +1,42 @@
+@using WebApp.Controllers
+@using BLL.DTO.Enums
+@using WebApp.Utils
+@using WebApp.ViewModels
+@model WebApp.ViewModels.VideoSearchViewModel
+
+@{
+    ViewBag.Title = "Search videos";
+}
+
+<form id="video-search-form" method="get">
+    <label asp-for="NameQuery"></label>
+    <input asp-for="NameQuery"/>
+    <label asp-for="AuthorQuery"></label>
+    <input asp-for="AuthorQuery"/>
+    <label asp-for="SortingOptions"></label>
+    <select asp-for="SortingOptions" asp-items="@(Html.GetLocalizedEnumSelectList<EVideoSortingOptions>(Model.SortingOptions))"></select>
+    <label asp-for="Descending"></label>
+    <input asp-for="Descending"/>
+    @* TODO <partial name="_CategoryPickerPartial" model="@Model.CategoryPickerViewModel" /> *@
+    <input type="submit" class="btn btn-primary" value="Search"/>
+</form>
+
+<partial name="_PaginationUiPartial" model="@PaginationViewModel"/>
+
+<partial name="_VideoResultsPartial" model="@Model.Videos"/>
+
+@functions
+{
+    PaginationUiPartialViewModel PaginationViewModel => new()
+    {
+        ControllerName = nameof(VideoController),
+        ActionName = nameof(VideoController.Search),
+        RouteValues = Context.GetRouteValues(),
+        LimitParamName = nameof(Model.Limit),
+        PageParamName = nameof(Model.Page),
+        Limit = Model.Limit,
+        Page = Model.Page,
+        Total = null,
+        AmountOnPage = Model.Videos.Count,
+    };
+}

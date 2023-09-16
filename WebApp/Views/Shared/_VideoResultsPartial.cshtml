@@ -1,0 +1,52 @@
+@using WebApp.Utils
+@model List<BLL.DTO.Entities.VideoSimple>
+
+<div>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(v => v[0].Title)</th>
+            <th>Author</th>
+            <th>Thumbnail</th>
+            <th>@Html.DisplayNameFor(v => v[0].Duration)</th>
+            <th>@Html.DisplayNameFor(v => v[0].CreatedAt)</th>
+            <th>@Html.DisplayNameFor(v => v[0].AddedToArchiveAt)</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var video in Model)
+        {
+            <tr>
+                <td>
+                    <a asp-controller="Video" asp-action="Watch" asp-route-id="@video.Id">
+                        @video.Title?.First().Content
+                        @* TODO *@
+                    </a>
+                </td>
+                <td>
+                    <partial name="_AuthorsSummaryPartial" model="@video.Authors"/>
+                </td>
+                <td>
+                    @if (video.Thumbnail?.LocalFilePath != null)
+                    {
+                        <img loading="lazy" src="/@video.Thumbnail.LocalFilePath" width="160" height="90" alt="Video thumbnail"/>
+                    }
+                    else
+                    {
+                        <div>No thumbnails :(</div>
+                    }
+                </td>
+                <td>
+                    @video.Duration
+                </td>
+                <td>
+                    @Context.SpanFor(video.PublishedAt ?? video.CreatedAt)
+                </td>
+                <td>
+                    @Context.SpanFor(video.AddedToArchiveAt)
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

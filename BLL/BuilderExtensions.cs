@@ -16,6 +16,7 @@ public static class BuilderExtensions
         services.AddScoped<SubmissionService>();
         services.AddScoped<AuthorizationService>();
         services.AddScoped<ImageService>();
+        services.AddScoped<VideoPresentationService>();
 
         services.AddHostedService<ImageBackgroundService>();
 

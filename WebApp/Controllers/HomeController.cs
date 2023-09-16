@@ -2,7 +2,6 @@ using BLL.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-#pragma warning disable CS1591
 namespace WebApp.Controllers;
 
 public class HomeController : Controller

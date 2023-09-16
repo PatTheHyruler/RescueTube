@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\BLL.DTO\BLL.DTO.csproj" />
       <ProjectReference Include="..\DAL.Contracts\DAL.Contracts.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
       <ProjectReference Include="..\Validation\Validation.csproj" />
@@ -22,5 +23,6 @@
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
     </ItemGroup>
+
 
 </Project>

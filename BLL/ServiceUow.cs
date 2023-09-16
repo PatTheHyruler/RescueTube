@@ -21,5 +21,8 @@ public class ServiceUow
 
     public ImageService ImageService => _services.GetRequiredService<ImageService>();
 
+    public VideoPresentationService VideoPresentationService =>
+        _services.GetRequiredService<VideoPresentationService>();
+
     public Task SaveChangesAsync() => Ctx.SaveChangesAsync();
 }

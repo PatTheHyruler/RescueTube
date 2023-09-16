@@ -1,4 +1,5 @@
 using System.Text;
+using BLL.Utils;
 using BLL.YouTube.Base;
 using BLL.YouTube.Extensions;
 using BLL.YouTube.Utils;
@@ -6,7 +7,9 @@ using Domain.Entities;
 using Domain.Entities.Localization;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using YoutubeDLSharp.Metadata;
 
 namespace BLL.YouTube.Services;
@@ -142,6 +145,8 @@ public class VideoService : BaseYouTubeService
         return video;
     }
 
+    private static readonly ConcurrentHashSet<Guid> CurrentlyDownloadingVideoIds = new();
+
     public async Task DownloadVideos(IEnumerable<Guid>? videoIds, CancellationToken ct)
     {
         if (ct.IsCancellationRequested) return;
@@ -173,6 +178,15 @@ public class VideoService : BaseYouTubeService
 
     private async Task DownloadVideo(Video video, CancellationToken ct = default)
     {
+        if (CurrentlyDownloadingVideoIds.Contains(video.Id))
+        {
+            Logger.LogInformation("Ignoring download request for video {VideoId} because it's already being downloaded",
+                video.Id);
+            return;
+        }
+
+        CurrentlyDownloadingVideoIds.Add(video.Id);
+
         Logger.LogInformation("Started downloading video {IdOnPlatform} on platform {Platform}",
             video.IdOnPlatform, video.Platform);
         var result = await YouTubeUow.YoutubeDl.RunVideoDownload(Url.ToVideoUrl(video.IdOnPlatform), ct: ct,
@@ -192,11 +206,12 @@ public class VideoService : BaseYouTubeService
             }
 
             var videoFilePath = result.Data;
+            var appPathOptions = Services.GetService<IOptions<AppPathOptions>>()?.Value;
             var infoJsonPath = AppPaths.GetFilePathWithoutExtension(videoFilePath) + ".info.json";
-            video.InfoJsonPath = AppPaths.MakeRelativeFilePath(infoJsonPath);
+            video.InfoJsonPath = AppPaths.GetPathRelativeToDownloads(infoJsonPath, appPathOptions);
             Ctx.VideoFiles.Add(new VideoFile
             {
-                FilePath = AppPaths.MakeRelativeFilePath(videoFilePath),
+                FilePath = AppPaths.GetPathRelativeToDownloads(videoFilePath, appPathOptions),
                 ValidSince = DateTime.UtcNow, // Questionable semantics?
                 LastFetched = DateTime.UtcNow,
                 Video = video,
@@ -209,5 +224,7 @@ public class VideoService : BaseYouTubeService
                 result.ErrorOutput.Length > 0 ? string.Join("\n", result.ErrorOutput) : "Unknown errors");
             video.FailedDownloadAttempts++;
         }
+
+        CurrentlyDownloadingVideoIds.Remove(video.Id);
     }
 }

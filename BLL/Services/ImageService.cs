@@ -113,7 +113,7 @@ public class ImageService : BaseService
         await using var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.Write);
         await fileStream.WriteAsync(imageBytes, ct);
         if (ct.IsCancellationRequested) return;
-        image.LocalFilePath = imagePath;
+        image.LocalFilePath = AppPaths.GetPathRelativeToDownloads(imagePath, appPathOptions);
     }
 
     private Image CreateUpdatedImage(Image image)
