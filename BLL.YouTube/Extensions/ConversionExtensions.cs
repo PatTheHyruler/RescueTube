@@ -50,4 +50,70 @@ public static class ConversionExtensions
             AddedToArchiveAt = DateTime.UtcNow,
         };
     }
+    
+    public static Author ToDomainAuthor(this CommentData commentData)
+    {
+        var domainAuthor = new Author
+        {
+            Platform = EPlatform.YouTube,
+            IdOnPlatform = commentData.AuthorID,
+
+            DisplayName = commentData.Author,
+
+            IsAvailable = true,
+            PrivacyStatus = EPrivacyStatus.Private,
+            
+            AuthorImages = new List<AuthorImage>
+            {
+                new()
+                {
+                    LastFetched = DateTime.UtcNow,
+                    ImageType = EImageType.ProfilePicture,
+                    Image = new Image
+                    {
+                        Platform = EPlatform.YouTube,
+                        Url = commentData.AuthorThumbnail
+                    }
+                }
+            },
+
+            LastFetchUnofficial = DateTime.UtcNow,
+            LastSuccessfulFetchUnofficial = DateTime.UtcNow,
+            AddedToArchiveAt = DateTime.UtcNow,
+        };
+
+        return domainAuthor;
+    }
+    
+    public static Comment ToDomainComment(this CommentData commentData)
+    {
+        return new Comment
+        {
+            Platform = EPlatform.YouTube,
+            IdOnPlatform = commentData.ID,
+
+            Content = commentData.Text,
+            
+            CommentStatisticSnapshots = new List<CommentStatisticSnapshot>
+            {
+                new()
+                {
+                    LikeCount = commentData.LikeCount,
+                    DislikeCount = commentData.DislikeCount,
+                    IsFavorited = commentData.IsFavorited,
+                }
+            },
+
+            AuthorIsCreator = commentData.AuthorIsUploader,
+
+            CreatedAt = commentData.Timestamp.ToUniversalTime(),
+
+            IsAvailable = true,
+            PrivacyStatus = EPrivacyStatus.Private,
+
+            LastFetchUnofficial = DateTime.UtcNow,
+            LastSuccessfulFetchUnofficial = DateTime.UtcNow,
+            AddedToArchiveAt = DateTime.UtcNow
+        };
+    }
 }

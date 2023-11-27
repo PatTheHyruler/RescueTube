@@ -33,7 +33,7 @@ public class AuthorService : BaseYouTubeService
         return (await AddOrGetAuthors(new[] { new AuthorFetchArg(id, newAuthorFunc) })).First();
     }
 
-    private async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs)
+    internal async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs)
     {
         ICollection<Author> authors = new List<Author>();
         var notCachedIds = new List<AuthorFetchArg>();

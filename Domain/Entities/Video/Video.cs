@@ -59,4 +59,5 @@ public class Video : AbstractIdDatabaseEntity, IMainArchiveEntity
     public ICollection<VideoCategory>? VideoCategories { get; set; }
     public ICollection<StatusChangeEvent>? StatusChangeEvents { get; set; }
     public ICollection<EntityAccessPermission>? EntityAccessPermissions { get; set; }
+    public ICollection<Comment>? Comments { get; set; }
 }

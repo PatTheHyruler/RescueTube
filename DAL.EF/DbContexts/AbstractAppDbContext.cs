@@ -35,6 +35,10 @@ public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, UserClai
     public DbSet<VideoStatisticSnapshot> VideoStatisticSnapshots { get; set; } = default!;
     public DbSet<VideoTag> VideoTags { get; set; } = default!;
 
+    public DbSet<Comment> Comments { get; set; } = default!;
+    public DbSet<CommentHistory> CommentHistories { get; set; } = default!;
+    public DbSet<CommentStatisticSnapshot> CommentStatisticSnapshots { get; set; } = default!;
+    
     public DbSet<Category> Categories { get; set; } = default!;
     public DbSet<EntityAccessPermission> EntityAccessPermissions { get; set; } = default!;
     public DbSet<StatusChangeEvent> StatusChangeEvents { get; set; } = default!;

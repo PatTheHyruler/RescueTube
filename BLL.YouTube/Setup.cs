@@ -36,6 +36,7 @@ public static class Setup
         services.AddScoped<SubmitService>();
         services.AddScoped<VideoService>();
         services.AddScoped<AuthorService>();
+        services.AddScoped<CommentService>();
 
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
         services.AddScoped<IPlatformVideoPresentationHandler, PresentationHandler>();
