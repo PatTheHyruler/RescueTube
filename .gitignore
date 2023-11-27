@@ -36,8 +36,4 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-# Custom
-*appsettings*.json
-!appsettings.*[Ee]xample*.json
-
 .env

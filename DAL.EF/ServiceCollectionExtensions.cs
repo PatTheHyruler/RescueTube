@@ -18,7 +18,7 @@ public static class ServiceCollectionExtensions
     {
         services
             .AddDbLoggingOptions();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("RescueTubePostgres");
         services.AddDbContext<AbstractAppDbContext, PostgresAppDbContext>(
             o => o.UseNpgsql(connectionString));
         services.AddScoped<AbstractAppDbContext, PostgresAppDbContext>();
