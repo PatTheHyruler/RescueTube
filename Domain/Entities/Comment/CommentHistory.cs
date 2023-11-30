@@ -1,9 +1,9 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Contracts;
 
 namespace Domain.Entities;
 
-public class CommentHistory : AbstractIdDatabaseEntity, IHistoryEntity<Comment>
+public class CommentHistory : BaseIdDbEntity, IHistoryEntity<Comment>
 {
     public Guid CurrentId { get; set; }
     public Comment? Current { get; set; }

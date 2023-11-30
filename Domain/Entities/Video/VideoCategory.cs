@@ -1,8 +1,8 @@
-using Base.Domain;
+using Domain.Base;
 
 namespace Domain.Entities;
 
-public class VideoCategory : AbstractIdDatabaseEntity
+public class VideoCategory : BaseIdDbEntity
 {
     public Guid VideoId { get; set; }
     public Video? Video { get; set; }

@@ -1,10 +1,10 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Contracts;
 using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class StatusChangeEvent : AbstractIdDatabaseEntity
+public class StatusChangeEvent : BaseIdDbEntity
 {
     public bool? PreviousAvailability { get; set; }
     public bool? NewAvailability { get; set; }

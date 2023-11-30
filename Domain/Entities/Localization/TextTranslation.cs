@@ -1,10 +1,10 @@
-using Base.Domain;
+using Domain.Base;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities.Localization;
 
 [Index(nameof(KeyId), nameof(Culture), nameof(ValidUntil), nameof(ValidSince))]
-public class TextTranslation : AbstractIdDatabaseEntity
+public class TextTranslation : BaseIdDbEntity
 {
     public string Content { get; set; } = default!;
     public string? Culture { get; set; }

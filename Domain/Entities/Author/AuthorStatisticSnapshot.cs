@@ -1,8 +1,8 @@
-using Base.Domain;
+using Domain.Base;
 
 namespace Domain.Entities;
 
-public class AuthorStatisticSnapshot : AbstractIdDatabaseEntity
+public class AuthorStatisticSnapshot : BaseIdDbEntity
 {
     public long? FollowerCount { get; set; }
     public long? PaidFollowerCount { get; set; }

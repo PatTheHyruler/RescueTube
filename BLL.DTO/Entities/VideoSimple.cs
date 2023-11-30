@@ -1,11 +1,11 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Entities;
 using Domain.Entities.Localization;
 using Domain.Enums;
 
 namespace BLL.DTO.Entities;
 
-public class VideoSimple : AbstractIdDatabaseEntity
+public class VideoSimple : BaseIdDbEntity
 {
     public ICollection<TextTranslation>? Title { get; set; }
     public ICollection<TextTranslation>? Description { get; set; }

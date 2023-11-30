@@ -1,4 +1,4 @@
-namespace Contracts.Domain;
+namespace Domain.Contracts;
 
 public interface IIdDatabaseEntity : IIdDatabaseEntity<Guid>
 {

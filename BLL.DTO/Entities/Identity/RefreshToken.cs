@@ -1,8 +1,8 @@
-using Base.Domain;
+using Domain.Base;
 
 namespace BLL.DTO.Entities.Identity;
 
-public class RefreshToken : AbstractIdDatabaseEntity
+public class RefreshToken : BaseIdDbEntity
 {
     public Guid UserId { get; set; }
 

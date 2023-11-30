@@ -1,8 +1,8 @@
-using Base.Domain;
+using Domain.Base;
 
 namespace Domain.Entities;
 
-public class VideoStatisticSnapshot : AbstractIdDatabaseEntity
+public class VideoStatisticSnapshot : BaseIdDbEntity
 {
     public long? ViewCount { get; set; }
     public long? LikeCount { get; set; }

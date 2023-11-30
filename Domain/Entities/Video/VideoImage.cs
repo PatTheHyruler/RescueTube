@@ -1,9 +1,9 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class VideoImage : AbstractIdDatabaseEntity
+public class VideoImage : BaseIdDbEntity
 {
     public EImageType ImageType { get; set; }
 

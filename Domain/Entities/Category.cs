@@ -1,10 +1,10 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Entities.Localization;
 using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class Category : AbstractIdDatabaseEntity
+public class Category : BaseIdDbEntity
 {
     public Guid NameId { get; set; }
     public TextTranslationKey? Name { get; set; }

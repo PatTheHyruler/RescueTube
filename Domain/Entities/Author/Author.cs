@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Base.Domain;
+using Domain.Base;
 using Domain.Contracts;
 using Domain.Entities.Localization;
 using Domain.Enums;
@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Domain.Entities;
 
 [Index(nameof(Platform), nameof(IdOnPlatform), IsUnique = true)]
-public class Author : AbstractIdDatabaseEntity, IMainArchiveEntity
+public class Author : BaseIdDbEntity, IMainArchiveEntity
 {
     public string? UserName { get; set; }
     public string? DisplayName { get; set; }

@@ -1,10 +1,10 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Entities.Identity;
 using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class Submission : AbstractIdDatabaseEntity
+public class Submission : BaseIdDbEntity
 {
     public EPlatform Platform { get; set; }
     public string IdOnPlatform { get; set; } = default!;

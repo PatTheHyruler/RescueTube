@@ -1,9 +1,9 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Entities.Identity;
 
 namespace Domain.Entities;
 
-public class EntityAccessPermission : AbstractIdDatabaseEntity
+public class EntityAccessPermission : BaseIdDbEntity
 {
     public Guid UserId { get; set; }
     public User? User { get; set; }

@@ -1,9 +1,9 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class VideoAuthor : AbstractIdDatabaseEntity
+public class VideoAuthor : BaseIdDbEntity
 {
     public Guid VideoId { get; set; }
     public Video? Video { get; set; }

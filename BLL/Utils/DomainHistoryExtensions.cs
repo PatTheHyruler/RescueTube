@@ -1,4 +1,3 @@
-using Contracts.Domain;
 using Domain.Contracts;
 using Domain.Entities;
 

@@ -1,4 +1,4 @@
-using Contracts.Domain;
+using Domain.Contracts;
 using Microsoft.AspNetCore.Identity;
 
 namespace Domain.Entities.Identity;

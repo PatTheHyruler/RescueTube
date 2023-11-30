@@ -9,7 +9,6 @@
     <ItemGroup>
       <ProjectReference Include="..\BLL.Contracts\BLL.Contracts.csproj" />
       <ProjectReference Include="..\BLL.DTO\BLL.DTO.csproj" />
-      <ProjectReference Include="..\ConfigDefaults\ConfigDefaults.csproj" />
       <ProjectReference Include="..\DAL.EF\DAL.EF.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
       <ProjectReference Include="..\Validation\Validation.csproj" />

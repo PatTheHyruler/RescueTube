@@ -1,10 +1,10 @@
-﻿using Base.Domain;
+﻿using Domain.Base;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Entities.Identity;
 
 [Index(nameof(UserId), nameof(Token), nameof(JwtHash), nameof(ExpiresAt))]
-public class RefreshToken : AbstractIdDatabaseEntity
+public class RefreshToken : BaseIdDbEntity
 {
     public Guid UserId { get; set; }
     public User? User { get; set; }

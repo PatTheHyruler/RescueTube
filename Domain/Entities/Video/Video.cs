@@ -1,11 +1,11 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Contracts;
 using Domain.Entities.Localization;
 using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class Video : AbstractIdDatabaseEntity, IMainArchiveEntity
+public class Video : BaseIdDbEntity, IMainArchiveEntity
 {
     public Guid? TitleId { get; set; }
     public TextTranslationKey? Title { get; set; }

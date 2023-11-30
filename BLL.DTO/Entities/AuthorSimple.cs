@@ -1,10 +1,10 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Entities;
 using Domain.Enums;
 
 namespace BLL.DTO.Entities;
 
-public class AuthorSimple : AbstractIdDatabaseEntity
+public class AuthorSimple : BaseIdDbEntity
 {
     public string? UserName { get; set; }
     public string? DisplayName { get; set; }

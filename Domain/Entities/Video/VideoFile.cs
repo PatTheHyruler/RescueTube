@@ -1,8 +1,8 @@
-using Base.Domain;
+using Domain.Base;
 
 namespace Domain.Entities;
 
-public class VideoFile : AbstractIdDatabaseEntity
+public class VideoFile : BaseIdDbEntity
 {
     public string? Key { get; set; }
     public string FilePath { get; set; } = default!;

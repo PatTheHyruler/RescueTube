@@ -1,5 +1,3 @@
-using Contracts.Domain;
-
 namespace Domain.Contracts;
 
 public interface IMainArchiveEntity :

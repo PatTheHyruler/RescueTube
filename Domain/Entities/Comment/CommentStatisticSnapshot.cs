@@ -1,8 +1,8 @@
-using Base.Domain;
+using Domain.Base;
 
 namespace Domain.Entities;
 
-public class CommentStatisticSnapshot : AbstractIdDatabaseEntity
+public class CommentStatisticSnapshot : BaseIdDbEntity
 {
     public long? LikeCount { get; set; }
     public long? DislikeCount { get; set; }

@@ -1,9 +1,9 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class AuthorImage : AbstractIdDatabaseEntity
+public class AuthorImage : BaseIdDbEntity
 {
     public EImageType ImageType { get; set; }
 

@@ -1,6 +1,5 @@
 using BLL.Identity.Options;
 using BLL.Identity.Services;
-using ConfigDefaults;
 using DAL.EF.DbContexts;
 using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Builder;
@@ -24,7 +23,7 @@ public static class SetupExtensions
         services
             .AddOptionsFull<RegistrationOptions>(configuration.GetSection(RegistrationOptions.Section))
             .AddOptions<IdentityOptions>()
-            .Configure(options => options.Password.RequiredLength = IdentityDefaults.PasswordMinLength)
+            .Configure(options => options.Password.RequiredLength = 16)
             .Bind(configuration.GetSection("Identity"))
             .ValidateDataAnnotations()
             .ValidateOnStart().Services

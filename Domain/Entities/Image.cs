@@ -1,9 +1,9 @@
-using Base.Domain;
+using Domain.Base;
 using Domain.Enums;
 
 namespace Domain.Entities;
 
-public class Image : AbstractIdDatabaseEntity
+public class Image : BaseIdDbEntity
 {
     public EPlatform Platform { get; set; }
     public string? IdOnPlatform { get; set; }

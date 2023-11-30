@@ -1,8 +1,8 @@
-using Base.Domain;
+using Domain.Base;
 
 namespace Domain.Entities;
 
-public class VideoTag : AbstractIdDatabaseEntity
+public class VideoTag : BaseIdDbEntity
 {
     public string Tag { get; set; } = default!;
     public string NormalizedTag { get; set; } = default!;
