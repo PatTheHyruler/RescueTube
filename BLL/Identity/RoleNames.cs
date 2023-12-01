@@ -15,6 +15,12 @@ public static class RoleNames
         Helper,
     };
 
+    public static readonly string[] AdminRoles =
+    {
+        SuperAdmin,
+        Admin,
+    };
+
     public const string AdminOrSuperAdmin = $"{SuperAdmin},{Admin}";
 
     public const string AllowedToSubmitRoles = $"{AdminOrSuperAdmin},{Helper}";
@@ -26,9 +32,5 @@ public static class RoleNames
         Helper,
     };
 
-    public static readonly string[] AllowedToAutoSubmitRolesList =
-    {
-        SuperAdmin,
-        Admin,
-    };
+    public static readonly string[] AllowedToAutoSubmitRolesList = AdminRoles;
 }

@@ -5,7 +5,6 @@ using BLL.YouTube.Base;
 using BLL.YouTube.Utils;
 using DAL.EF.Extensions;
 using Domain.Enums;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace BLL.YouTube.Services;

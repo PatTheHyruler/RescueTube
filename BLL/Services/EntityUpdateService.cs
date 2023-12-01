@@ -47,6 +47,8 @@ public class EntityUpdateService : BaseService
         comment.CreatedAtVideoTimecode ??= newCommentData.CreatedAtVideoTimecode;
         comment.DeletedAt ??= newCommentData.DeletedAt;
 
+        comment.OrderIndex = newCommentData.OrderIndex;
+
         await UpdateBaseEntity(comment, newCommentData);
 
         if (changed)

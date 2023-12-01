@@ -1,8 +1,11 @@
+using BLL.Events;
+using BLL.Events.Events;
 using BLL.YouTube.Base;
 using BLL.YouTube.Extensions;
 using DAL.EF.Extensions;
 using Domain.Entities;
 using Domain.Enums;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using YoutubeDLSharp.Metadata;
@@ -12,9 +15,11 @@ namespace BLL.YouTube.Services;
 public class AuthorService : BaseYouTubeService
 {
     private readonly Dictionary<string, Author> _cachedAuthors = new();
+    private readonly IMediator _mediator;
 
-    public AuthorService(IServiceProvider services, ILogger<AuthorService> logger) : base(services, logger)
+    public AuthorService(IServiceProvider services, ILogger<AuthorService> logger, IMediator mediator) : base(services, logger)
     {
+        _mediator = mediator;
     }
 
     private async Task<Author> AddOrGetAuthor(VideoData videoData)
@@ -66,6 +71,7 @@ public class AuthorService : BaseYouTubeService
                 var author = arg.NewAuthorFunc();
                 try
                 {
+                    // TODO: Move this to a background job
                     var channel = await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(author.IdOnPlatform);
                     author.AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
                     {
@@ -90,8 +96,9 @@ public class AuthorService : BaseYouTubeService
                 }
 
                 Ctx.Authors.Add(author);
-                Ctx.RegisterAuthorAddedCallback(new PlatformEntityAddedEventArgs(
-                    author.Id, EPlatform.YouTube, author.IdOnPlatform));
+                Ctx.RegisterSavedChangesCallbackRunOnce(() =>
+                    _mediator.Publish(new AuthorAddedEvent(
+                        author.Id, EPlatform.YouTube, author.IdOnPlatform)));
                 _cachedAuthors.TryAdd(arg.AuthorId, author);
                 authors.Add(author);
             }

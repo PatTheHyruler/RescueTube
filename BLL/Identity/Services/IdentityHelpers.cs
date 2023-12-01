@@ -77,4 +77,13 @@ public static class IdentityHelpers
         var stringId = user?.Claims.SingleOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
         return stringId == null ? null : Guid.Parse(stringId);
     }
+
+    public static bool IsAdmin(this ClaimsPrincipal? user)
+    {
+        if (user == null)
+        {
+            return false;
+        }
+        return RoleNames.AdminRoles.Any(user.IsInRole);
+    }
 }

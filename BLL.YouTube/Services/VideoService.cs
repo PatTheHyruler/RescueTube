@@ -1,11 +1,13 @@
 using System.Text;
-using BLL.Utils;
+using BLL.Events;
+using BLL.Events.Events;
 using BLL.YouTube.Base;
 using BLL.YouTube.Extensions;
 using BLL.YouTube.Utils;
 using Domain.Entities;
 using Domain.Entities.Localization;
 using Domain.Enums;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,8 +18,12 @@ namespace BLL.YouTube.Services;
 
 public class VideoService : BaseYouTubeService
 {
-    public VideoService(IServiceProvider services, ILogger<VideoService> logger) : base(services, logger)
+    private readonly IMediator _mediator;
+
+    public VideoService(IServiceProvider services, ILogger<VideoService> logger, IMediator mediator) : base(services,
+        logger)
     {
+        _mediator = mediator;
     }
 
     public async Task<VideoData?> FetchVideoDataYtdl(string id, bool fetchComments, CancellationToken ct = default)
@@ -135,8 +141,9 @@ public class VideoService : BaseYouTubeService
 
         Ctx.Videos.Add(video);
 
-        Ctx.RegisterVideoAddedCallback(new PlatformEntityAddedEventArgs(
-            video.Id, EPlatform.YouTube, videoData.ID));
+        Ctx.RegisterSavedChangesCallbackRunOnce(() =>
+            _mediator.Publish(new VideoAddedEvent(
+                video.Id, EPlatform.YouTube, videoData.ID)));
         // TODO: Comments callback subscribe
         // TODO: Captions downloader callback subscribe
 
@@ -145,52 +152,42 @@ public class VideoService : BaseYouTubeService
         return video;
     }
 
-    private static readonly ConcurrentHashSet<Guid> CurrentlyDownloadingVideoIds = new();
-
-    public async Task DownloadVideos(IEnumerable<Guid>? videoIds, CancellationToken ct)
+    public async Task DownloadVideo(Guid videoId, CancellationToken ct)
     {
-        if (ct.IsCancellationRequested) return;
         var query = Ctx.Videos
             .Where(e => e.Platform == EPlatform.YouTube)
             .Include(e => e.VideoFiles)
-            .Where(e => e.VideoFiles!.Count == 0 && e.FailedDownloadAttempts == 0);
-        if (videoIds != null)
-        {
-            query = query.Where(e => videoIds.Contains(e.Id));
-        }
+            .Where(e => e.VideoFiles!.Count == 0 && e.FailedDownloadAttempts == 0)
+            .Where(e => e.Id == videoId);
 
-        var videos = await query.ToListAsync(cancellationToken: ct);
-
-        foreach (var video in videos)
-        {
-            if (ct.IsCancellationRequested) break;
-            try
-            {
-                await DownloadVideo(video, ct);
-            }
-            catch (Exception e)
-            {
-                Logger.LogError(e, "Error occurred downloading {Platform} video {IdOnPlatform}",
-                    video.Platform, video.IdOnPlatform);
-            }
-        }
+        var video = await query.FirstAsync(ct);
+        await DownloadVideo(video, ct);
     }
 
     private async Task DownloadVideo(Video video, CancellationToken ct = default)
     {
-        if (CurrentlyDownloadingVideoIds.Contains(video.Id))
-        {
-            Logger.LogInformation("Ignoring download request for video {VideoId} because it's already being downloaded",
-                video.Id);
-            return;
-        }
-
-        CurrentlyDownloadingVideoIds.Add(video.Id);
-
         Logger.LogInformation("Started downloading video {IdOnPlatform} on platform {Platform}",
             video.IdOnPlatform, video.Platform);
         var result = await YouTubeUow.YoutubeDl.RunVideoDownload(Url.ToVideoUrl(video.IdOnPlatform), ct: ct,
             overrideOptions: YouTubeUow.DownloadOptions);
+        // TODO: Progress display?
+        if (!result.Success)
+        {
+            var errorString = result.ErrorOutput.Length > 0 ? string.Join("\n", result.ErrorOutput) : null;
+            Logger.LogError("Failed to download {Platform} video with ID {IdOnPlatform}.\nErrors: [{Errors}]",
+                EPlatform.YouTube, video.IdOnPlatform,
+                errorString);
+            // Since we throw an exception here, we can't expect the callers of this function to call SaveChanges()
+            // Also, executing this update in the DB should avoid potential concurrency issues
+            await Ctx.Videos
+                .Where(e => e.Id == video.Id)
+                .ExecuteUpdateAsync(e => e.SetProperty(
+                        v => v.FailedDownloadAttempts,
+                        v => v.FailedDownloadAttempts + 1),
+                    cancellationToken: ct);
+            throw new ApplicationException(errorString ?? $"Failed to download video {video.Id}");
+        }
+
         if (result.Success)
         {
             video.FailedDownloadAttempts = 0;
@@ -217,14 +214,5 @@ public class VideoService : BaseYouTubeService
                 Video = video,
             });
         }
-        else
-        {
-            Logger.LogError("Failed to download {Platform} video with ID {IdOnPlatform}.\nErrors: [{Errors}]",
-                EPlatform.YouTube, video.IdOnPlatform,
-                result.ErrorOutput.Length > 0 ? string.Join("\n", result.ErrorOutput) : "Unknown errors");
-            video.FailedDownloadAttempts++;
-        }
-
-        CurrentlyDownloadingVideoIds.Remove(video.Id);
     }
 }

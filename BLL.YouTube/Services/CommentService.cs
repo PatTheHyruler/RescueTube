@@ -12,8 +12,9 @@ namespace BLL.YouTube.Services;
 public class CommentService : BaseYouTubeService
 {
     private readonly EntityUpdateService _entityUpdateService;
-    
-    public CommentService(IServiceProvider services, ILogger<CommentService> logger, EntityUpdateService entityUpdateService) : base(services, logger)
+
+    public CommentService(IServiceProvider services, ILogger<CommentService> logger,
+        EntityUpdateService entityUpdateService) : base(services, logger)
     {
         _entityUpdateService = entityUpdateService;
     }
@@ -26,6 +27,7 @@ public class CommentService : BaseYouTubeService
             Logger.LogError("Failed to fetch comments for video {VideoId}", videoIdOnPlatform);
             return;
         }
+
         var commentsFetched = DateTime.UtcNow;
         Logger.LogInformation(
             "Fetched {CommentsAmount} comments from YouTube for video {VideoId}",
@@ -35,18 +37,11 @@ public class CommentService : BaseYouTubeService
         var video = await Ctx.Videos
             .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoIdOnPlatform)
             .Include(v => v.Comments)
-            .SingleOrDefaultAsync(cancellationToken: ct);
-
-        if (video == null)
-        {
-            Logger.LogError("Video {IdOnPlatform} not found in archive", videoIdOnPlatform);
-            return;
-        }
+            .SingleAsync(cancellationToken: ct);
 
         video.LastCommentsFetch = commentsFetched;
 
         await UpdateComments(video, videoData.Comments);
-        Ctx.Videos.Update(video);
     }
 
     private async Task UpdateComments(Video video, CommentData[] commentDatas)
@@ -55,11 +50,11 @@ public class CommentService : BaseYouTubeService
         {
             throw new ArgumentException("Video's comments should not be null when updating them", nameof(video));
         }
-        
+
         // TODO: What to do if video has 20000 comments? Memory issues?
         var commentsWithoutParent = new List<(Comment Comment, string Parent)>();
         var commentsWithoutRoot = new List<(Comment Comment, string Root)>();
-        
+
         foreach (var comment in video.Comments)
         {
             if (commentDatas.All(c => c.ID != comment.IdOnPlatform))
@@ -75,7 +70,7 @@ public class CommentService : BaseYouTubeService
         var addedOrFetchedAuthors = await YouTubeUow.AuthorService.AddOrGetAuthors(authorFetchArgs);
 
         var commentOrderIndex = 0L;
-        
+
         foreach (var commentData in commentDatas)
         {
             var comment = commentData.ToDomainComment();
@@ -113,6 +108,7 @@ public class CommentService : BaseYouTubeService
                 }
             }
 
+            Ctx.Comments.Add(comment);
             video.Comments.Add(comment);
         }
 

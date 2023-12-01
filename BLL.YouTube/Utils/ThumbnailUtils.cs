@@ -1,7 +1,6 @@
 using Domain.Entities;
 using Domain.Enums;
 using YoutubeDLSharp.Metadata;
-using YoutubeExplode.Common;
 
 namespace BLL.YouTube.Utils;
 

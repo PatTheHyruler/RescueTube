@@ -1,5 +1,5 @@
 ﻿@using BLL.Identity
-@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BLL.Identity.Services
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,10 +34,9 @@
                             </a>
                         </li>
                     }
-                    @if (User.IsInRole(RoleNames.Admin))
+                    @if (User.IsAdmin())
                     {
-                        <div>ADMIN</div>
-                        @* <partial name="_AdminDropdown"/> *@
+                        <partial name="_AdminDropdown"/>
                     }
                     <li class="nav-item">
                         <a class="nav-link text-dark"

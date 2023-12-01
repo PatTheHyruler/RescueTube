@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using BLL.Contracts;
-using BLL.YouTube.BackgroundServices;
+using BLL.YouTube.EventHandlers;
+using BLL.YouTube.Jobs;
+using BLL.YouTube.Jobs.Registration;
 using BLL.YouTube.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,7 +43,14 @@ public static class Setup
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
         services.AddScoped<IPlatformVideoPresentationHandler, PresentationHandler>();
 
-        services.AddHostedService<VideoDownloadBackgroundService>();
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblyContaining<VideoAddedDownloadHandler>();
+        });
+
+        services.AddScoped<DownloadVideoJob>();
+        services.AddScoped<FetchCommentsJob>();
+        services.AddHostedService<RegisterYouTubeJobsService>();
     }
 
     public static void SetupYouTube(this WebApplication app)
@@ -63,6 +72,7 @@ public static class Setup
 
     private static async Task DownloadAndSetupBinaries(string? binariesDirectory = null, bool overWriteExistingBinaries = true)
     {
+        // TODO: This should be redesigned to allow manual and automatic updates to these binaries (and UI to show version/perform updates)
         if (binariesDirectory != null)
         {
             binariesDirectory = Path.GetFullPath(binariesDirectory);

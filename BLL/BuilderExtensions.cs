@@ -1,4 +1,5 @@
-using BLL.BackgroundServices;
+using BLL.Jobs;
+using BLL.Jobs.Registration;
 using BLL.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Validation;
@@ -18,8 +19,19 @@ public static class BuilderExtensions
         services.AddScoped<ImageService>();
         services.AddScoped<VideoPresentationService>();
         services.AddScoped<EntityUpdateService>();
+        services.AddScoped<AuthorService>();
+        services.AddScoped<VideoService>();
 
-        services.AddHostedService<ImageBackgroundService>();
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblyContaining<SubmissionService>();
+        });
+
+        services.AddScoped<DownloadAuthorImagesJob>();
+        services.AddScoped<DownloadVideoImagesJob>();
+        services.AddScoped<DownloadImageJob>();
+
+        services.AddHostedService<RegisterBllJobsService>();
 
         return services;
     }

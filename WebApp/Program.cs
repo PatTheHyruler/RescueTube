@@ -3,11 +3,14 @@ using BLL;
 using BLL.Identity;
 using BLL.YouTube;
 using DAL.EF;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Serilog;
 using Serilog.Settings.Configuration;
+using WebApp.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +24,8 @@ builder.Logging.AddSerilog();
 builder.Services.AddSingleton(Log.Logger);
 builder.Services.Configure<HostOptions>(hostOptions =>
 {
-    hostOptions.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore; // Is this a good idea???
+    hostOptions.BackgroundServiceExceptionBehavior =
+        BackgroundServiceExceptionBehavior.Ignore; // Is this a good idea???
 });
 
 var useHttpLogging = builder.Configuration.GetValue<bool>("Logging:HTTP:Enabled");
@@ -29,6 +33,19 @@ if (useHttpLogging)
 {
     builder.Services.AddHttpLogging(logging => { logging.LoggingFields = HttpLoggingFields.All; });
 }
+
+builder.Services.AddHttpClient();
+
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(
+        builder.Configuration.GetConnectionString("HangfirePostgres"))
+    )
+    .UseSerilogLogProvider()
+);
+builder.Services.AddHangfireServer();
 
 builder.Services.AddDbPersistenceEf(builder.Configuration);
 
@@ -67,6 +84,12 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseHangfireDashboard(options: new DashboardOptions
+{
+    DarkModeEnabled = true,
+    Authorization = new[] { new HangfireDashboardAuthorizationFilter() }
+});
 
 app.MapControllers();
 

@@ -11,79 +11,77 @@ namespace BLL.Services;
 
 public class ImageService : BaseService
 {
-    public ImageService(IServiceProvider services, ILogger<ImageService> logger) : base(services, logger)
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    public ImageService(IServiceProvider services, ILogger<ImageService> logger, IHttpClientFactory httpClientFactory) :
+        base(services, logger)
     {
+        _httpClientFactory = httpClientFactory;
     }
 
-    public async Task DownloadNotDownloadedImages(CancellationToken ct = default)
+    public async Task UpdateImage(Guid imageId, CancellationToken ct)
     {
-        var images = await Ctx.Images
-            .Where(e => e.LocalFilePath == null && e.FailedFetchAttempts == 0
-                                                && e.Url != null)
-            .Include(e => e.VideoImages)
+        var image = await Ctx.Images
+            .Where(e => e.Id == imageId)
             .Include(e => e.AuthorImages)
-            .AsSplitQuery() // TODO: Is this good?
-            .ToListAsync(cancellationToken: ct);
-        await UpdateImages(images, ct);
+            .Include(e => e.VideoImages)
+            .FirstAsync(ct);
+        await UpdateImage(image, ct);
     }
 
-    public async Task UpdateImages(List<Image> images, CancellationToken ct = default)
+    public async Task UpdateImage(Image image, CancellationToken ct)
     {
-        if (ct.IsCancellationRequested) return;
-        using var httpClient = new HttpClient();
-        var appPathOptions = Services.GetService<IOptions<AppPathOptions>>()?.Value;
-
-        foreach (var image in images)
+        if (image.Url == null) return;
+        using var httpClient = _httpClientFactory.CreateClient(); // TODO: should this be a class member instead?
+        var response = await httpClient.GetAsync(image.Url, ct);
+        if (!response.IsSuccessStatusCode)
         {
-            if (ct.IsCancellationRequested) break;
-            if (image.Url == null) continue;
-            var response = await httpClient.GetAsync(image.Url, ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                image.FailedFetchAttempts++;
-                continue;
-            }
+            // Maybe this should be done immediately in the DB to avoid concurrency issues
+            // But the worst outcome of concurrency issues here would be a few extra download attempts
+            image.FailedFetchAttempts++;
+            return;
+        }
 
-            bool? isChanged = null;
+        bool? isChanged = null;
 
-            if (isChanged == null &&
-                image.Etag != null && response.Headers.ETag != null)
-            {
-                isChanged = image.Etag != response.Headers.ETag.Tag;
-            }
+        if (isChanged == null &&
+            image.Etag != null && response.Headers.ETag != null)
+        {
+            isChanged = image.Etag != response.Headers.ETag.Tag;
+        }
 
-            var imageBytes = await response.Content.ReadAsByteArrayAsync(ct);
-            if (ct.IsCancellationRequested) break;
+        var imageBytes = await response.Content.ReadAsByteArrayAsync(ct);
+        ct.ThrowIfCancellationRequested();
 
-            var hash = MD5.HashData(imageBytes);
-            var hashString = BitConverter.ToString(hash).Replace("-", "").ToLower();
+        var hash = MD5.HashData(imageBytes);
+        var hashString = BitConverter.ToString(hash).Replace("-", "").ToLower();
 
-            if (isChanged == null
-                && image.Hash != null)
-            {
-                isChanged = hashString == image.Hash;
-            }
+        if (isChanged == null
+            && image.Hash != null)
+        {
+            isChanged = hashString == image.Hash;
+        }
 
-            Image imageToUpdate;
-            if (isChanged == true && image.LocalFilePath != null)
-            {
-                imageToUpdate = CreateUpdatedImage(image);
-            }
-            else
-            {
-                imageToUpdate = image;
-            }
+        Image imageToUpdate;
+        if (isChanged == true && image.LocalFilePath != null)
+        {
+            imageToUpdate = CreateUpdatedImage(image);
+        }
+        else
+        {
+            imageToUpdate = image;
+        }
 
-            imageToUpdate.Hash = hashString;
-            imageToUpdate.MediaType = response.Content.Headers.ContentType?.MediaType;
-            imageToUpdate.Etag = response.Headers.ETag?.Tag;
-            imageToUpdate.Ext ??= GetFileExtension(response);
-            // TODO: Try to parse ext from URL if still null?
+        imageToUpdate.Hash = hashString;
+        imageToUpdate.MediaType = response.Content.Headers.ContentType?.MediaType;
+        imageToUpdate.Etag = response.Headers.ETag?.Tag;
+        imageToUpdate.Ext ??= GetFileExtension(response);
+        // TODO: Try to parse ext from URL if still null?
 
-            if (imageToUpdate.LocalFilePath == null)
-            {
-                await DownloadImage(imageToUpdate, appPathOptions, imageBytes, ct);
-            }
+        if (imageToUpdate.LocalFilePath == null)
+        {
+            var appPathOptions = Services.GetService<IOptions<AppPathOptions>>()?.Value;
+            await DownloadImage(imageToUpdate, appPathOptions, imageBytes, ct);
         }
     }
 
@@ -93,9 +91,9 @@ public class ImageService : BaseService
         if (ct.IsCancellationRequested) return;
         var fileNameBuilder = new StringBuilder()
             .Append(image.Url?.ToFileNameSanitized(100) ?? "NULL")
-            .Append("_")
+            .Append('_')
             .Append(DateTime.UtcNow.Ticks)
-            .Append("_")
+            .Append('_')
             .Append(Guid.NewGuid().ToString().Replace("-", ""));
         if (image.Ext != null)
         {
@@ -134,39 +132,39 @@ public class ImageService : BaseService
         };
         Ctx.Images.Add(newImage);
 
-        if (image.VideoImages == null || image.AuthorImages == null)
-        {
-            throw new ArgumentException(
-                $"Updatable image {image.Id} did not have its navigation collections included");
-        }
-
         var currentTime = DateTime.UtcNow;
 
-        foreach (var videoImage in image.VideoImages)
+        if (image.VideoImages != null)
         {
-            videoImage.ValidUntil = currentTime;
-            Ctx.VideoImages.Add(new VideoImage
+            foreach (var videoImage in image.VideoImages)
             {
-                ImageType = videoImage.ImageType,
-                ValidSince = currentTime,
-                LastFetched = videoImage.LastFetched,
-                Preference = videoImage.Preference,
-                VideoId = videoImage.VideoId,
-                Image = newImage,
-            });
+                videoImage.ValidUntil = currentTime;
+                Ctx.VideoImages.Add(new VideoImage
+                {
+                    ImageType = videoImage.ImageType,
+                    ValidSince = currentTime,
+                    LastFetched = videoImage.LastFetched,
+                    Preference = videoImage.Preference,
+                    VideoId = videoImage.VideoId,
+                    Image = newImage,
+                });
+            }
         }
 
-        foreach (var authorImage in image.AuthorImages)
+        if (image.AuthorImages != null)
         {
-            authorImage.ValidUntil = currentTime;
-            Ctx.AuthorImages.Add(new AuthorImage
+            foreach (var authorImage in image.AuthorImages)
             {
-                ImageType = authorImage.ImageType,
-                ValidSince = currentTime,
-                LastFetched = authorImage.LastFetched,
-                AuthorId = authorImage.AuthorId,
-                Image = newImage,
-            });
+                authorImage.ValidUntil = currentTime;
+                Ctx.AuthorImages.Add(new AuthorImage
+                {
+                    ImageType = authorImage.ImageType,
+                    ValidSince = currentTime,
+                    LastFetched = authorImage.LastFetched,
+                    AuthorId = authorImage.AuthorId,
+                    Image = newImage,
+                });
+            }
         }
 
         return newImage;
