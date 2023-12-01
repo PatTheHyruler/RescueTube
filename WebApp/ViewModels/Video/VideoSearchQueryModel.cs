@@ -1,6 +1,6 @@
 using BLL.DTO.Enums;
 
-namespace WebApp.ViewModels;
+namespace WebApp.ViewModels.Video;
 
 public class VideoSearchQueryModel
 {

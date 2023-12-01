@@ -1,6 +1,6 @@
 using BLL.DTO.Entities;
 
-namespace WebApp.ViewModels;
+namespace WebApp.ViewModels.Video;
 
 public class VideoSearchViewModel : VideoSearchQueryModel
 {

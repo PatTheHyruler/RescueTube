@@ -1,9 +1,12 @@
+using System.Security.Claims;
 using System.Security.Principal;
 using BLL.Base;
 using BLL.Identity;
 using DAL.EF.Extensions;
 using Domain.Entities;
 using Microsoft.Extensions.Logging;
+using BLL.Identity.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace BLL.Services;
 
@@ -23,6 +26,25 @@ public class AuthorizationService : BaseService
         });
     }
 
-    public static bool IsAllowedToAccessVideoByRole(IPrincipal user) =>
-        user.IsInRole(RoleNames.Admin) || user.IsInRole(RoleNames.SuperAdmin);
+    public static bool IsAllowedToAccessVideoByRole(IPrincipal? user) {
+        if (user == null)
+        {
+            return false;
+        }
+        return user.IsInRole(RoleNames.Admin) || user.IsInRole(RoleNames.SuperAdmin);
+    }
+
+    public async Task<bool> IsAllowedToAccessVideo(ClaimsPrincipal? user, Guid videoId)
+    {
+        if (IsAllowedToAccessVideoByRole(user))
+        {
+            return true;
+        }
+
+        return await Ctx.Videos
+            .Where(v => v.Id == videoId)
+            .WhereUserIsAllowedToAccessVideoOrVideoIsPublic(
+                Ctx, user?.GetUserId())
+            .AnyAsync();
+    }
 }

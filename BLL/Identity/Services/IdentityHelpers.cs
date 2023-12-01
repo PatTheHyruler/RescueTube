@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Principal;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
@@ -78,7 +79,7 @@ public static class IdentityHelpers
         return stringId == null ? null : Guid.Parse(stringId);
     }
 
-    public static bool IsAdmin(this ClaimsPrincipal? user)
+    public static bool IsAdmin(this IPrincipal? user)
     {
         if (user == null)
         {

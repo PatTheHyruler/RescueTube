@@ -1,17 +1,27 @@
+using System.ComponentModel.DataAnnotations;
 using BLL;
+using BLL.Utils;
+using HeyRed.Mime;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using WebApp.ViewModels;
+using WebApp.ViewModels.Video;
 
 namespace WebApp.Controllers;
 
 public class VideoController : Controller
 {
     private readonly ServiceUow _serviceUow;
+    private readonly IWebHostEnvironment _environment;
+    private readonly IOptions<AppPathOptions> _appPathOptions;
 
-    public VideoController(ServiceUow serviceUow)
+    public VideoController(ServiceUow serviceUow, IWebHostEnvironment environment, IOptions<AppPathOptions> appPathOptions)
     {
         _serviceUow = serviceUow;
+        _environment = environment;
+        _appPathOptions = appPathOptions;
     }
 
     [Authorize]
@@ -37,8 +47,59 @@ public class VideoController : Controller
         return View(viewModel);
     }
 
-    public IActionResult Watch(Guid id)
+    public async Task<IActionResult> Watch([FromRoute] Guid id, [FromQuery] VideoWatchViewModel model)
     {
-        return Ok(id);
+        if (!await _serviceUow.AuthorizationService.IsAllowedToAccessVideo(User, id))
+        {
+            return NotFound();
+        }
+
+        var video = await _serviceUow.VideoPresentationService.GetVideoSimple(id);
+        if (video == null)
+        {
+            return NotFound();
+        }
+        model.Video = video;
+        
+        return View(model);
+    }
+
+    [HttpGet("/[controller]/[action]/{videoId:guid}")]
+    [AllowAnonymous]
+    [Authorize]
+    public async Task<IResult> VideoFile([FromRoute] Guid videoId)
+    {
+        if (!await _serviceUow.AuthorizationService.IsAllowedToAccessVideo(User, videoId))
+        {
+            return Results.NotFound();
+        }
+
+        var videoFile = await _serviceUow.VideoPresentationService.GetVideoFileAsync(videoId);
+        if (videoFile == null)
+        {
+            return Results.NotFound();
+        }
+
+        var filePath = videoFile.FilePath;
+
+        var contentType = MimeTypesMap.GetMimeType(filePath);
+
+        FileStream stream;
+        try
+        {
+            // Using ContentRootPath is necessary on some OSes / hosting scenarios?
+            stream = System.IO.File.OpenRead(Path.Combine(
+                _environment.ContentRootPath, _appPathOptions.Value.Downloads, filePath));
+        }
+        catch (FileNotFoundException)
+        {
+            return Results.NotFound();
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return Results.NotFound();
+        }
+
+        return Results.File(stream, contentType, enableRangeProcessing: true);
     }
 }
