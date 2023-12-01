@@ -188,31 +188,29 @@ public class VideoService : BaseYouTubeService
             throw new ApplicationException(errorString ?? $"Failed to download video {video.Id}");
         }
 
-        if (result.Success)
+        video.FailedDownloadAttempts = 0;
+        if (video.VideoFiles != null)
         {
-            video.FailedDownloadAttempts = 0;
-            if (video.VideoFiles != null)
+            foreach (var videoFile in video.VideoFiles)
             {
-                foreach (var videoFile in video.VideoFiles)
+                if (videoFile.ValidUntil == null || videoFile.ValidUntil > DateTime.UtcNow)
                 {
-                    if (videoFile.ValidUntil == null || videoFile.ValidUntil > DateTime.UtcNow)
-                    {
-                        videoFile.ValidUntil = DateTime.UtcNow;
-                    }
+                    videoFile.ValidUntil = DateTime.UtcNow;
                 }
             }
-
-            var videoFilePath = result.Data;
-            var appPathOptions = Services.GetService<IOptions<AppPathOptions>>()?.Value;
-            var infoJsonPath = AppPaths.GetFilePathWithoutExtension(videoFilePath) + ".info.json";
-            video.InfoJsonPath = AppPaths.GetPathRelativeToDownloads(infoJsonPath, appPathOptions);
-            Ctx.VideoFiles.Add(new VideoFile
-            {
-                FilePath = AppPaths.GetPathRelativeToDownloads(videoFilePath, appPathOptions),
-                ValidSince = DateTime.UtcNow, // Questionable semantics?
-                LastFetched = DateTime.UtcNow,
-                Video = video,
-            });
         }
+
+        var videoFilePath = result.Data;
+        var appPathOptions = Services.GetService<IOptions<AppPathOptions>>()?.Value;
+        var infoJsonPath = AppPaths.GetFilePathWithoutExtension(videoFilePath) + ".info.json";
+        video.InfoJsonPath = AppPaths.GetPathRelativeToDownloads(infoJsonPath, appPathOptions);
+        video.InfoJson = await File.ReadAllTextAsync(infoJsonPath, CancellationToken.None);
+        Ctx.VideoFiles.Add(new VideoFile
+        {
+            FilePath = AppPaths.GetPathRelativeToDownloads(videoFilePath, appPathOptions),
+            ValidSince = DateTime.UtcNow, // Questionable semantics?
+            LastFetched = DateTime.UtcNow,
+            Video = video,
+        });
     }
 }

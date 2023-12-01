@@ -31,6 +31,9 @@ public class YouTubeUow
     private YoutubeClient? _youTubeExplodeClient;
     public YoutubeClient YouTubeExplodeClient => _youTubeExplodeClient ??= new YoutubeClient();
 
+    private string GetUniqueFileIdentifier() => $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid()
+        .ToString().Replace("-", "")[..8]}";
+
     public OptionSet DownloadOptions => new()
     {
         WriteInfoJson = true,
@@ -38,7 +41,7 @@ public class YouTubeUow
         TrimFilenames = 180,
         Output = Path.Combine(
             AppPaths.GetVideosDirectory(EPlatform.YouTube, _services.GetService<AppPathOptions>()),
-            "(%(channel_id)s) %(uploader).200B/%(upload_date)s - %(title).200B - %(id)s.%(ext)s"
+            $"(%(channel_id)s) %(uploader).200B/%(upload_date)s - %(title).200B - %(id)s/{GetUniqueFileIdentifier()}.%(ext)s"
         ),
     };
 

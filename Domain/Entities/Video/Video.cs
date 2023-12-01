@@ -30,6 +30,7 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
     public int FailedDownloadAttempts { get; set; }
     public int FailedAuthorFetches { get; set; }
     public string? InfoJsonPath { get; set; }
+    public string? InfoJson { get; set; }
     public DateTime? LastCommentsFetch { get; set; }
 
     public bool? IsLiveStreamRecording { get; set; }
