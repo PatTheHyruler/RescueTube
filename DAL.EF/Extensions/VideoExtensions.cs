@@ -1,8 +1,10 @@
 using BLL.DTO.Enums;
 using DAL.EF.DbContexts;
+using DAL.EF.Pagination;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Utils.Pagination.Contracts;
 
 namespace DAL.EF.Extensions;
 
@@ -21,7 +23,7 @@ public static class VideoExtensions
         EPlatform? platform, string? name, string? author,
         ICollection<Guid>? categoryIds,
         Guid? userId, Guid? userAuthorId, bool accessAllowed,
-        int skipAmount, int limit, EVideoSortingOptions sortingOptions,
+        IPaginationQuery paginationQuery, EVideoSortingOptions sortingOptions,
         bool descending)
     {
         if (platform != null)
@@ -72,7 +74,7 @@ public static class VideoExtensions
                 break;
         }
 
-        query = query.Skip(skipAmount).Take(limit);
+        query = query.Paginate(paginationQuery);
 
         return query;
     }

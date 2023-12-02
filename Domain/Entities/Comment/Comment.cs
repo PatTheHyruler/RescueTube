@@ -26,27 +26,28 @@ public class Comment : BaseIdDbEntity, IMainArchiveEntity
     public Video? Video { get; set; }
     public Guid VideoId { get; set; }
 
-    [ForeignKey(nameof(ReplyTargetId))]
-    public Comment? ReplyTarget { get; set; }
+    [ForeignKey(nameof(ReplyTargetId))] public Comment? ReplyTarget { get; set; }
     public Guid? ReplyTargetId { get; set; }
 
     [ForeignKey(nameof(ConversationRootId))]
     public Comment? ConversationRoot { get; set; }
+
     public Guid? ConversationRootId { get; set; }
 
     public string? Content { get; set; }
 
 
-    public ICollection<CommentStatisticSnapshot>? CommentStatisticSnapshots { get; set; }
     public bool? AuthorIsCreator { get; set; }
 
     public TimeSpan? CreatedAtVideoTimecode { get; set; }
     public DateTime? DeletedAt { get; set; }
 
     public long OrderIndex { get; set; }
-    
-    [InverseProperty(nameof(ReplyTarget))]
-    public ICollection<Comment>? DirectReplies { get; set; }
+
+    public ICollection<CommentStatisticSnapshot>? CommentStatisticSnapshots { get; set; }
+
+    [InverseProperty(nameof(ReplyTarget))] public ICollection<Comment>? DirectReplies { get; set; }
+
     [InverseProperty(nameof(ConversationRoot))]
     public ICollection<Comment>? ConversationReplies { get; set; }
 

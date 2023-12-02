@@ -1,4 +1,6 @@
-namespace BLL.Utils;
+using Utils.Pagination.Contracts;
+
+namespace Utils.Pagination;
 
 public static class PaginationUtils
 {
@@ -42,5 +44,17 @@ public static class PaginationUtils
         total = ClampTotal(total);
         limit = ClampLimit(limit);
         page = ClampPage(total, limit, page);
+    }
+
+    public static void ConformValues(this IPaginationQuery query)
+    {
+        query.Total = ClampTotal(query.Total);
+        query.Limit = ClampLimit(query.Limit);
+        query.Page = ClampPage(query.Total, query.Limit, query.Page);
+    }
+
+    public static int GetSkipAmount(this IPaginationQuery query)
+    {
+        return PageToSkipAmount(query.Limit, query.Page);
     }
 }

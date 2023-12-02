@@ -5,5 +5,5 @@ namespace WebApp.ViewModels.Video;
 public class VideoWatchViewModel
 {
     public VideoSimple Video { get; set; } = default!;
-    public bool EmbedView { get; set; } = false;
+    public bool EmbedView { get; set; }
 }

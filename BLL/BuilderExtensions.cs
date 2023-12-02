@@ -2,7 +2,7 @@ using BLL.Jobs;
 using BLL.Jobs.Registration;
 using BLL.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Validation;
+using Utils.Validation;
 
 namespace BLL;
 
@@ -32,6 +32,8 @@ public static class BuilderExtensions
         services.AddScoped<DownloadImageJob>();
 
         services.AddHostedService<RegisterBllJobsService>();
+
+        services.AddAutoMapper(typeof(DTO.AutoMapperConfig));
 
         return services;
     }

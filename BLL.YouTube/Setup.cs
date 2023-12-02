@@ -7,7 +7,7 @@ using BLL.YouTube.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Validation;
+using Utils.Validation;
 
 namespace BLL.YouTube;
 

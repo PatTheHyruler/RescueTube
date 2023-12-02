@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace Validation;
+namespace Utils.Validation;
 
 public static class ServiceCollectionExtensions
 {

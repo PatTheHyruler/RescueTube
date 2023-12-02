@@ -1,23 +1,27 @@
 using System.Security.Claims;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using BLL.Base;
 using BLL.Contracts;
 using BLL.DTO.Entities;
 using BLL.DTO.Enums;
 using BLL.DTO.Mappers;
 using BLL.Identity.Services;
-using BLL.Utils;
 using DAL.EF.Extensions;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Utils.Pagination;
+using Utils.Pagination.Contracts;
 
 namespace BLL.Services;
 
 public class VideoPresentationService : BaseService
 {
+    private readonly IMapper _mapper;
     private readonly IEnumerable<IPlatformVideoPresentationHandler> _videoPresentationHandlers;
-    
+
     public async Task<List<VideoSimple>> SearchVideosAsync(
         EPlatform? platformQuery, string? nameQuery,
         string? authorQuery, ICollection<Guid>? categoryIds,
@@ -29,19 +33,24 @@ public class VideoPresentationService : BaseService
         var accessAllowed = AuthorizationService.IsAllowedToAccessVideoByRole(user);
         int? total = null;
         PaginationUtils.ConformValues(ref total, ref limit, ref page);
-        var skipAmount = PaginationUtils.PageToSkipAmount(limit, page);
-        var videos = (await Ctx.Videos.SearchVideos(
+        var videos = await Ctx.Videos.SearchVideos(
             dbContext: Ctx,
             platform: platformQuery,
             name: nameQuery, author: authorQuery,
             categoryIds: categoryIds, userId: userId,
             userAuthorId: userAuthorId,
             accessAllowed: accessAllowed,
-            skipAmount: skipAmount, limit: limit,
+            new PaginationQuery { Page = page, Limit = limit, Total = total },
             sortingOptions: sortingOptions, descending: descending
-        ).ProjectToVideoSimple().ToListAsync());
+        )
+            // .Select(VideoMapper.VideoToVideoSimpleExpression)
+            // .ProjectToVideoSimple()
+            .ProjectTo<VideoSimple>(_mapper.ConfigurationProvider)
+            .ToListAsync();
         MakePresentable(videos);
 
+        Console.WriteLine("õüoi" + videos.FirstOrDefault()?.Authors.FirstOrDefault()?.ProfileImages?.FirstOrDefault()?.Id);
+        
         return videos;
     }
 
@@ -49,7 +58,8 @@ public class VideoPresentationService : BaseService
     {
         var video = await Ctx.Videos
             .Where(v => v.Id == videoId)
-            .ProjectToVideoSimple()
+            .ProjectTo<VideoSimple>(_mapper.ConfigurationProvider)
+            // .ProjectToVideoSimple()
             .FirstOrDefaultAsync();
         MakePresentable(video);
         return video;
@@ -77,6 +87,7 @@ public class VideoPresentationService : BaseService
         {
             return;
         }
+
         foreach (var presentationHandler in _videoPresentationHandlers)
         {
             if (!presentationHandler.CanHandle(video)) continue;
@@ -85,8 +96,10 @@ public class VideoPresentationService : BaseService
         }
     }
 
-    public VideoPresentationService(IServiceProvider services, ILogger<VideoPresentationService> logger, IEnumerable<IPlatformVideoPresentationHandler> videoPresentationHandlers) : base(services, logger)
+    public VideoPresentationService(IServiceProvider services, ILogger<VideoPresentationService> logger,
+        IEnumerable<IPlatformVideoPresentationHandler> videoPresentationHandlers, IMapper mapper) : base(services, logger)
     {
         _videoPresentationHandlers = videoPresentationHandlers;
+        _mapper = mapper;
     }
 }

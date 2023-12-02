@@ -3,7 +3,7 @@ using DAL.EF.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Validation;
+using Utils.Validation;
 
 namespace DAL.EF;
 
