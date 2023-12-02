@@ -1,12 +1,8 @@
-using System.ComponentModel.DataAnnotations;
 using BLL;
-using BLL.Utils;
 using HeyRed.Mime;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using WebApp.ViewModels;
 using WebApp.ViewModels.Video;
 
 namespace WebApp.Controllers;

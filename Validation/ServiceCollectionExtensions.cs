@@ -45,7 +45,9 @@ public static class ServiceCollectionExtensions
     {
         var result = services.AddOptions<TOptions>();
         configureOptions?.Invoke(result);
-        return result
-            .ValidateDataAnnotationsRecursively();
+        return result;
+        // TODO: This used to validate options recursively using a library by ReHackt, but it was removed due to dependency conflicts
+        // return result
+        //     .ValidateDataAnnotationsRecursively();
     }
 }
