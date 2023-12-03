@@ -1,4 +1,3 @@
-@using WebApp.Controllers
 @using BLL.DTO.Enums
 @using WebApp.Utils
 @using WebApp.ViewModels
@@ -29,11 +28,6 @@
 {
     PaginationUiPartialViewModel PaginationViewModel => new()
     {
-        ControllerName = nameof(VideoController),
-        ActionName = nameof(VideoController.Search),
-        RouteValues = Context.GetRouteValues(),
-        LimitParamName = nameof(Model.Limit),
-        PageParamName = nameof(Model.Page),
         Limit = Model.Limit,
         Page = Model.Page,
         Total = null,

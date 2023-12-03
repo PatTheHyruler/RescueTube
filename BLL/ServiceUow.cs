@@ -24,6 +24,7 @@ public class ServiceUow
 
     public AuthorService AuthorService => _services.GetRequiredService<AuthorService>();
     public VideoService VideoService => _services.GetRequiredService<VideoService>();
+    public CommentService CommentService => _services.GetRequiredService<CommentService>();
 
     public VideoPresentationService VideoPresentationService =>
         _services.GetRequiredService<VideoPresentationService>();

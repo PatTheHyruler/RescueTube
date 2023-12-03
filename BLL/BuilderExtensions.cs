@@ -21,6 +21,7 @@ public static class BuilderExtensions
         services.AddScoped<EntityUpdateService>();
         services.AddScoped<AuthorService>();
         services.AddScoped<VideoService>();
+        services.AddScoped<CommentService>();
 
         services.AddMediatR(cfg =>
         {

@@ -1,5 +1,8 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Utils.Pagination
+@using Htmx
+@using Microsoft.AspNetCore.WebUtilities
+@using WebApp.Utils
 @model WebApp.ViewModels.PaginationUiPartialViewModel
 
 @{
@@ -19,18 +22,38 @@
                             <span class="rounded-3 p-2">...</span>
                         }
                         previousPage = selectPage;
-                        <a class="btn @(selectPage == Model.Page ? "btn-primary" : "btn-outline-primary")"
-                           asp-action="@ActionName"
-                           asp-controller="@ControllerName"
-                           asp-all-route-data="@GetDictionary(Model.RouteValues, selectPage)">
-                            @(selectPage + 1)
-                        </a>
+                        @if (Context.Request.IsHtmx(out var htmxHeaders))
+                        {
+                            <a class="btn @(selectPage == Model.Page ? "btn-primary" : "btn-outline-primary")"
+                               hx-target="#@htmxHeaders!.Target"
+                               hx-get="@GetQueryString(selectPage)">
+                                @(selectPage + 1)
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="btn @(selectPage == Model.Page ? "btn-primary" : "btn-outline-primary")"
+                               asp-all-route-data="@GetDictionary(selectPage)">
+                                @(selectPage + 1)
+                            </a>
+                        }
                     }
                     @if (Model.Total == null && Model.AmountOnPage >= Model.Limit)
                     {
-                        <a class="btn btn-outline-primary" asp-action="@ActionName" asp-controller="@ControllerName" asp-all-route-data="@GetDictionary(Model.RouteValues, Model.Page + 1)">
-                            @Resources.WebApp.Views.Shared._PaginationUiPartial.NextPage
-                        </a>
+                        var nextPage = Model.Page + 1;
+                        if (Context.Request.IsHtmx(out var htmxHeaders))
+                        {
+                            <a class="btn btn-outline-primary" hx-get="@GetQueryString(nextPage)"
+                               hx-target="#@htmxHeaders!.Target">
+                                @Resources.WebApp.Views.Shared._PaginationUiPartial.NextPage
+                            </a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-outline-primary" asp-all-route-data="@GetDictionary(nextPage)">
+                                @Resources.WebApp.Views.Shared._PaginationUiPartial.NextPage
+                            </a>
+                        }
                     }
                 }
             </div>
@@ -104,11 +127,18 @@
         return pagesSelection;
     }
 
-    private string ControllerName => Model.ControllerName.EndsWith("Controller") ?
-        Model.ControllerName.Remove(Model.ControllerName.Length - "Controller".Length) :
-        Model.ControllerName;
+    private string GetQueryString(int page)
+    {
+        var dictionary = GetDictionary(page);
+        return QueryHelpers.AddQueryString(
+            $"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}",
+            dictionary!);
+    }
 
-    private string ActionName => Model.ActionName.EndsWith("Async") ? Model.ActionName.Remove(Model.ActionName.Length - "Async".Length) : Model.ActionName;
+    private IDictionary<string, string> GetDictionary(int page)
+    {
+        return GetDictionary(Context.GetRouteValues(), page);
+    }
 
     private IDictionary<string, string> GetDictionary(object? routeValues, int page)
     {
@@ -116,12 +146,13 @@
         if (routeValues != null)
         {
             var routeValueDictionary = new RouteValueDictionary(routeValues);
-            routeValueDictionary.Remove(Model.PageParamName);
-            routeValueDictionary.Remove(Model.LimitParamName);
-            result = routeValueDictionary.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString() ?? "");
+            routeValueDictionary.Remove(nameof(Model.Page));
+            routeValueDictionary.Remove(nameof(Model.Limit));
+            result = routeValueDictionary.ToDictionary(kvp => kvp.Key,
+                kvp => kvp.Value?.ToString() ?? "");
         }
-        result[Model.PageParamName] = $"{page}";
-        result[Model.LimitParamName] = $"{Model.Limit}";
+        result[nameof(Model.Page)] = $"{page}";
+        result[nameof(Model.Limit)] = $"{Model.Limit}";
         return result;
     }
 }

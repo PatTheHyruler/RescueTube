@@ -11,6 +11,7 @@ public class AutoMapperConfig : Profile
     {
         AddVideoMap();
         AddAuthorMap();
+        AddCommentMap();
     }
 
     private void AddVideoMap()
@@ -39,5 +40,10 @@ public class AutoMapperConfig : Profile
                 ));
         CreateMap<VideoAuthor, AuthorSimple>()
             .IncludeMembers(va => va.Author);
+    }
+
+    private void AddCommentMap()
+    {
+        CreateMap<Video, VideoComments>();
     }
 }
