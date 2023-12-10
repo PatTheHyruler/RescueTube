@@ -9,7 +9,7 @@ public class Caption : BaseIdDbEntity
     public string? IdOnPlatform { get; set; }
 
     public string? Culture { get; set; }
-    public string Ext { get; set; } = default!;
+    public required string Ext { get; set; }
     public string? FilePath { get; set; }
     public string? Url { get; set; }
     public string? Name { get; set; }

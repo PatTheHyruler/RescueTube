@@ -6,9 +6,9 @@ public class JwtBearerOptions
 {
     public const string Section = "Auth:JWT";
 
-    [Required] [MinLength(16)] public string Key { get; set; } = default!;
-    [Required] public string Issuer { get; set; } = default!;
-    [Required] public string Audience { get; set; } = default!;
+    [Required] [MinLength(16)] public required string Key { get; set; }
+    [Required] public required string Issuer { get; set; }
+    [Required] public required string Audience { get; set; }
     [Range(1, int.MaxValue)] public int ExpiresInSeconds { get; set; } = 60;
     [Range(1, int.MaxValue)] public int ExpiresInSecondsMax { get; set; } = 60 * 30;
     [Range(1, int.MaxValue)] public int RefreshTokenExpiresInDays { get; set; } = 7;

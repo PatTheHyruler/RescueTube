@@ -6,7 +6,7 @@ namespace Domain.Entities.Localization;
 [Index(nameof(KeyId), nameof(Culture), nameof(ValidUntil), nameof(ValidSince))]
 public class TextTranslation : BaseIdDbEntity
 {
-    public string Content { get; set; } = default!;
+    public required string Content { get; set; }
     public string? Culture { get; set; }
 
     public DateTime? ValidSince { get; set; }

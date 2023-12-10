@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Domain.Entities;
 using Domain.Enums;
 
@@ -9,13 +10,14 @@ public class LinkSubmissionSuccessResult
     public EEntityType Type { get; set; }
     public Guid? EntityId { get; set; }
     public EPlatform Platform { get; set; }
-    public string IdOnPlatform { get; set; } = default!;
+    public required string IdOnPlatform { get; set; } 
     public bool AlreadyAdded { get; set; }
 
     public LinkSubmissionSuccessResult()
     {
     }
 
+    [SetsRequiredMembers]
     public LinkSubmissionSuccessResult(Submission submission, bool alreadyAdded)
     {
         SubmissionId = submission.Id;

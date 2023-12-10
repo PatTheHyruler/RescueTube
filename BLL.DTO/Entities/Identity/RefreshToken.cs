@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Domain.Base;
 
 namespace BLL.DTO.Entities.Identity;
@@ -10,7 +11,7 @@ public class RefreshToken : BaseIdDbEntity
 
     public DateTime ExpiresAt { get; set; }
 
-    public string JwtHash { get; set; } = default!;
+    public required string JwtHash { get; set; }
 
     public bool IsExpired => ExpiresAt <= DateTime.UtcNow;
 
@@ -18,6 +19,7 @@ public class RefreshToken : BaseIdDbEntity
     {
     }
 
+    [SetsRequiredMembers]
     public RefreshToken(TimeSpan expiresIn, string jwtHash, Guid userId)
     {
         ExpiresAt = DateTime.UtcNow.AddMilliseconds(expiresIn.TotalMilliseconds);

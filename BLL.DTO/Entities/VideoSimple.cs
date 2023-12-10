@@ -10,15 +10,15 @@ public class VideoSimple : BaseIdDbEntity
     public ICollection<TextTranslation>? Title { get; set; }
     public ICollection<TextTranslation>? Description { get; set; }
 
-    public List<Image> Thumbnails { get; set; } = default!;
+    public required List<Image> Thumbnails { get; set; }
     public Image? Thumbnail { get; set; }
 
     public TimeSpan? Duration { get; set; }
 
     public EPlatform Platform { get; set; }
-    public string IdOnPlatform { get; set; } = default!;
+    public required string IdOnPlatform { get; set; }
 
-    public ICollection<AuthorSimple> Authors { get; set; } = default!;
+    public required ICollection<AuthorSimple> Authors { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? PublishedAt { get; set; }
     public DateTime AddedToArchiveAt { get; set; }

@@ -13,5 +13,5 @@ public class RefreshToken : BaseIdDbEntity
 
     public DateTime ExpiresAt { get; set; }
 
-    public string JwtHash { get; set; } = default!;
+    public required string JwtHash { get; set; }
 }

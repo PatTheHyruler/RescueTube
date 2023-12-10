@@ -13,13 +13,15 @@ namespace BLL.Services;
 public class CommentService : BaseService
 {
     private readonly IMapper _mapper;
-    
-    public CommentService(IServiceProvider services, ILogger<CommentService> logger, IMapper mapper) : base(services, logger)
+
+    public CommentService(IServiceProvider services, ILogger<CommentService> logger, IMapper mapper) : base(services,
+        logger)
     {
         _mapper = mapper;
     }
-    
-    public async Task<VideoComments?> GetVideoComments(Guid videoId, IPaginationQuery paginationQuery, CancellationToken ct = default)
+
+    public async Task<VideoComments?> GetVideoComments(Guid videoId, IPaginationQuery paginationQuery,
+        CancellationToken ct = default)
     {
         var videoData = await Ctx.Videos
             .Where(v => v.Id == videoId)
@@ -33,12 +35,6 @@ public class CommentService : BaseService
             return null;
         }
 
-        var result = new VideoComments
-        {
-            Id = videoId,
-            LastCommentsFetch = videoData.LastCommentsFetch,
-        };
-        
         paginationQuery.ConformValues();
         var commentRootsQuery = Ctx.Comments
             .Where(c => c.VideoId == videoId && c.ConversationRootId == null)
@@ -47,13 +43,18 @@ public class CommentService : BaseService
             .ThenByDescending(c => c.Id);
 
         paginationQuery.Total = await commentRootsQuery.CountAsync(cancellationToken: ct);
-            
+
         var commentRoots = await commentRootsQuery
             .Paginate(paginationQuery)
             .ProjectTo<CommentDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken: ct);
 
-        result.Comments = commentRoots;
+        var result = new VideoComments
+        {
+            Id = videoId,
+            LastCommentsFetch = videoData.LastCommentsFetch,
+            Comments = commentRoots,
+        };
 
         return result;
     }

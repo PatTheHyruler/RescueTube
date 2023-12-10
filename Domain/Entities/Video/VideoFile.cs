@@ -5,7 +5,7 @@ namespace Domain.Entities;
 public class VideoFile : BaseIdDbEntity
 {
     public string? Key { get; set; }
-    public string FilePath { get; set; } = default!;
+    public required string FilePath { get; set; }
     public string? Etag { get; set; }
     public int? Width { get; set; }
     public int? Height { get; set; }

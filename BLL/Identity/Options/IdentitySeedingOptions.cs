@@ -8,8 +8,8 @@ public class IdentitySeedingOptions
 
     public class UserOptions
     {
-        public string UserName { get; set; } = default!;
-        public string Password { get; set; } = default!;
+        public required string UserName { get; set; }
+        public required string Password { get; set; }
         public string[]? Roles { get; set; }
     }
 }

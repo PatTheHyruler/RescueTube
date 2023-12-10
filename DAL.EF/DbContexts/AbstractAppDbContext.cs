@@ -15,35 +15,35 @@ namespace DAL.EF.DbContexts;
 public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole,
     UserLogin, RoleClaim, UserToken>
 {
-    public DbSet<RefreshToken> RefreshTokens { get; set; } = default!;
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
-    public DbSet<Author> Authors { get; set; } = default!;
-    public DbSet<AuthorStatisticSnapshot> AuthorStatisticSnapshots { get; set; } = default!;
-    public DbSet<AuthorImage> AuthorImages { get; set; } = default!;
+    public DbSet<Author> Authors => Set<Author>();
+    public DbSet<AuthorStatisticSnapshot> AuthorStatisticSnapshots => Set<AuthorStatisticSnapshot>();
+    public DbSet<AuthorImage> AuthorImages => Set<AuthorImage>();
 
-    public DbSet<Image> Images { get; set; } = default!;
+    public DbSet<Image> Images => Set<Image>();
 
-    public DbSet<TextTranslation> TextTranslations { get; set; } = default!;
-    public DbSet<TextTranslationKey> TextTranslationKeys { get; set; } = default!;
+    public DbSet<TextTranslation> TextTranslations => Set<TextTranslation>();
+    public DbSet<TextTranslationKey> TextTranslationKeys => Set<TextTranslationKey>();
 
-    public DbSet<Video> Videos { get; set; } = default!;
-    public DbSet<Caption> Captions { get; set; } = default!;
-    public DbSet<VideoAuthor> VideoAuthors { get; set; } = default!;
-    public DbSet<VideoCategory> VideoCategories { get; set; } = default!;
-    public DbSet<VideoFile> VideoFiles { get; set; } = default!;
-    public DbSet<VideoImage> VideoImages { get; set; } = default!;
-    public DbSet<VideoStatisticSnapshot> VideoStatisticSnapshots { get; set; } = default!;
-    public DbSet<VideoTag> VideoTags { get; set; } = default!;
+    public DbSet<Video> Videos => Set<Video>();
+    public DbSet<Caption> Captions => Set<Caption>();
+    public DbSet<VideoAuthor> VideoAuthors => Set<VideoAuthor>();
+    public DbSet<VideoCategory> VideoCategories => Set<VideoCategory>();
+    public DbSet<VideoFile> VideoFiles => Set<VideoFile>();
+    public DbSet<VideoImage> VideoImages => Set<VideoImage>();
+    public DbSet<VideoStatisticSnapshot> VideoStatisticSnapshots => Set<VideoStatisticSnapshot>();
+    public DbSet<VideoTag> VideoTags => Set<VideoTag>();
 
-    public DbSet<Comment> Comments { get; set; } = default!;
-    public DbSet<CommentHistory> CommentHistories { get; set; } = default!;
-    public DbSet<CommentStatisticSnapshot> CommentStatisticSnapshots { get; set; } = default!;
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<CommentHistory> CommentHistories => Set<CommentHistory>();
+    public DbSet<CommentStatisticSnapshot> CommentStatisticSnapshots => Set<CommentStatisticSnapshot>();
     
-    public DbSet<Category> Categories { get; set; } = default!;
-    public DbSet<EntityAccessPermission> EntityAccessPermissions { get; set; } = default!;
-    public DbSet<StatusChangeEvent> StatusChangeEvents { get; set; } = default!;
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<EntityAccessPermission> EntityAccessPermissions => Set<EntityAccessPermission>();
+    public DbSet<StatusChangeEvent> StatusChangeEvents => Set<StatusChangeEvent>();
 
-    public DbSet<Submission> Submissions { get; set; } = default!;
+    public DbSet<Submission> Submissions => Set<Submission>();
 
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;

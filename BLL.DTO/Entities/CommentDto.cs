@@ -7,7 +7,7 @@ public class CommentDto
     public Guid Id { get; set; }
     
     public EPlatform Platform { get; set; }
-    public string IdOnPlatform { get; set; } = default!;
+    public required string IdOnPlatform { get; set; }
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
     public bool IsAvailable { get; set; }
     public EPrivacyStatus PrivacyStatus { get; set; }
@@ -17,7 +17,7 @@ public class CommentDto
     public DateTime? LastSuccessfulFetchOfficial { get; set; }
     public DateTime AddedToArchiveAt { get; set; }
 
-    public AuthorSimple Author { get; set; } = default!;
+    public required AuthorSimple Author { get; set; }
 
     public ICollection<CommentDto>? ConversationReplies { get; set; }
     public ICollection<CommentDto>? DirectReplies { get; set; }

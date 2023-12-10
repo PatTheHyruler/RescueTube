@@ -44,7 +44,7 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
     public DateTime? RecordedAt { get; set; }
     
     public EPlatform Platform { get; set; }
-    public string IdOnPlatform { get; set; } = default!;
+    public required string IdOnPlatform { get; set; }
 
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
     public bool IsAvailable { get; set; }

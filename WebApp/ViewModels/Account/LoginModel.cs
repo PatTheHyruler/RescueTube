@@ -5,16 +5,16 @@ namespace WebApp.ViewModels.Account;
 public class LoginModel
 {
     public string? ReturnUrl { get; set; }
-    public InputModel Input { get; set; } = default!;
+    public required InputModel Input { get; set; }
 
     public class InputModel
     {
         [Required]
-        public string UserName { get; set; } = default!;
+        public required string UserName { get; set; }
 
         [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; } = default!;
+        public required string Password { get; set; }
 
         public bool RememberMe { get; set; } = true;
     }

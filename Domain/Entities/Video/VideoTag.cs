@@ -4,8 +4,8 @@ namespace Domain.Entities;
 
 public class VideoTag : BaseIdDbEntity
 {
-    public string Tag { get; set; } = default!;
-    public string NormalizedTag { get; set; } = default!;
+    public required string Tag { get; set; }
+    public required string NormalizedTag { get; set; }
 
     public DateTime? ValidSince { get; set; }
     public DateTime? ValidUntil { get; set; }
