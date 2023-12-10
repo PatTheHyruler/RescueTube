@@ -45,5 +45,11 @@ public class AutoMapperConfig : Profile
     private void AddCommentMap()
     {
         CreateMap<Video, VideoComments>();
+        CreateMap<Comment, CommentDto>()
+            .ForMember(c => c.Statistics, o => o
+                .MapFrom(c => c.CommentStatisticSnapshots!
+                    .OrderByDescending(s => s.ValidAt)
+                    .FirstOrDefault()));
+        CreateMap<CommentStatisticSnapshot, CommentStatisticSnapshotDto>();
     }
 }

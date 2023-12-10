@@ -16,6 +16,7 @@ public class FetchCommentsJob
         _backgroundJobClient = backgroundJobClient;
     }
 
+    [DisableConcurrentExecution(timeoutInSeconds: 60 * 10)]
     public async Task FetchVideoComments(string videoIdOnPlatform, CancellationToken ct)
     {
         await _commentService.UpdateComments(videoIdOnPlatform, ct);

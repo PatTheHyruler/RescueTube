@@ -16,6 +16,7 @@ public class AuthorService : BaseYouTubeService
 {
     private readonly Dictionary<string, Author> _cachedAuthors = new();
     private readonly IMediator _mediator;
+    private DateTimeOffset _lastYtExplodeRateLimitHit = DateTimeOffset.MinValue;
 
     public AuthorService(IServiceProvider services, ILogger<AuthorService> logger, IMediator mediator) : base(services, logger)
     {
@@ -40,7 +41,7 @@ public class AuthorService : BaseYouTubeService
 
     internal async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs)
     {
-        ICollection<Author> authors = new List<Author>();
+        var authors = new List<Author>();
         var notCachedIds = new List<AuthorFetchArg>();
         foreach (var arg in authorFetchArgs)
         {
@@ -69,31 +70,7 @@ public class AuthorService : BaseYouTubeService
             else
             {
                 var author = arg.NewAuthorFunc();
-                try
-                {
-                    // TODO: Move this to a background job
-                    var channel = await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(author.IdOnPlatform);
-                    author.AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
-                    {
-                        ImageType = EImageType.ProfilePicture,
-                        LastFetched = DateTime.UtcNow,
-
-                        Image = new Image
-                        {
-                            Platform = EPlatform.YouTube,
-
-                            Width = e.Resolution.Width,
-                            Height = e.Resolution.Height,
-                            Url = e.Url,
-                        },
-                    }).ToList();
-                }
-                catch (Exception e)
-                {
-                    author.FailedExtraDataFetchAttempts++;
-                    Logger.LogError(e, "Error occurred fetching extra author data for {Platform} author {IdOnPlatform}",
-                        EPlatform.YouTube, arg.AuthorId);
-                }
+                await TryFetchExtraAuthorData(author, arg); // TODO: Move this to a background job
 
                 Ctx.Authors.Add(author);
                 Ctx.RegisterSavedChangesCallbackRunOnce(() =>
@@ -105,6 +82,43 @@ public class AuthorService : BaseYouTubeService
         }
 
         return authors;
+    }
+
+    private async Task TryFetchExtraAuthorData(Author author, AuthorFetchArg arg)
+    {
+        if (_lastYtExplodeRateLimitHit < DateTimeOffset.Now.Subtract(TimeSpan.FromHours(1)))
+        {
+            try
+            {
+                var channel = await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(author.IdOnPlatform);
+                author.AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
+                {
+                    ImageType = EImageType.ProfilePicture,
+                    LastFetched = DateTime.UtcNow,
+
+                    Image = new Image
+                    {
+                        Platform = EPlatform.YouTube,
+
+                        Width = e.Resolution.Width,
+                        Height = e.Resolution.Height,
+                        Url = e.Url,
+                    },
+                }).ToList();
+            }
+            catch (Exception e)
+            {
+                _lastYtExplodeRateLimitHit = DateTimeOffset.Now;
+                author.FailedExtraDataFetchAttempts++;
+                Logger.LogError(e, "Error occurred fetching extra author data for {Platform} author {IdOnPlatform}",
+                    EPlatform.YouTube, arg.AuthorId);
+            }
+        }
+        else
+        {
+            Logger.LogInformation("Skipped fetching extra data for {Platform} author {IdOnPlatform}, latest rate limit hit was at {LatestRateLimitHit}",
+                EPlatform.YouTube, arg.AuthorId, _lastYtExplodeRateLimitHit);
+        }
     }
 }
 

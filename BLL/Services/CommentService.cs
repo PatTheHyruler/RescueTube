@@ -1,4 +1,6 @@
-﻿using BLL.Base;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using BLL.Base;
 using BLL.DTO.Entities;
 using DAL.EF.Pagination;
 using Microsoft.EntityFrameworkCore;
@@ -10,8 +12,11 @@ namespace BLL.Services;
 
 public class CommentService : BaseService
 {
-    public CommentService(IServiceProvider services, ILogger<CommentService> logger) : base(services, logger)
+    private readonly IMapper _mapper;
+    
+    public CommentService(IServiceProvider services, ILogger<CommentService> logger, IMapper mapper) : base(services, logger)
     {
+        _mapper = mapper;
     }
     
     public async Task<VideoComments?> GetVideoComments(Guid videoId, IPaginationQuery paginationQuery, CancellationToken ct = default)
@@ -45,6 +50,7 @@ public class CommentService : BaseService
             
         var commentRoots = await commentRootsQuery
             .Paginate(paginationQuery)
+            .ProjectTo<CommentDto>(_mapper.ConfigurationProvider)
             .ToListAsync(cancellationToken: ct);
 
         result.Comments = commentRoots;

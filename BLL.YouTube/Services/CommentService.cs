@@ -36,7 +36,8 @@ public class CommentService : BaseYouTubeService
 
         var video = await Ctx.Videos
             .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoIdOnPlatform)
-            .Include(v => v.Comments)
+            .Include(v => v.Comments!)
+            .ThenInclude(v => v.CommentStatisticSnapshots)
             .SingleAsync(cancellationToken: ct);
 
         video.LastCommentsFetch = commentsFetched;
@@ -60,6 +61,10 @@ public class CommentService : BaseYouTubeService
             if (commentDatas.All(c => c.ID != comment.IdOnPlatform))
             {
                 comment.DeletedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                comment.DeletedAt = null;
             }
         }
 

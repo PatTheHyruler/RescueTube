@@ -40,6 +40,7 @@ public class EntityUpdateService : BaseService
             newStats.CommentId = comment.Id;
 
             comment.CommentStatisticSnapshots.Add(newStats);
+            Ctx.CommentStatisticSnapshots.Add(newStats);
         }
 
         comment.AuthorIsCreator ??= newCommentData.AuthorIsCreator;
