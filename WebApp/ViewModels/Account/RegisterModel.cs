@@ -4,21 +4,21 @@ namespace WebApp.ViewModels.Account;
 
 public class RegisterModel
 {
-    public required InputModel Input { get; set; }
+    public InputModel Input { get; set; } = new();
     public string? ReturnUrl { get; set; }
 
     public class InputModel
     {
-        [Required] public required string UserName { get; set; }
+        [Required] public string UserName { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Password)]
-        public required string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
         [Required]
         [DataType(DataType.Password)]
         [Compare(nameof(Password))]
-        public required string ConfirmPassword { get; set; }
+        public string ConfirmPassword { get; set; } = string.Empty;
 
         public bool RememberMe { get; set; } = true;
     }

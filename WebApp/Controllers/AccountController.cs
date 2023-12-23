@@ -133,10 +133,8 @@ public class AccountController : Controller
                 return RedirectToAction(nameof(ApprovalRequired), new { username = model.Input.UserName });
             }
         }
-        else
-        {
-            ModelState.AddModelError(string.Empty, "Invalid login attempt");
-        }
+        
+        ModelState.AddModelError(string.Empty, "Invalid login attempt");
 
         return View(model);
     }

@@ -3,59 +3,43 @@
 @using Htmx
 @using Microsoft.AspNetCore.WebUtilities
 @using WebApp.Utils
+@using WebApp.ViewModels
 @model WebApp.ViewModels.PaginationUiPartialViewModel
 
 @{
     int? totalPages = Model.Total == null ? null : Convert.ToInt32(Math.Ceiling(Model.Total.Value / (double)Model.Limit));
-    var pagesSelection = GetPagesSelection(totalPages);
 
     @if (!PaginationUtils.IsOnlyPage(Model.Total, Model.Limit) && !(Model.Page == 0 && Model.AmountOnPage < Model.Limit))
     {
         <div>
             <div class="d-flex gap-1">
-                @{
-                    int? previousPage = null;
-                    @foreach (var selectPage in pagesSelection)
-                    {
-                        @if (previousPage + 1 < selectPage)
+                <partial name="_PaginationButtonPartial" model="@(new PaginationButtonPartialViewModel(0, Model.Limit, "<<"))"/>
+                <partial name="_PaginationButtonPartial" model="@(new PaginationButtonPartialViewModel(PreviousPage, Model.Limit, "<"))"/>
+                @if (Context.Request.IsHtmx(out var htmxHeaders))
+                {
+                    <form method="get" hx-get="@GetQueryString(Model.Page)"
+                          hx-target="#@htmxHeaders!.Target">
+                        @foreach (var (key, value) in GetDictionary())
                         {
-                            <span class="rounded-3 p-2">...</span>
+                            <input type="hidden" name="@key" value="@value"/>
                         }
-                        previousPage = selectPage;
-                        @if (Context.Request.IsHtmx(out var htmxHeaders))
-                        {
-                            <a class="btn @(selectPage == Model.Page ? "btn-primary" : "btn-outline-primary")"
-                               hx-target="#@htmxHeaders!.Target"
-                               hx-get="@GetQueryString(selectPage)">
-                                @(selectPage + 1)
-                            </a>
-                        }
-                        else
-                        {
-                            <a class="btn @(selectPage == Model.Page ? "btn-primary" : "btn-outline-primary")"
-                               asp-all-route-data="@GetDictionary(selectPage)">
-                                @(selectPage + 1)
-                            </a>
-                        }
-                    }
-                    @if (Model.Total == null && Model.AmountOnPage >= Model.Limit)
-                    {
-                        var nextPage = Model.Page + 1;
-                        if (Context.Request.IsHtmx(out var htmxHeaders))
-                        {
-                            <a class="btn btn-outline-primary" hx-get="@GetQueryString(nextPage)"
-                               hx-target="#@htmxHeaders!.Target">
-                                @Resources.WebApp.Views.Shared._PaginationUiPartial.NextPage
-                            </a>
-                        }
-                        else
-                        {
-                            <a class="btn btn-outline-primary" asp-all-route-data="@GetDictionary(nextPage)">
-                                @Resources.WebApp.Views.Shared._PaginationUiPartial.NextPage
-                            </a>
-                        }
-                    }
+                        <input asp-for="Page"/>
+                        <input asp-for="Limit"/>
+                    </form>
                 }
+                else
+                {
+                    <form method="get">
+                        @foreach (var (key, value) in GetDictionary())
+                        {
+                            <input type="hidden" name="@key" value="@value"/>
+                        }
+                        <input asp-for="Page"/>
+                        <input asp-for="Limit"/>
+                    </form>
+                }
+                <partial name="_PaginationButtonPartial" model="@(new PaginationButtonPartialViewModel(NextPage, Model.Limit, ">"))"/>
+                <partial name="_PaginationButtonPartial" model="@(new PaginationButtonPartialViewModel(LastPage, Model.Limit, ">>"))"/>
             </div>
         </div>
         @if (Model.AmountOnPage == 0)
@@ -86,46 +70,12 @@
 
 @functions
 {
+    private int PreviousPage => Math.Max(0, Model.Page - 1);
+    private int NextPage => Math.Min(LastPage, Model.Page + 1);
+    private int LastPage => PaginationUtils.GetLastPage(Model.Total, Model.Limit);
+
     private int PageRangeStart => Model.Limit * Model.Page + 1;
     private int PageRangeEnd => Model.Limit * Model.Page + Model.AmountOnPage;
-    
-    private IEnumerable<int> GetPagesSelection(int? totalPages)
-    {
-        const int selectionAmountToShow = 5;
-        var pagesSelection = new List<int>();
-        var maxAddedPage = 0;
-        if (Model.Page - Math.Ceiling(selectionAmountToShow / 2d) > 0)
-        {
-            pagesSelection.Add(0);
-        }
-        var selectedAmount = 0;
-        var offset = 0;
-        while (selectedAmount < selectionAmountToShow)
-        {
-            var page = Convert.ToInt32(Model.Page - Math.Ceiling(selectionAmountToShow / 2d) + offset);
-            if (page < 0)
-            {
-                offset++;
-                continue;
-            }
-            if (page >= totalPages) break;
-            if (totalPages == null && page > Model.Page) break;
-            if (pagesSelection.Contains(page))
-            {
-                offset++;
-                continue;
-            }
-            maxAddedPage = page;
-            pagesSelection.Add(page);
-            offset++;
-            selectedAmount++;
-        }
-        if (totalPages != null && maxAddedPage < totalPages - 1)
-        {
-            pagesSelection.Add(totalPages.Value);
-        }
-        return pagesSelection;
-    }
 
     private string GetQueryString(int page)
     {
@@ -135,12 +85,9 @@
             dictionary!);
     }
 
-    private IDictionary<string, string> GetDictionary(int page)
-    {
-        return GetDictionary(Context.GetRouteValues(), page);
-    }
-
-    private IDictionary<string, string> GetDictionary(object? routeValues, int page)
+    private IDictionary<string, string> GetDictionary() => GetDictionary(Context.GetRouteValues());
+    
+    private IDictionary<string, string> GetDictionary(object? routeValues)
     {
         var result = new Dictionary<string, string>();
         if (routeValues != null)
@@ -151,6 +98,19 @@
             result = routeValueDictionary.ToDictionary(kvp => kvp.Key,
                 kvp => kvp.Value?.ToString() ?? "");
         }
+
+        return result;
+    }
+    
+    private IDictionary<string, string> GetDictionary(int page)
+    {
+        return GetDictionary(Context.GetRouteValues(), page);
+    }
+
+    private IDictionary<string, string> GetDictionary(object? routeValues, int page)
+    {
+        var result = GetDictionary(routeValues);
+
         result[nameof(Model.Page)] = $"{page}";
         result[nameof(Model.Limit)] = $"{Model.Limit}";
         return result;
