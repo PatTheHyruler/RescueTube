@@ -1,4 +1,4 @@
-Backend for a web application that archives content from online video platforms (currently only YouTube).
+Web application that archives content from online video platforms (currently only YouTube).
 
 
 Started as a university homework project, the code for which can be found here:
