@@ -58,7 +58,7 @@ public static class ConversionExtensions
             Platform = EPlatform.YouTube,
             IdOnPlatform = commentData.AuthorID,
 
-            DisplayName = commentData.Author,
+            UserName = commentData.Author,
 
             IsAvailable = true,
             PrivacyStatus = EPrivacyStatus.Private,
