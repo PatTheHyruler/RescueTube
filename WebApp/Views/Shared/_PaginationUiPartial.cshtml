@@ -19,8 +19,8 @@
                         ? $"hx-get={CurrentUri} " +
                           $"hx-target=#{htmxHeaders?.Target}"
                         : string.Empty)>
-                    <partial name="_PaginationButtonPartial" model="@(new PaginationButtonPartialViewModel(0, Model.Limit, "<<"))"/>
-                    <partial name="_PaginationButtonPartial" model="@(new PaginationButtonPartialViewModel(PreviousPage, Model.Limit, "<"))"/>
+                    <partial name="_PaginationButtonPartial" model="@(new PaginationButtonPartialViewModel(0, Model.Limit, "<<", Disabled: Model.Page == 0))"/>
+                    <partial name="_PaginationButtonPartial" model="@(new PaginationButtonPartialViewModel(PreviousPage, Model.Limit, "<", Disabled: Model.Page == 0))"/>
 
                     @foreach (var (key, value) in GetDictionary())
                     {
