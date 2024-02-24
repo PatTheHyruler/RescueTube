@@ -4,7 +4,13 @@
 @using WebApp.Utils
 @model WebApp.ViewModels.PaginationButtonPartialViewModel
 
-@if (Context.Request.IsHtmx(out var htmxHeaders))
+@if (Model.Disabled)
+{
+    <div class="btn btn-dark disabled">
+        @Model.Text
+    </div>
+}
+else if (Context.Request.IsHtmx(out var htmxHeaders))
 {
 <a class="btn btn-outline-primary" hx-get="@GetQueryString(Model.Page)"
    hx-target="#@htmxHeaders!.Target">
