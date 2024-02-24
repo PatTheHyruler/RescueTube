@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using BLL.YouTube.Services;
 using Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,17 +32,21 @@ public class YouTubeUow
     private YoutubeClient? _youTubeExplodeClient;
     public YoutubeClient YouTubeExplodeClient => _youTubeExplodeClient ??= new YoutubeClient();
 
-    private string GetUniqueFileIdentifier() => $"{DateTime.UtcNow.Ticks}_{Guid.NewGuid()
+    private string GetUniqueFileIdentifier() => $"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid()
         .ToString().Replace("-", "")[..8]}";
+
+    private static int UnnecessaryFilePartLimit =>
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? 20
+            : 200;
 
     public OptionSet DownloadOptions => new()
     {
         WriteInfoJson = true,
         RestrictFilenames = true,
-        TrimFilenames = 180,
         Output = Path.Combine(
             AppPaths.GetVideosDirectory(EPlatform.YouTube, _services.GetService<AppPathOptions>()),
-            $"(%(channel_id)s) %(uploader).200B/%(upload_date)s - %(title).200B - %(id)s/{GetUniqueFileIdentifier()}.%(ext)s"
+            $"(%(channel_id)s) %(uploader).{UnnecessaryFilePartLimit}B/%(upload_date)s - %(title).{UnnecessaryFilePartLimit}B - %(id)s/{GetUniqueFileIdentifier()}.%(ext)s"
         ),
     };
 
