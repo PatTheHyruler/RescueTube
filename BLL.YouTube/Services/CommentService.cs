@@ -22,7 +22,7 @@ public class CommentService : BaseYouTubeService
     public async Task UpdateComments(string videoIdOnPlatform, CancellationToken ct)
     {
         var videoData = await YouTubeUow.VideoService.FetchVideoDataYtdl(videoIdOnPlatform, true, ct);
-        if (videoData == null)
+        if (videoData?.Comments == null)
         {
             Logger.LogError("Failed to fetch comments for video {VideoId}", videoIdOnPlatform);
             return;
@@ -33,6 +33,14 @@ public class CommentService : BaseYouTubeService
             "Fetched {CommentsAmount} comments from YouTube for video {VideoId}",
             videoData.Comments.Length, videoIdOnPlatform
         );
+
+        if (videoData.Comments.Length == 0 && videoData.CommentCount != 0)
+        {
+            Logger.LogError(
+                "Fetched 0 comments while reported comment count was {CommentCount}, assuming comments fetch error",
+                videoData.CommentCount);
+            return;
+        }
 
         var video = await Ctx.Videos
             .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoIdOnPlatform)
