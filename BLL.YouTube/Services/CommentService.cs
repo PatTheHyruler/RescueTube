@@ -60,7 +60,7 @@ public class CommentService : BaseYouTubeService
         {
             if (commentDatas.All(c => c.ID != comment.IdOnPlatform))
             {
-                comment.DeletedAt = DateTime.UtcNow;
+                comment.DeletedAt ??= DateTime.UtcNow;
             }
             else
             {
