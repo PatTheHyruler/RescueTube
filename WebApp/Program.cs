@@ -4,6 +4,8 @@ using BLL.Identity;
 using BLL.YouTube;
 using DAL.EF;
 using Hangfire;
+using Hangfire.Console;
+using Hangfire.Console.Extensions;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
@@ -44,8 +46,10 @@ builder.Services.AddHangfire(configuration => configuration
         builder.Configuration.GetConnectionString("HangfirePostgres"))
     )
     .UseSerilogLogProvider()
+    .UseConsole()
 );
 builder.Services.AddHangfireServer();
+builder.Services.AddHangfireConsoleExtensions();
 
 builder.Services.AddDbPersistenceEf(builder.Configuration);
 
