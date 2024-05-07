@@ -4,10 +4,12 @@ using BLL.YouTube.EventHandlers;
 using BLL.YouTube.Jobs;
 using BLL.YouTube.Jobs.Registration;
 using BLL.YouTube.Services;
+using Domain.Enums;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Utils.Validation;
+using YoutubeDLSharp;
 
 namespace BLL.YouTube;
 
@@ -43,9 +45,23 @@ public static class Setup
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
         services.AddScoped<IPlatformVideoPresentationHandler, PresentationHandler>();
 
-        services.AddMediatR(cfg =>
+        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<VideoAddedDownloadHandler>(); });
+
+        services.AddScoped(s =>
         {
-            cfg.RegisterServicesFromAssemblyContaining<VideoAddedDownloadHandler>();
+            var youTubeOptions = s.GetService<IOptions<YouTubeOptions>>()?.Value;
+            var binariesDirectory = GetBinariesDirectory(youTubeOptions?.BinariesDirectory);
+
+            return new YoutubeDL
+            {
+                OutputFolder = AppPaths.GetVideosDirectory(EPlatform.YouTube,
+                    s.GetService<IOptionsSnapshot<AppPathOptions>>()?.Value),
+                RestrictFilenames = true,
+                YoutubeDLPath = Path.Combine(binariesDirectory, YoutubeDLSharp.Utils.YtDlpBinaryName),
+                FFmpegPath = Path.Combine(binariesDirectory, YoutubeDLSharp.Utils.FfmpegBinaryName),
+                // Can't set ffprobe path??
+                OverwriteFiles = false,
+            };
         });
 
         services.AddScoped<DownloadVideoJob>();
@@ -66,19 +82,38 @@ public static class Setup
         var services = scope.ServiceProvider;
 
         var options = services.GetService<IOptions<YouTubeOptions>>()?.Value;
-        await DownloadAndSetupBinaries(options?.BinariesDirectory ?? Directory.GetCurrentDirectory(),
-            options?.OverwriteExistingBinaries ?? false);
+        var binariesDirectory = GetBinariesDirectory(options?.BinariesDirectory);
+        var overwriteExistingBinaries = options?.OverwriteExistingBinaries ?? false;
+        Directory.CreateDirectory(binariesDirectory);
+
+        await DownloadAndSetupBinaries(binariesDirectory,
+            overwriteExistingBinaries);
+
+        if (!overwriteExistingBinaries)
+        {
+            var ytdl = services.GetRequiredService<YoutubeDL>();
+            if (Path.Exists(ytdl.YoutubeDLPath))
+            {
+                await ytdl.RunUpdate();
+            }
+        }
     }
 
-    private static async Task DownloadAndSetupBinaries(string? binariesDirectory = null, bool overWriteExistingBinaries = true)
+    private static string GetBinariesDirectory(string? binariesDirectory)
     {
-        // TODO: This should be redesigned to allow manual and automatic updates to these binaries (and UI to show version/perform updates)
         if (binariesDirectory != null)
         {
             binariesDirectory = Path.GetFullPath(binariesDirectory);
         }
+
         binariesDirectory ??= Path.Combine(Directory.GetCurrentDirectory(), "yt-dlp-binaries");
-        await YoutubeDLSharp.Utils.DownloadBinaries(skipExisting: !overWriteExistingBinaries, directoryPath: binariesDirectory);
+        return binariesDirectory;
+    }
+
+    private static async Task DownloadAndSetupBinaries(string binariesDirectory, bool overWriteExistingBinaries = true)
+    {
+        await YoutubeDLSharp.Utils.DownloadBinaries(skipExisting: !overWriteExistingBinaries,
+            directoryPath: binariesDirectory);
 
         var binaries = new[]
         {

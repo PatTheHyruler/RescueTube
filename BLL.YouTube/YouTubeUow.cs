@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 using BLL.YouTube.Services;
 using Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 using YoutubeExplode;
@@ -19,15 +18,8 @@ public class YouTubeUow
     }
 
     private YoutubeDL? _youtubeDl;
-
     public YoutubeDL YoutubeDl =>
-        _youtubeDl ??= new YoutubeDL
-        {
-            OutputFolder = AppPaths.GetVideosDirectory(EPlatform.YouTube,
-                _services.GetService<IOptionsSnapshot<AppPathOptions>>()?.Value),
-            RestrictFilenames = true,
-            OverwriteFiles = false,
-        };
+        _youtubeDl ??= _services.GetRequiredService<YoutubeDL>();
 
     private YoutubeClient? _youTubeExplodeClient;
     public YoutubeClient YouTubeExplodeClient => _youTubeExplodeClient ??= new YoutubeClient();

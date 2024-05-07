@@ -26,6 +26,10 @@ public class RegisterYouTubeJobsService : BackgroundService
             "yt-download-non-downloaded-videos-recurring",
             x => x.DownloadNotDownloadedVideos(default),
             Cron.Daily);
+        recurringJobManager.AddOrUpdate<UpdateYtDlpJob>(
+            "yt-update-ytdlp-binary",
+            x => x.UpdateYouTubeDl(),
+            Cron.Daily);
 
         return Task.CompletedTask;
     }
