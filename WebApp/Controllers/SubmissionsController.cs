@@ -8,6 +8,7 @@ using WebApp.ViewModels;
 namespace WebApp.Controllers;
 
 [Authorize(Roles = RoleNames.AllowedToSubmitRoles)]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class SubmissionsController : Controller
 {
     private readonly ServiceUow _serviceUow;

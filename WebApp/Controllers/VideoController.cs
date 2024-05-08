@@ -7,6 +7,7 @@ using WebApp.ViewModels.Video;
 
 namespace WebApp.Controllers;
 
+[ApiExplorerSettings(IgnoreApi = true)]
 public class VideoController : Controller
 {
     private readonly ServiceUow _serviceUow;

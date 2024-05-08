@@ -10,6 +10,7 @@ using WebApp.ViewModels.Account;
 namespace WebApp.Controllers;
 
 [AutoValidateAntiforgeryToken]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class AccountController : Controller
 {
     private readonly IServiceProvider _services;

@@ -5,6 +5,7 @@ using WebApp.ViewModels.Comment;
 
 namespace WebApp.Controllers;
 
+[ApiExplorerSettings(IgnoreApi = true)]
 public class CommentController : Controller
 {
     private readonly CommentService _commentService;
