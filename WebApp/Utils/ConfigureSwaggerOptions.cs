@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Asp.Versioning.ApiExplorer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -44,31 +45,25 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
             options.IncludeXmlComments(xmlPath);
         }
 
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        var jwtSecurityScheme = new OpenApiSecurityScheme
         {
-            Description = "JWT authorization",
-            Name = "Authorization",
+            BearerFormat = "JWT Bearer",
+            Description = "Put your JWT Bearer token in the textbox (without the Bearer prefix)",
+            Name = "JWT authentication",
             In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "Bearer"
-        });
+            Type = SecuritySchemeType.Http,
+            Scheme = JwtBearerDefaults.AuthenticationScheme,
+            Reference = new OpenApiReference
+            {
+                Id = JwtBearerDefaults.AuthenticationScheme,
+                Type = ReferenceType.SecurityScheme,
+            }
+        };
+        options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, jwtSecurityScheme);
 
         options.AddSecurityRequirement(new OpenApiSecurityRequirement
         {
-            {
-                new OpenApiSecurityScheme
-                {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    },
-                    Scheme = "oauth2",
-                    Name = "Bearer",
-                    In = ParameterLocation.Header
-                },
-                new List<string>()
-            }
+            { jwtSecurityScheme, Array.Empty<string>() }
         });
     }
 }
