@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using BLL.DTO.Entities.Identity;
 using BLL.DTO.Exceptions.Identity;
 using BLL.DTO.Mappers;
@@ -43,9 +44,8 @@ public class TokenService
 
     private static string HashJwt(string jwt)
     {
-        using var sha = new System.Security.Cryptography.HMACSHA256();
         var textBytes = System.Text.Encoding.UTF8.GetBytes(jwt);
-        var hashBytes = sha.ComputeHash(textBytes);
+        var hashBytes = SHA512.HashData(textBytes);
 
         var hash = BitConverter
             .ToString(hashBytes)
@@ -55,36 +55,18 @@ public class TokenService
     }
 
     /// <summary>
-    /// Validate the requested expiration time for a JWT.
-    /// </summary>
-    /// <param name="expiresInSeconds">The requested JWT expiration time, in seconds.</param>
-    /// <returns>The expiration time, if provided, else returns the default configured expiration time.</returns>
-    /// <exception cref="InvalidJwtExpirationRequestedException">Thrown if the requested expiration time is too short or too long.</exception>
-    private int ValidateExpiresInSeconds(int? expiresInSeconds)
-    {
-        if (expiresInSeconds == null) return _jwtBearerOptions.ExpiresInSeconds;
-        if (expiresInSeconds <= 1 || expiresInSeconds > _jwtBearerOptions.ExpiresInSecondsMax)
-            throw new InvalidJwtExpirationRequestedException(expiresInSeconds.Value, 1,
-                _jwtBearerOptions.ExpiresInSecondsMax);
-
-        return expiresInSeconds.Value;
-    }
-
-    /// <summary>
     /// Generate a new JWT for given <see cref="ClaimsPrincipal"/>.
     /// </summary>
     /// <param name="claimsPrincipal">The <see cref="ClaimsPrincipal"/> to create a JWT for.</param>
-    /// <param name="expiresInSeconds">The amount of time (in seconds) that the created JWT should be valid for.</param>
     /// <returns>The created JWT.</returns>
-    /// <exception cref="InvalidJwtExpirationRequestedException">Thrown if the requested expiration time is too short or too long.</exception>
-    public string GenerateJwt(ClaimsPrincipal claimsPrincipal, int? expiresInSeconds)
+    public string GenerateJwt(ClaimsPrincipal claimsPrincipal)
     {
         return IdentityHelpers.GenerateJwt(
             claimsPrincipal.Claims,
             _jwtBearerOptions.Key,
             _jwtBearerOptions.Issuer,
             _jwtBearerOptions.Audience,
-            ValidateExpiresInSeconds(expiresInSeconds)
+            _jwtBearerOptions.ExpiresInSeconds
         );
     }
 
@@ -98,12 +80,10 @@ public class TokenService
     /// The refresh token to refresh the JWT with.
     /// A new refresh token will be generated and the old refresh token will be invalidated.
     /// </param>
-    /// <param name="expiresInSeconds">The amount of time the new JWT should be valid for.</param>
     /// <returns>The new JWT and new refresh token.</returns>
     /// <exception cref="InvalidJwtException">The provided JWT has an invalid form.</exception>
     /// <exception cref="InvalidRefreshTokenException">The provided refresh token is invalid.</exception>
-    /// <exception cref="InvalidJwtExpirationRequestedException">The requested expiration time is too short or too long.</exception>
-    public async Task<JwtResult> RefreshTokenAsync(string jwt, string refreshToken, int? expiresInSeconds = null)
+    public async Task<JwtResult> RefreshTokenAsync(string jwt, string refreshToken)
     {
         JwtSecurityToken jwtToken;
 
@@ -137,11 +117,11 @@ public class TokenService
         }
 
         var claimsPrincipal = await _identityUow.SignInManager.CreateUserPrincipalAsync(user);
-        jwt = GenerateJwt(claimsPrincipal, expiresInSeconds);
+        jwt = GenerateJwt(claimsPrincipal);
 
         var userRefreshToken = userRefreshTokens.Single();
         userRefreshToken.ExpiresAt =
-            userRefreshToken.ExpiresAt.AddMinutes(
+            DateTime.UtcNow.AddMinutes(
                 _jwtBearerOptions.ExtendOldRefreshTokenExpirationByMinutes);
 
         var newRefreshToken = CreateAndAddRefreshToken(user.Id, jwt);
@@ -190,6 +170,13 @@ public class TokenService
         var jwtHash = HashJwt(jwt);
         await _identityUow.Ctx.RefreshTokens
             .Filter(userId, refreshToken, jwtHash)
+            .ExecuteDeleteAsync();
+    }
+
+    public async Task DeleteExpiredRefreshTokensAsync()
+    {
+        await _identityUow.Ctx.RefreshTokens
+            .Where(r => r.ExpiresAt < DateTime.UtcNow)
             .ExecuteDeleteAsync();
     }
 }

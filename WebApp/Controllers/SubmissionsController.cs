@@ -24,6 +24,7 @@ public class SubmissionsController : Controller
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([FromForm] LinkSubmissionModel model)
     {
         try

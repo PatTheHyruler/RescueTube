@@ -1,13 +1,16 @@
+using System.Text;
 using BLL.Identity.Options;
 using BLL.Identity.Services;
 using DAL.EF.DbContexts;
 using Domain.Entities.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Utils.Validation;
 
 namespace BLL.Identity;
@@ -19,19 +22,13 @@ public static class SetupExtensions
         var services = builder.Services;
         var configuration = builder.Configuration;
 
-        var cookieSection = configuration.GetRequiredSection(CookieAuthOptions.Section);
         services
             .AddOptionsFull<RegistrationOptions>(configuration.GetSection(RegistrationOptions.Section))
             .AddOptions<IdentityOptions>()
             .Configure(options => options.Password.RequiredLength = 16)
             .Bind(configuration.GetSection("Identity"))
             .ValidateDataAnnotations()
-            .ValidateOnStart().Services
-            .AddOptionsFull<CookieAuthOptions>(cookieSection);
-        var cookieOptions = cookieSection.Get<CookieAuthOptions>()
-                            ?? throw new OptionsValidationException(CookieAuthOptions.Section,
-                                typeof(CookieAuthOptions),
-                                new[] { "Failed to read authentication cookie options" });
+            .ValidateOnStart();
 
         services.AddHttpContextAccessor(); // This is added in .AddIdentity(), but not in .AddIdentityCore(), so adding it manually just in case it doesn't get registered elsewhere.
 
@@ -48,7 +45,52 @@ public static class SetupExtensions
         services.AddScoped<SignInManager<User>>();
 
         services.AddAuthentication(IdentityConstants.ApplicationScheme)
-            .AddIdentityCookies()
+            .AddIdentityCookiesCustom(services, configuration)
+            .AddJwtBearerCustom(services, configuration);
+
+        builder.Services.AddSeeding();
+
+        services.AddAuthorization();
+
+        services.AddIdentityUowAndServices();
+
+        return services;
+    }
+
+    private static AuthenticationBuilder AddJwtBearerCustom(this AuthenticationBuilder authBuilder,
+        IServiceCollection services, IConfiguration config)
+    {
+        var jwtSection = config.GetRequiredSection(JwtBearerOptions.Section);
+        services.AddOptionsFull<JwtBearerOptions>(jwtSection);
+        var jwtOptions = jwtSection.Get<JwtBearerOptions>()
+                         ?? throw new OptionsValidationException(JwtBearerOptions.Section,
+                             typeof(JwtBearerOptions),
+                             ["Failed to read JWT bearer auth options"]);
+
+        authBuilder.AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtOptions.Issuer,
+                ValidAudience = jwtOptions.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+                ClockSkew = TimeSpan.FromSeconds(5),
+            };
+        });
+        return authBuilder;
+    }
+
+    private static AuthenticationBuilder AddIdentityCookiesCustom(this AuthenticationBuilder authBuilder,
+        IServiceCollection services, IConfiguration config)
+    {
+        var cookieSection = config.GetRequiredSection(CookieAuthOptions.Section);
+        services.AddOptionsFull<CookieAuthOptions>(cookieSection);
+        var cookieOptions = cookieSection.Get<CookieAuthOptions>()
+                            ?? throw new OptionsValidationException(CookieAuthOptions.Section,
+                                typeof(CookieAuthOptions),
+                                ["Failed to read authentication cookie options"]);
+        authBuilder.AddIdentityCookies()
             .ApplicationCookie?
             .Configure(o =>
             {
@@ -59,14 +101,7 @@ public static class SetupExtensions
             });
         services.Configure<SecurityStampValidatorOptions>(o =>
             o.ValidationInterval = cookieOptions.ValidationInterval);
-
-        builder.Services.AddSeeding();
-
-        services.AddAuthorization();
-
-        services.AddIdentityUowAndServices();
-
-        return services;
+        return authBuilder;
     }
 
     private static void AddIdentityUowAndServices(this IServiceCollection services)

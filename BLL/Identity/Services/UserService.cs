@@ -65,13 +65,11 @@ public class UserService
     /// <remarks>Requires calling SaveChanges().</remarks>
     /// <param name="username">The username for the account being signed in to.</param>
     /// <param name="password">The password for the account being signed in to.</param>
-    /// <param name="expiresInSeconds">The amount of time the created JWT should be valid for.</param>
     /// <returns>A JSON Web Token for the specified user, and a token to refresh the JWT with.</returns>
     /// <exception cref="UserNotFoundException">No user with given <paramref name="username"/> found.</exception>
     /// <exception cref="WrongPasswordException">Given <paramref name="password"/> is invalid.</exception>
     /// <exception cref="UserNotApprovedException">Given credentials are correct, but the user account with given <paramref name="username"/> requires approval before it can be used.</exception>
-    /// <exception cref="InvalidJwtExpirationRequestedException">Requested JWT expiration time is invalid.</exception>
-    public async Task<JwtResult> SignInJwtAsync(string username, string password, int? expiresInSeconds = null)
+    public async Task<JwtResult> SignInJwtAsync(string username, string password)
     {
         var user = await _identityUow.UserManager.FindByNameAsync(username);
         if (user == null)
@@ -93,7 +91,7 @@ public class UserService
         // TODO: Background service for deleting expired refresh tokens?
 
         var claimsPrincipal = await _identityUow.SignInManager.CreateUserPrincipalAsync(user);
-        var jwt = _identityUow.TokenService.GenerateJwt(claimsPrincipal, expiresInSeconds);
+        var jwt = _identityUow.TokenService.GenerateJwt(claimsPrincipal);
 
         var refreshToken = _identityUow.TokenService.CreateAndAddRefreshToken(user.Id, jwt);
 

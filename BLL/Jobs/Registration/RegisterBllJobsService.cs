@@ -25,6 +25,9 @@ public class RegisterBllJobsService : BackgroundService
             "download-all-not-downloaded-author-images",
             x => x.DownloadAllNotDownloadedAuthorImages(default),
             Cron.Daily);
+        recurringJobManager.AddOrUpdate<DeleteExpiredRefreshTokensJob>("delete-expired-refresh-tokens",
+            x => x.DeleteExpiredRefreshTokens(),
+            Cron.Daily);
         return Task.CompletedTask;
     }
 }

@@ -2,13 +2,14 @@ using BLL.DTO.Exceptions.Identity;
 using BLL.Identity.Options;
 using BLL.Identity.Services;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using WebApp.Auth;
 using WebApp.ViewModels.Account;
 
 namespace WebApp.Controllers;
 
+[AutoValidateAntiforgeryToken]
 public class AccountController : Controller
 {
     private readonly IServiceProvider _services;
@@ -76,12 +77,12 @@ public class AccountController : Controller
                 {
                     foreach (var error in e.Errors)
                     {
-                        if (AllowedPasswordErrors.Contains(error.Code))
+                        if (AuthHelpers.AllowedPasswordErrors.Contains(error.Code))
                         {
                             ModelState.AddModelError(nameof(model.Input) + "." + nameof(model.Input.Password),
                                 error.Description);
                         }
-                        else if (AllowedRegisterUsernameErrors.Contains(error.Code))
+                        else if (AuthHelpers.AllowedRegisterUsernameErrors.Contains(error.Code))
                         {
                             ModelState.AddModelError(nameof(model.Input) + "." + nameof(model.Input.UserName),
                                 error.Description);
@@ -151,21 +152,4 @@ public class AccountController : Controller
     {
         return View(model: username);
     }
-
-    private static readonly string[] AllowedPasswordErrors =
-    {
-        nameof(IdentityErrorDescriber.PasswordMismatch),
-        nameof(IdentityErrorDescriber.PasswordRequiresDigit),
-        nameof(IdentityErrorDescriber.PasswordRequiresLower),
-        nameof(IdentityErrorDescriber.PasswordRequiresUpper),
-        nameof(IdentityErrorDescriber.PasswordTooShort),
-        nameof(IdentityErrorDescriber.PasswordRequiresNonAlphanumeric),
-        nameof(IdentityErrorDescriber.PasswordRequiresUniqueChars),
-    };
-
-    private static readonly string[] AllowedRegisterUsernameErrors =
-    {
-        nameof(IdentityErrorDescriber.InvalidUserName),
-        nameof(IdentityErrorDescriber.DuplicateUserName),
-    };
 }

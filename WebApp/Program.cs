@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using BLL;
 using BLL.Identity;
 using BLL.YouTube;
@@ -8,11 +10,14 @@ using Hangfire.Console;
 using Hangfire.Console.Extensions;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.HttpLogging;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Settings.Configuration;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using WebApp.ApiModels;
 using WebApp.Auth;
+using WebApp.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,12 +58,25 @@ builder.Services.AddHangfireConsoleExtensions();
 
 builder.Services.AddDbPersistenceEf(builder.Configuration);
 
-builder.Services.AddControllersWithViews(options =>
-    {
-        options.Filters.Add(typeof(AutoValidateAntiforgeryTokenAttribute));
-    })
+builder.Services.AddControllersWithViews()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddMvc();
+
+var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+});
+apiVersioningBuilder.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+builder.Services.AddSwaggerGen();
 
 builder.AddCustomIdentity();
 builder.Services.AddBll();
@@ -74,6 +92,35 @@ app.SeedIdentity();
 app.SetupYouTube();
 
 app.UseHttpsRedirection();
+
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), apiApp =>
+{
+    apiApp.UseExceptionHandler(apiBuilder =>
+    {
+        apiBuilder.Run(async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            await context.Response.WriteAsJsonAsync(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.GenericError,
+                Message = "Something went wrong",
+            });
+        });
+    });
+});
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+        foreach (var description in provider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
+        }
+    });
+}
+
 app.UseStaticFiles();
 var imagesDirectory = AppPaths.GetImagesDirectory(AppPathOptions.FromConfiguration(app.Configuration));
 var imagesDirectoryPath = Path.Combine(app.Environment.ContentRootPath, imagesDirectory);
