@@ -174,7 +174,7 @@ public class AccountController : ControllerBase
             });
         }
     }
-    
+
     /// <summary>
     /// Log out user by deleting provided refresh token.
     /// User access will be refused when JWT expires.

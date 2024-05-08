@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using BLL;
@@ -59,7 +58,7 @@ builder.Services.AddHangfireConsoleExtensions();
 builder.Services.AddDbPersistenceEf(builder.Configuration);
 
 builder.Services.AddControllersWithViews()
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    .AddJsonOptions(options => JsonUtils.ConfigureJsonSerializerOptions(options.JsonSerializerOptions));
 builder.Services.AddMvc();
 
 var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
@@ -104,7 +103,7 @@ app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), apiApp =
             {
                 ErrorType = EErrorType.GenericError,
                 Message = "Something went wrong",
-            });
+            }, JsonUtils.DefaultJsonSerializerOptions);
         });
     });
 });
