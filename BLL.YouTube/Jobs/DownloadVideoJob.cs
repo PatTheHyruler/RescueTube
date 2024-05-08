@@ -15,6 +15,7 @@ public class DownloadVideoJob
         _backgroundJobClient = backgroundJobClient;
     }
 
+    [AutomaticRetry(Attempts = 0)]
     public async Task DownloadVideo(Guid videoId, CancellationToken ct)
     {
         await _videoService.DownloadVideo(videoId, ct);

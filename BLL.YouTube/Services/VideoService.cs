@@ -157,7 +157,7 @@ public class VideoService : BaseYouTubeService
         var query = Ctx.Videos
             .Where(e => e.Platform == EPlatform.YouTube)
             .Include(e => e.VideoFiles)
-            .Where(e => e.VideoFiles!.Count == 0 && e.FailedDownloadAttempts == 0)
+            .Where(e => e.VideoFiles!.Count == 0)
             .Where(e => e.Id == videoId);
 
         var video = await query.FirstAsync(ct);
