@@ -1,6 +1,9 @@
 ﻿using Asp.Versioning;
 using BLL.DTO.Exceptions.Identity;
 using BLL.Identity;
+using BLL.Identity.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using WebApp.ApiModels;
@@ -201,5 +204,52 @@ public class AccountController : ControllerBase
                 Message = "Provided JWT was invalid",
             });
         }
+    }
+
+    /// <summary>
+    /// Get information about the authenticated user.
+    /// </summary>
+    /// <response code="200">User information fetched successfully</response>
+    /// <response code="404">User not found</response>
+    [SwaggerErrorResponse(StatusCodes.Status404NotFound)]
+    [SwaggerResponse(StatusCodes.Status200OK, null, typeof(MeResponseDtoV1))]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [HttpGet]
+    public async Task<ActionResult<MeResponseDtoV1>> Me()
+    {
+        var userNotFoundResult = NotFound(new ErrorResponseDto
+        {
+            ErrorType = EErrorType.EntityNotFound,
+            Message = "User matching authenticated user not found",
+        });
+        
+        var userId = HttpContext.User.GetUserIdIfExists();
+        if (userId == null)
+        {
+            return userNotFoundResult;
+        }
+
+        var user = await _identityUow.UserService.GetUserWithRolesAsync(userId.Value);
+        if (user == null)
+        {
+            return userNotFoundResult;
+        }
+
+        return new MeResponseDtoV1
+        {
+            User = new UserDtoV1
+            {
+                Id = user.Id,
+                UserName = user.UserName!,
+                NormalizedUserName = user.UserName!,
+                IsApproved = user.IsApproved,
+                Roles = user.UserRoles!.Select(ur => new RoleDtoV1
+                {
+                    Id = ur.Role!.Id,
+                    Name = ur.Role!.Name!,
+                    NormalizedName = ur.Role!.NormalizedName!,
+                })
+            }
+        };
     }
 }

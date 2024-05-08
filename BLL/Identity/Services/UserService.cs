@@ -3,6 +3,7 @@ using BLL.DTO.Exceptions.Identity;
 using BLL.Identity.Options;
 using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace BLL.Identity.Services;
@@ -100,6 +101,15 @@ public class UserService
             Jwt = jwt,
             RefreshToken = refreshToken,
         };
+    }
+
+    public async Task<User?> GetUserWithRolesAsync(Guid userId)
+    {
+        return await _identityUow.Ctx.Users
+            .Where(u => u.Id == userId)
+            .Include(u => u.UserRoles!)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync();
     }
 
     public UserService(IOptionsSnapshot<RegistrationOptions> registrationOptions, IdentityUow identityUow)

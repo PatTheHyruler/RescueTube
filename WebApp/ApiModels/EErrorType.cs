@@ -6,6 +6,11 @@ public enum EErrorType
     /// Generic unspecified error
     /// </summary>
     GenericError,
+    /// <summary>
+    /// Generic error indicating that requested entity wasn't found.
+    /// NB! Should be treated as semantically different from "page not found"!
+    /// </summary>
+    EntityNotFound,
     
     /// <summary>
     /// Provided credentials for logging in were invalid.
