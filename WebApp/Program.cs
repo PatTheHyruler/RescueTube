@@ -77,6 +77,31 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 builder.Services.AddSwaggerGen();
 
+const string corsAllowAllName = "CorsAllowAll";
+const string corsAllowCredentialsName = "CorsAllowCredentials";
+builder.Services.AddCors(options =>
+{
+    var allowCredentialsOrigins = builder.Configuration.GetValue<List<string>?>("AllowedCorsCredentialOrigins");
+    options.AddPolicy(corsAllowCredentialsName, policy =>
+    {
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+
+        if (allowCredentialsOrigins is { Count: > 0 })
+        {
+            policy.WithOrigins(allowCredentialsOrigins.ToArray());
+        }
+
+        policy.AllowCredentials();
+    });
+    options.AddPolicy(corsAllowAllName, policy =>
+    {
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+        policy.AllowAnyOrigin();
+    });
+});
+
 builder.AddCustomIdentity();
 builder.Services.AddBll();
 builder.Services.AddYouTube();
@@ -131,6 +156,9 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseRouting();
+
+app.UseCors(corsAllowAllName);
+app.UseCors(corsAllowCredentialsName);
 
 app.UseAuthentication();
 app.UseAuthorization();
