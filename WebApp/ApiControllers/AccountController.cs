@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using WebApp.ApiModels;
+using WebApp.ApiModels.Auth;
 using WebApp.Auth;
 using WebApp.Utils;
 

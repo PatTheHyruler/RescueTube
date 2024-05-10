@@ -1,4 +1,4 @@
-﻿namespace WebApp.ApiModels;
+﻿namespace WebApp.ApiModels.Auth;
 
 public class LoginDtoV1
 {

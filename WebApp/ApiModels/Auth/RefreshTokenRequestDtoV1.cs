@@ -1,4 +1,4 @@
-﻿namespace WebApp.ApiModels;
+﻿namespace WebApp.ApiModels.Auth;
 
 /// <summary>
 /// Required data for refreshing a JWT and refresh token
