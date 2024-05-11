@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApp", "WebApp\WebApp.csproj", "{04A3610A-CD2D-4D44-BA26-EEE0BEB6B1CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL.EF", "DAL.EF\DAL.EF.csproj", "{BFAE2818-603F-4DAA-96C8-B007DEDB6B96}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RescueTube.DAL.EF", "RescueTube.DAL.EF\RescueTube.DAL.EF.csproj", "{BFAE2818-603F-4DAA-96C8-B007DEDB6B96}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RescueTube.Domain", "RescueTube.Domain\RescueTube.Domain.csproj", "{8E9CC52D-83A4-451E-A73F-FCDE8CEBE8A9}"
 EndProject
@@ -28,7 +28,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RescueTube.YouTube", "Rescu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resources", "Resources\Resources.csproj", "{B2AA416B-C30F-460F-9C30-2336A67FC8DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL.EF.Postgres", "DAL.EF.Postgres\DAL.EF.Postgres.csproj", "{1AE56245-EF05-4EC6-9102-9CE35096B24B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RescueTube.DAL.EF.Postgres", "RescueTube.DAL.EF.Postgres\RescueTube.DAL.EF.Postgres.csproj", "{1AE56245-EF05-4EC6-9102-9CE35096B24B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

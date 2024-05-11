@@ -46,8 +46,8 @@
     <ItemGroup>
       <ProjectReference Include="..\RescueTube.YouTube\RescueTube.YouTube.csproj" />
       <ProjectReference Include="..\RescueTube.Core\RescueTube.Core.csproj" />
-      <ProjectReference Include="..\DAL.EF.Postgres\DAL.EF.Postgres.csproj" />
-      <ProjectReference Include="..\DAL.EF\DAL.EF.csproj" />
+      <ProjectReference Include="..\RescueTube.DAL.EF.Postgres\RescueTube.DAL.EF.Postgres.csproj" />
+      <ProjectReference Include="..\RescueTube.DAL.EF\RescueTube.DAL.EF.csproj" />
       <ProjectReference Include="..\Resources\Resources.csproj" />
     </ItemGroup>
 
