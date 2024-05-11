@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 namespace DAL.EF.DbContexts;
 
-public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole,
+public class AppDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole,
     UserLogin, RoleClaim, UserToken>
 {
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
@@ -48,7 +48,7 @@ public class AbstractAppDbContext : IdentityDbContext<User, Role, Guid, UserClai
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
 
-    public AbstractAppDbContext(DbContextOptions options,
+    public AppDbContext(DbContextOptions options,
         IOptions<DbLoggingOptions> dbLoggingOptions,
         ILoggerFactory? loggerFactory = null) : base(options)
     {

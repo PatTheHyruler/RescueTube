@@ -9,18 +9,18 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace DAL.EF.Migrations.Postgres
+namespace DAL.EF.Postgres.Migrations
 {
     [DbContext(typeof(PostgresAppDbContext))]
-    [Migration("20240507164527_InfoJsonAsJsonB")]
-    partial class InfoJsonAsJsonB
+    [Migration("20231201224111_InfoJsonInDb")]
+    partial class InfoJsonInDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "7.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -855,7 +855,7 @@ namespace DAL.EF.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<string>("InfoJson")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text");
 
                     b.Property<string>("InfoJsonPath")
                         .HasColumnType("text");

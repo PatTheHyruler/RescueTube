@@ -11,8 +11,8 @@ public abstract class BaseService
     private ServiceUow? _serviceUow;
     public ServiceUow ServiceUow => _serviceUow ??= Services.GetRequiredService<ServiceUow>();
 
-    private AbstractAppDbContext? _ctx;
-    public AbstractAppDbContext Ctx => _ctx ??= Services.GetRequiredService<AbstractAppDbContext>();
+    private AppDbContext? _ctx;
+    public AppDbContext Ctx => _ctx ??= Services.GetRequiredService<AppDbContext>();
 
     protected readonly ILogger Logger;
 

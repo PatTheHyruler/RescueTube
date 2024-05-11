@@ -9,7 +9,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace DAL.EF.Migrations.Postgres
+namespace DAL.EF.Postgres.Migrations
 {
     [DbContext(typeof(PostgresAppDbContext))]
     [Migration("20230807151457_AddAuthorsImproveRefreshTokens")]

@@ -19,7 +19,7 @@ public static class VideoExtensions
             .FirstOrDefaultAsync();
 
     public static IQueryable<Video> SearchVideos(
-        this IQueryable<Video> query, AbstractAppDbContext dbContext,
+        this IQueryable<Video> query, AppDbContext dbContext,
         EPlatform? platform, string? name, string? author,
         ICollection<Guid>? categoryIds,
         Guid? userId, Guid? userAuthorId, bool accessAllowed,
@@ -80,7 +80,7 @@ public static class VideoExtensions
     }
 
     public static IQueryable<Video> WhereUserIsAllowedToAccessVideoOrVideoIsPublic(
-        this IQueryable<Video> query, AbstractAppDbContext dbContext, Guid? userId)
+        this IQueryable<Video> query, AppDbContext dbContext, Guid? userId)
     {
         if (userId != null)
         {

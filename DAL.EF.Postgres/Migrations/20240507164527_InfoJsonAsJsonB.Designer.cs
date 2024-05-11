@@ -9,18 +9,18 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace DAL.EF.Migrations.Postgres
+namespace DAL.EF.Postgres.Migrations
 {
     [DbContext(typeof(PostgresAppDbContext))]
-    [Migration("20230828185114_MoreImageProperties")]
-    partial class MoreImageProperties
+    [Migration("20240507164527_InfoJsonAsJsonB")]
+    partial class InfoJsonAsJsonB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.9")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -42,6 +42,9 @@ namespace DAL.EF.Migrations.Postgres
 
                     b.Property<string>("DisplayName")
                         .HasColumnType("text");
+
+                    b.Property<int>("FailedExtraDataFetchAttempts")
+                        .HasColumnType("integer");
 
                     b.Property<string>("IdOnPlatform")
                         .IsRequired()
@@ -231,6 +234,162 @@ namespace DAL.EF.Migrations.Postgres
                     b.HasIndex("NameId");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Comment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AddedToArchiveAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("AuthorIsCreator")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ConversationRootId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan?>("CreatedAtVideoTimecode")
+                        .HasColumnType("interval");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdOnPlatform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFetchOfficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastFetchUnofficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastSuccessfulFetchOfficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastSuccessfulFetchUnofficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("OrderIndex")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PrivacyStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PrivacyStatusOnPlatform")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ReplyTargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VideoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("ConversationRootId");
+
+                    b.HasIndex("ReplyTargetId");
+
+                    b.HasIndex("VideoId");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CommentHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan?>("CreatedAtVideoTimecode")
+                        .HasColumnType("interval");
+
+                    b.Property<Guid>("CurrentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FirstNotValidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastOfficialValidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastValidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrentId");
+
+                    b.ToTable("CommentHistories");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CommentStatisticSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long?>("DislikeCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool?>("IsFavorited")
+                        .HasColumnType("boolean");
+
+                    b.Property<long?>("LikeCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("ReplyCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("ValidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
+
+                    b.ToTable("CommentStatisticSnapshots");
                 });
 
             modelBuilder.Entity("Domain.Entities.EntityAccessPermission", b =>
@@ -685,8 +844,20 @@ namespace DAL.EF.Migrations.Postgres
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("interval");
 
+                    b.Property<int>("FailedAuthorFetches")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FailedDownloadAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("IdOnPlatform")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InfoJson")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("InfoJsonPath")
                         .HasColumnType("text");
 
                     b.Property<bool>("IsAvailable")
@@ -1013,6 +1184,61 @@ namespace DAL.EF.Migrations.Postgres
                     b.Navigation("Name");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Comment", b =>
+                {
+                    b.HasOne("Domain.Entities.Author", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Comment", "ConversationRoot")
+                        .WithMany("ConversationReplies")
+                        .HasForeignKey("ConversationRootId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Comment", "ReplyTarget")
+                        .WithMany("DirectReplies")
+                        .HasForeignKey("ReplyTargetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Video", "Video")
+                        .WithMany("Comments")
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("ConversationRoot");
+
+                    b.Navigation("ReplyTarget");
+
+                    b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CommentHistory", b =>
+                {
+                    b.HasOne("Domain.Entities.Comment", "Current")
+                        .WithMany("CommentHistories")
+                        .HasForeignKey("CurrentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Current");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CommentStatisticSnapshot", b =>
+                {
+                    b.HasOne("Domain.Entities.Comment", "Comment")
+                        .WithMany("CommentStatisticSnapshots")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+                });
+
             modelBuilder.Entity("Domain.Entities.EntityAccessPermission", b =>
                 {
                     b.HasOne("Domain.Entities.Author", "Author")
@@ -1301,6 +1527,17 @@ namespace DAL.EF.Migrations.Postgres
                     b.Navigation("VideoCategories");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Comment", b =>
+                {
+                    b.Navigation("CommentHistories");
+
+                    b.Navigation("CommentStatisticSnapshots");
+
+                    b.Navigation("ConversationReplies");
+
+                    b.Navigation("DirectReplies");
+                });
+
             modelBuilder.Entity("Domain.Entities.Identity.Role", b =>
                 {
                     b.Navigation("RoleClaims");
@@ -1336,6 +1573,8 @@ namespace DAL.EF.Migrations.Postgres
             modelBuilder.Entity("Domain.Entities.Video", b =>
                 {
                     b.Navigation("Captions");
+
+                    b.Navigation("Comments");
 
                     b.Navigation("EntityAccessPermissions");
 

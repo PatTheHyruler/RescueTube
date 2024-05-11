@@ -9,9 +9,9 @@ namespace BLL.Services;
 
 public class EntityUpdateService : BaseService
 {
-    private readonly AbstractAppDbContext _dbCtx;
+    private readonly AppDbContext _dbCtx;
     
-    public EntityUpdateService(IServiceProvider services, ILogger<EntityUpdateService> logger, AbstractAppDbContext dbCtx) : base(services, logger)
+    public EntityUpdateService(IServiceProvider services, ILogger<EntityUpdateService> logger, AppDbContext dbCtx) : base(services, logger)
     {
         _dbCtx = dbCtx;
     }

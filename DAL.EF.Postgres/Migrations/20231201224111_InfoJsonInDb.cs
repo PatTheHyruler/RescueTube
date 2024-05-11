@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace DAL.EF.Migrations.Postgres
+namespace DAL.EF.Postgres.Migrations
 {
     /// <inheritdoc />
     public partial class InfoJsonInDb : Migration

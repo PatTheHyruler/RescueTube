@@ -13,8 +13,8 @@ public class ServiceUow
         _services = services;
     }
 
-    private AbstractAppDbContext? _ctx;
-    public AbstractAppDbContext Ctx => _ctx ??= _services.GetRequiredService<AbstractAppDbContext>();
+    private AppDbContext? _ctx;
+    public AppDbContext Ctx => _ctx ??= _services.GetRequiredService<AppDbContext>();
 
     public SubmissionService SubmissionService => _services.GetRequiredService<SubmissionService>();
     public AuthorizationService AuthorizationService => _services.GetRequiredService<AuthorizationService>();

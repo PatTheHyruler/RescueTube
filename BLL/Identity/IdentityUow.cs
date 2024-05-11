@@ -15,8 +15,8 @@ public sealed class IdentityUow
         _services = services;
     }
 
-    private AbstractAppDbContext? _ctx;
-    public AbstractAppDbContext Ctx => _ctx ??= _services.GetRequiredService<AbstractAppDbContext>();
+    private AppDbContext? _ctx;
+    public AppDbContext Ctx => _ctx ??= _services.GetRequiredService<AppDbContext>();
 
     private UserManager<User>? _userManager;
     public UserManager<User> UserManager => _userManager ??= _services.GetRequiredService<UserManager<User>>();

@@ -1,9 +1,8 @@
-using DAL.EF.DbContexts;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DAL.EF.Factories;
+namespace DAL.EF.Postgres;
 
 public class PostgresAppDbContextFactory : IDesignTimeDbContextFactory<PostgresAppDbContext>
 {
@@ -21,7 +20,7 @@ public class PostgresAppDbContextFactory : IDesignTimeDbContextFactory<PostgresA
 
         var services = new ServiceCollection()
             .AddSingleton<IConfiguration>(configuration)
-            .AddDbPersistenceEf(configuration);
+            .AddDbPersistenceEfPostgres(configuration);
 
         var serviceProvider = services.BuildServiceProvider();
 

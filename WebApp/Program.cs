@@ -4,6 +4,7 @@ using BLL;
 using BLL.Identity;
 using BLL.YouTube;
 using DAL.EF;
+using DAL.EF.Postgres;
 using Hangfire;
 using Hangfire.Console;
 using Hangfire.Console.Extensions;
@@ -55,7 +56,7 @@ builder.Services.AddHangfire(configuration => configuration
 builder.Services.AddHangfireServer();
 builder.Services.AddHangfireConsoleExtensions();
 
-builder.Services.AddDbPersistenceEf(builder.Configuration);
+builder.Services.AddDbPersistenceEfPostgres(builder.Configuration);
 
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options => JsonUtils.ConfigureJsonSerializerOptions(options.JsonSerializerOptions));

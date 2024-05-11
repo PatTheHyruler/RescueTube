@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace DAL.EF.Migrations.Postgres
+namespace DAL.EF.Postgres.Migrations
 {
     [DbContext(typeof(PostgresAppDbContext))]
-    [Migration("20230815170022_Submission")]
-    partial class Submission
+    [Migration("20230827121132_MinorFixes")]
+    partial class MinorFixes
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,7 +34,7 @@ namespace DAL.EF.Migrations.Postgres
                     b.Property<DateTime>("AddedToArchiveAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("BioId")
+                    b.Property<Guid?>("BioId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -493,6 +493,9 @@ namespace DAL.EF.Migrations.Postgres
                     b.Property<string>("Etag")
                         .HasColumnType("text");
 
+                    b.Property<string>("Ext")
+                        .HasColumnType("text");
+
                     b.Property<string>("Hash")
                         .HasColumnType("text");
 
@@ -853,6 +856,9 @@ namespace DAL.EF.Migrations.Postgres
                     b.Property<DateTime?>("LastFetched")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("Preference")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("ValidSince")
                         .HasColumnType("timestamp with time zone");
 
@@ -908,6 +914,10 @@ namespace DAL.EF.Migrations.Postgres
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("NormalizedTag")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Tag")
                         .IsRequired()
                         .HasColumnType("text");
@@ -933,8 +943,7 @@ namespace DAL.EF.Migrations.Postgres
                     b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Bio")
                         .WithMany()
                         .HasForeignKey("BioId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Bio");
                 });

@@ -8,10 +8,10 @@ namespace BLL.Jobs;
 public class DownloadVideoImagesJob
 {
     private readonly VideoService _videoService;
-    private readonly AbstractAppDbContext _dbCtx;
+    private readonly AppDbContext _dbCtx;
     private readonly IBackgroundJobClient _backgroundJobs;
 
-    public DownloadVideoImagesJob(VideoService videoService, AbstractAppDbContext dbCtx,
+    public DownloadVideoImagesJob(VideoService videoService, AppDbContext dbCtx,
         IBackgroundJobClient backgroundJobs)
     {
         _videoService = videoService;

@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace DAL.EF.Migrations.Postgres
+namespace DAL.EF.Postgres.Migrations
 {
     [DbContext(typeof(PostgresAppDbContext))]
-    [Migration("20230810123256_Videos")]
-    partial class Videos
+    [Migration("20231127192714_Comments")]
+    partial class Comments
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,7 +34,7 @@ namespace DAL.EF.Migrations.Postgres
                     b.Property<DateTime>("AddedToArchiveAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("BioId")
+                    b.Property<Guid?>("BioId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("CreatedAt")
@@ -42,6 +42,9 @@ namespace DAL.EF.Migrations.Postgres
 
                     b.Property<string>("DisplayName")
                         .HasColumnType("text");
+
+                    b.Property<int>("FailedExtraDataFetchAttempts")
+                        .HasColumnType("integer");
 
                     b.Property<string>("IdOnPlatform")
                         .IsRequired()
@@ -231,6 +234,162 @@ namespace DAL.EF.Migrations.Postgres
                     b.HasIndex("NameId");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Comment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AddedToArchiveAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool?>("AuthorIsCreator")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ConversationRootId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan?>("CreatedAtVideoTimecode")
+                        .HasColumnType("interval");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IdOnPlatform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFetchOfficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastFetchUnofficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastSuccessfulFetchOfficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastSuccessfulFetchUnofficial")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("OrderIndex")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PrivacyStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PrivacyStatusOnPlatform")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ReplyTargetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("VideoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
+
+                    b.HasIndex("ConversationRootId");
+
+                    b.HasIndex("ReplyTargetId");
+
+                    b.HasIndex("VideoId");
+
+                    b.ToTable("Comments");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CommentHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<TimeSpan?>("CreatedAtVideoTimecode")
+                        .HasColumnType("interval");
+
+                    b.Property<Guid>("CurrentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FirstNotValidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastOfficialValidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastValidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrentId");
+
+                    b.ToTable("CommentHistories");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CommentStatisticSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long?>("DislikeCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool?>("IsFavorited")
+                        .HasColumnType("boolean");
+
+                    b.Property<long?>("LikeCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("ReplyCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("ValidAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
+
+                    b.ToTable("CommentStatisticSnapshots");
                 });
 
             modelBuilder.Entity("Domain.Entities.EntityAccessPermission", b =>
@@ -493,6 +652,12 @@ namespace DAL.EF.Migrations.Postgres
                     b.Property<string>("Etag")
                         .HasColumnType("text");
 
+                    b.Property<string>("Ext")
+                        .HasColumnType("text");
+
+                    b.Property<int>("FailedFetchAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Hash")
                         .HasColumnType("text");
 
@@ -506,6 +671,9 @@ namespace DAL.EF.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.Property<string>("LocalFilePath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MediaType")
                         .HasColumnType("text");
 
                     b.Property<string>("Platform")
@@ -602,6 +770,56 @@ namespace DAL.EF.Migrations.Postgres
                     b.ToTable("StatusChangeEvents");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Submission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("AddedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ApprovedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("GrantAccess")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("IdOnPlatform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("VideoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AddedById");
+
+                    b.HasIndex("ApprovedById");
+
+                    b.HasIndex("VideoId");
+
+                    b.ToTable("Submissions");
+                });
+
             modelBuilder.Entity("Domain.Entities.Video", b =>
                 {
                     b.Property<Guid>("Id")
@@ -626,8 +844,17 @@ namespace DAL.EF.Migrations.Postgres
                     b.Property<TimeSpan?>("Duration")
                         .HasColumnType("interval");
 
+                    b.Property<int>("FailedAuthorFetches")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FailedDownloadAttempts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("IdOnPlatform")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InfoJsonPath")
                         .HasColumnType("text");
 
                     b.Property<bool>("IsAvailable")
@@ -803,6 +1030,9 @@ namespace DAL.EF.Migrations.Postgres
                     b.Property<DateTime?>("LastFetched")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("Preference")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("ValidSince")
                         .HasColumnType("timestamp with time zone");
 
@@ -858,6 +1088,10 @@ namespace DAL.EF.Migrations.Postgres
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("NormalizedTag")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Tag")
                         .IsRequired()
                         .HasColumnType("text");
@@ -883,8 +1117,7 @@ namespace DAL.EF.Migrations.Postgres
                     b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Bio")
                         .WithMany()
                         .HasForeignKey("BioId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Bio");
                 });
@@ -898,7 +1131,7 @@ namespace DAL.EF.Migrations.Postgres
                         .IsRequired();
 
                     b.HasOne("Domain.Entities.Image", "Image")
-                        .WithMany()
+                        .WithMany("AuthorImages")
                         .HasForeignKey("ImageId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -946,6 +1179,61 @@ namespace DAL.EF.Migrations.Postgres
                     b.Navigation("Creator");
 
                     b.Navigation("Name");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Comment", b =>
+                {
+                    b.HasOne("Domain.Entities.Author", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Comment", "ConversationRoot")
+                        .WithMany("ConversationReplies")
+                        .HasForeignKey("ConversationRootId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Comment", "ReplyTarget")
+                        .WithMany("DirectReplies")
+                        .HasForeignKey("ReplyTargetId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Video", "Video")
+                        .WithMany("Comments")
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("ConversationRoot");
+
+                    b.Navigation("ReplyTarget");
+
+                    b.Navigation("Video");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CommentHistory", b =>
+                {
+                    b.HasOne("Domain.Entities.Comment", "Current")
+                        .WithMany("CommentHistories")
+                        .HasForeignKey("CurrentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Current");
+                });
+
+            modelBuilder.Entity("Domain.Entities.CommentStatisticSnapshot", b =>
+                {
+                    b.HasOne("Domain.Entities.Comment", "Comment")
+                        .WithMany("CommentStatisticSnapshots")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
                 });
 
             modelBuilder.Entity("Domain.Entities.EntityAccessPermission", b =>
@@ -1075,6 +1363,31 @@ namespace DAL.EF.Migrations.Postgres
                     b.Navigation("Video");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Submission", b =>
+                {
+                    b.HasOne("Domain.Entities.Identity.User", "AddedBy")
+                        .WithMany()
+                        .HasForeignKey("AddedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Identity.User", "ApprovedBy")
+                        .WithMany()
+                        .HasForeignKey("ApprovedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Domain.Entities.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AddedBy");
+
+                    b.Navigation("ApprovedBy");
+
+                    b.Navigation("Video");
+                });
+
             modelBuilder.Entity("Domain.Entities.Video", b =>
                 {
                     b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Description")
@@ -1151,7 +1464,7 @@ namespace DAL.EF.Migrations.Postgres
             modelBuilder.Entity("Domain.Entities.VideoImage", b =>
                 {
                     b.HasOne("Domain.Entities.Image", "Image")
-                        .WithMany()
+                        .WithMany("VideoImages")
                         .HasForeignKey("ImageId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1211,6 +1524,17 @@ namespace DAL.EF.Migrations.Postgres
                     b.Navigation("VideoCategories");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Comment", b =>
+                {
+                    b.Navigation("CommentHistories");
+
+                    b.Navigation("CommentStatisticSnapshots");
+
+                    b.Navigation("ConversationReplies");
+
+                    b.Navigation("DirectReplies");
+                });
+
             modelBuilder.Entity("Domain.Entities.Identity.Role", b =>
                 {
                     b.Navigation("RoleClaims");
@@ -1231,6 +1555,13 @@ namespace DAL.EF.Migrations.Postgres
                     b.Navigation("UserTokens");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Image", b =>
+                {
+                    b.Navigation("AuthorImages");
+
+                    b.Navigation("VideoImages");
+                });
+
             modelBuilder.Entity("Domain.Entities.Localization.TextTranslationKey", b =>
                 {
                     b.Navigation("Translations");
@@ -1239,6 +1570,8 @@ namespace DAL.EF.Migrations.Postgres
             modelBuilder.Entity("Domain.Entities.Video", b =>
                 {
                     b.Navigation("Captions");
+
+                    b.Navigation("Comments");
 
                     b.Navigation("EntityAccessPermissions");
 

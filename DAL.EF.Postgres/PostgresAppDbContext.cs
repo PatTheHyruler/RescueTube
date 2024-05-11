@@ -1,12 +1,13 @@
 using DAL.Contracts;
+using DAL.EF.DbContexts;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace DAL.EF.DbContexts;
+namespace DAL.EF.Postgres;
 
-public class PostgresAppDbContext : AbstractAppDbContext
+public class PostgresAppDbContext : AppDbContext
 {
     public PostgresAppDbContext(DbContextOptions<PostgresAppDbContext> options,
         IOptions<DbLoggingOptions> dbLoggingOptions, ILoggerFactory? loggerFactory = null) :

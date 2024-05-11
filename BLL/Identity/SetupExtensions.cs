@@ -34,7 +34,7 @@ public static class SetupExtensions
 
         services.AddIdentityCore<User>()
             .AddRoles<Role>()
-            .AddEntityFrameworkStores<AbstractAppDbContext>()
+            .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
 
         services.TryAddScoped<IRoleValidator<Role>, RoleValidator<Role>>();
