@@ -1,9 +1,9 @@
 using BLL.YouTube.Jobs;
 using RescueTube.Core.Events.Events;
-using Domain.Enums;
 using Hangfire;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using RescueTube.Domain.Enums;
 
 namespace BLL.YouTube.EventHandlers;
 

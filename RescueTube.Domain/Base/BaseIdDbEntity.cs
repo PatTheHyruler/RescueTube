@@ -1,6 +1,6 @@
-using Domain.Contracts;
+using RescueTube.Domain.Contracts;
 
-namespace Domain.Base;
+namespace RescueTube.Domain.Base;
 
 public abstract class BaseIdDbEntity : BaseIdDbEntity<Guid>, IIdDatabaseEntity
 {

@@ -1,9 +1,9 @@
-using Domain.Base;
-using Domain.Contracts;
-using Domain.Entities.Localization;
-using Domain.Enums;
+using RescueTube.Domain.Base;
+using RescueTube.Domain.Contracts;
+using RescueTube.Domain.Entities.Localization;
+using RescueTube.Domain.Enums;
 
-namespace Domain.Entities;
+namespace RescueTube.Domain.Entities;
 
 public class Video : BaseIdDbEntity, IMainArchiveEntity
 {

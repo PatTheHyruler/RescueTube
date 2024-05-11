@@ -1,7 +1,7 @@
 using BLL.YouTube.Services;
-using Domain.Enums;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.Domain.Enums;
 
 namespace BLL.YouTube.Jobs;
 

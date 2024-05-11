@@ -1,9 +1,9 @@
 using RescueTube.Core.Utils;
-using Domain.Contracts;
-using Domain.Entities;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
 using RescueTube.Core.Data;
+using RescueTube.Domain.Contracts;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
 

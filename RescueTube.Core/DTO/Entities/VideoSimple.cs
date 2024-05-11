@@ -1,7 +1,7 @@
-using Domain.Base;
-using Domain.Entities;
-using Domain.Entities.Localization;
-using Domain.Enums;
+using RescueTube.Domain.Base;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Entities.Localization;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.DTO.Entities;
 

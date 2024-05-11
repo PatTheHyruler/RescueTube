@@ -1,6 +1,6 @@
-using Domain.Enums;
+using RescueTube.Domain.Enums;
 
-namespace Domain.Contracts;
+namespace RescueTube.Domain.Contracts;
 
 public interface IInternalPrivacyEntity
 {

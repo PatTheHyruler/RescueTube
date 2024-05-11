@@ -1,8 +1,6 @@
 using System.Security.Claims;
 using System.Security.Principal;
 using RescueTube.Core.Identity.Services;
-using Domain.Entities;
-using Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
@@ -10,6 +8,8 @@ using RescueTube.Core.Contracts;
 using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.Exceptions;
 using RescueTube.Core.Identity;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Services;
 

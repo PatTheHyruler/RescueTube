@@ -2,8 +2,6 @@ using System.Security.Claims;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using RescueTube.Core.Identity.Services;
-using Domain.Entities;
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
@@ -13,6 +11,8 @@ using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.DTO.Enums;
 using RescueTube.Core.Utils.Pagination;
 using RescueTube.Core.Utils.Pagination.Contracts;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Services;
 

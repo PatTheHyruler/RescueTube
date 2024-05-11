@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace Domain.Entities.Identity;
+namespace RescueTube.Domain.Entities.Identity;
 
 public class RoleClaim : IdentityRoleClaim<Guid>
 {

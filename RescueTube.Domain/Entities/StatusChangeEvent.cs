@@ -1,8 +1,8 @@
-using Domain.Base;
-using Domain.Contracts;
-using Domain.Enums;
+using RescueTube.Domain.Base;
+using RescueTube.Domain.Contracts;
+using RescueTube.Domain.Enums;
 
-namespace Domain.Entities;
+namespace RescueTube.Domain.Entities;
 
 public class StatusChangeEvent : BaseIdDbEntity
 {

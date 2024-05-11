@@ -1,11 +1,11 @@
 using RescueTube.Core.Services;
 using BLL.YouTube.Base;
 using BLL.YouTube.Extensions;
-using Domain.Entities;
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RescueTube.Domain.Enums;
 using YoutubeDLSharp.Metadata;
+using Video = RescueTube.Domain.Entities.Video;
 
 namespace BLL.YouTube.Services;
 
@@ -61,8 +61,8 @@ public class CommentService : BaseYouTubeService
         }
 
         // TODO: What to do if video has 20000 comments? Memory issues?
-        var commentsWithoutParent = new List<(Comment Comment, string Parent)>();
-        var commentsWithoutRoot = new List<(Comment Comment, string Root)>();
+        var commentsWithoutParent = new List<(RescueTube.Domain.Entities.Comment Comment, string Parent)>();
+        var commentsWithoutRoot = new List<(RescueTube.Domain.Entities.Comment Comment, string Root)>();
 
         foreach (var comment in video.Comments)
         {

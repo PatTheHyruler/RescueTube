@@ -1,7 +1,7 @@
-using Domain.Contracts;
 using Microsoft.AspNetCore.Identity;
+using RescueTube.Domain.Contracts;
 
-namespace Domain.Entities.Identity;
+namespace RescueTube.Domain.Entities.Identity;
 
 public class User : IdentityUser<Guid>, IIdDatabaseEntity
 {

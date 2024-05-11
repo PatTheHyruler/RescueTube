@@ -1,7 +1,7 @@
-using Domain.Base;
-using Domain.Contracts;
+using RescueTube.Domain.Base;
+using RescueTube.Domain.Contracts;
 
-namespace Domain.Entities;
+namespace RescueTube.Domain.Entities;
 
 public class CommentHistory : BaseIdDbEntity, IHistoryEntity<Comment>
 {

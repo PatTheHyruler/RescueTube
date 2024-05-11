@@ -1,7 +1,7 @@
-using Domain.Base;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.Domain.Base;
 
-namespace Domain.Entities.Localization;
+namespace RescueTube.Domain.Entities.Localization;
 
 [Index(nameof(KeyId), nameof(Culture), nameof(ValidUntil), nameof(ValidSince))]
 public class TextTranslation : BaseIdDbEntity

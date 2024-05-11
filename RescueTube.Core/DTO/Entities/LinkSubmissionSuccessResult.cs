@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using Domain.Entities;
-using Domain.Enums;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.DTO.Entities;
 

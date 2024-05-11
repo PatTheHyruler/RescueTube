@@ -2,9 +2,9 @@
 using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.Data.Repositories;
 using RescueTube.Core.DTO.Enums;
-using Domain.Entities;
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Enums;
 
 namespace DAL.EF.Repositories;
 

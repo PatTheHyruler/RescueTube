@@ -1,4 +1,4 @@
-namespace Domain.Enums;
+namespace RescueTube.Domain.Enums;
 
 public enum EImageType
 {

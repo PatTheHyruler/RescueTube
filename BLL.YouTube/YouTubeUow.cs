@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
 using BLL.YouTube.Services;
-using Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core;
+using RescueTube.Domain.Enums;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 using YoutubeExplode;

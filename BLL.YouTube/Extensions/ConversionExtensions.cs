@@ -1,5 +1,5 @@
-using Domain.Entities;
-using Domain.Enums;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Enums;
 using YoutubeDLSharp.Metadata;
 using Url = BLL.YouTube.Utils.Url;
 

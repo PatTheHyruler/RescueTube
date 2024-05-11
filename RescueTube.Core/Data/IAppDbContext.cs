@@ -1,7 +1,7 @@
-﻿using Domain.Entities;
-using Domain.Entities.Identity;
-using Domain.Entities.Localization;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Entities.Identity;
+using RescueTube.Domain.Entities.Localization;
 
 namespace RescueTube.Core.Data;
 

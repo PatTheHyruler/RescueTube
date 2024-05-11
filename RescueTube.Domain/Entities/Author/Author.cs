@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Domain.Base;
-using Domain.Contracts;
-using Domain.Entities.Localization;
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.Domain.Base;
+using RescueTube.Domain.Contracts;
+using RescueTube.Domain.Entities.Localization;
+using RescueTube.Domain.Enums;
 
-namespace Domain.Entities;
+namespace RescueTube.Domain.Entities;
 
 [Index(nameof(Platform), nameof(IdOnPlatform), IsUnique = true)]
 public class Author : BaseIdDbEntity, IMainArchiveEntity

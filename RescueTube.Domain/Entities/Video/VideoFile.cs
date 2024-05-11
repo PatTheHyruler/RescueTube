@@ -1,6 +1,6 @@
-using Domain.Base;
+using RescueTube.Domain.Base;
 
-namespace Domain.Entities;
+namespace RescueTube.Domain.Entities;
 
 public class VideoFile : BaseIdDbEntity
 {

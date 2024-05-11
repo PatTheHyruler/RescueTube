@@ -4,8 +4,8 @@ using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.Exceptions;
 using BLL.YouTube.Base;
 using BLL.YouTube.Utils;
-using Domain.Enums;
 using Microsoft.Extensions.Logging;
+using RescueTube.Domain.Enums;
 
 namespace BLL.YouTube.Services;
 

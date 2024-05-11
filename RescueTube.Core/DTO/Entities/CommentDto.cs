@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+﻿using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.DTO.Entities;
 

@@ -1,6 +1,6 @@
-using Domain.Base;
+using RescueTube.Domain.Base;
 
-namespace Domain.Entities.Localization;
+namespace RescueTube.Domain.Entities.Localization;
 
 public class TextTranslationKey : BaseIdDbEntity
 {

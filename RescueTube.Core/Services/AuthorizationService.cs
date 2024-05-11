@@ -1,12 +1,12 @@
 using System.Security.Claims;
 using System.Security.Principal;
 using RescueTube.Core.Data.Extensions;
-using Domain.Entities;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Identity.Services;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Base;
 using RescueTube.Core.Identity;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
 

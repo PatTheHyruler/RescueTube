@@ -1,5 +1,5 @@
-using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Data.Extensions;
 

@@ -1,7 +1,7 @@
-﻿using Domain.Entities;
-using Domain.Enums;
-using RescueTube.Core.DTO.Enums;
+﻿using RescueTube.Core.DTO.Enums;
 using RescueTube.Core.Utils.Pagination.Contracts;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Data.Repositories;
 

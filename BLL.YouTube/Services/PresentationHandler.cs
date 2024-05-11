@@ -1,7 +1,7 @@
 using RescueTube.Core.Contracts;
 using RescueTube.Core.DTO.Entities;
 using BLL.YouTube.Utils;
-using Domain.Enums;
+using RescueTube.Domain.Enums;
 
 namespace BLL.YouTube.Services;
 

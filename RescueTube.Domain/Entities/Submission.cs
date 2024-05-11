@@ -1,9 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
-using Domain.Base;
-using Domain.Entities.Identity;
-using Domain.Enums;
+using RescueTube.Domain.Base;
+using RescueTube.Domain.Entities.Identity;
+using RescueTube.Domain.Enums;
 
-namespace Domain.Entities;
+namespace RescueTube.Domain.Entities;
 
 public class Submission : BaseIdDbEntity
 {

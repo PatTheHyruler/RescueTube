@@ -1,5 +1,5 @@
-using Domain.Contracts;
-using Domain.Entities;
+using RescueTube.Domain.Contracts;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Utils;
 

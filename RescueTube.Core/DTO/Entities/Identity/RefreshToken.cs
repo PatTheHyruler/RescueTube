@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using Domain.Base;
+using RescueTube.Domain.Base;
 
 namespace RescueTube.Core.DTO.Entities.Identity;
 

@@ -1,11 +1,11 @@
 using System.Security.Cryptography;
 using System.Text;
-using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Base;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
 

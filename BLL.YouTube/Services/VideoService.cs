@@ -3,15 +3,15 @@ using RescueTube.Core.Events.Events;
 using BLL.YouTube.Base;
 using BLL.YouTube.Extensions;
 using BLL.YouTube.Utils;
-using Domain.Entities;
-using Domain.Entities.Localization;
-using Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RescueTube.Core;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Entities.Localization;
+using RescueTube.Domain.Enums;
 using YoutubeDLSharp.Metadata;
 
 namespace BLL.YouTube.Services;

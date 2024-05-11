@@ -1,6 +1,5 @@
 using System.Text;
 using RescueTube.Core.Utils.Validation;
-using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -12,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RescueTube.Core.Identity.Options;
 using RescueTube.Core.Identity.Services;
+using RescueTube.Domain.Entities.Identity;
 
 namespace RescueTube.Core.Identity;
 

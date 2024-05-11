@@ -1,8 +1,8 @@
-using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Data;
 using RescueTube.Core.Identity.Services;
+using RescueTube.Domain.Entities.Identity;
 
 namespace RescueTube.Core.Identity;
 

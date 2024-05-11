@@ -1,6 +1,6 @@
-using Domain.Enums;
 using MediatR;
 using RescueTube.Core.Events.Events.Base;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Events.Events;
 

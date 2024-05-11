@@ -1,7 +1,7 @@
-﻿using Domain.Base;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using RescueTube.Domain.Base;
 
-namespace Domain.Entities.Identity;
+namespace RescueTube.Domain.Entities.Identity;
 
 [Index(nameof(UserId), nameof(Token), nameof(JwtHash), nameof(ExpiresAt))]
 public class RefreshToken : BaseIdDbEntity

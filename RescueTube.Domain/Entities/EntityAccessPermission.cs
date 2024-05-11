@@ -1,7 +1,7 @@
-using Domain.Base;
-using Domain.Entities.Identity;
+using RescueTube.Domain.Base;
+using RescueTube.Domain.Entities.Identity;
 
-namespace Domain.Entities;
+namespace RescueTube.Domain.Entities;
 
 public class EntityAccessPermission : BaseIdDbEntity
 {

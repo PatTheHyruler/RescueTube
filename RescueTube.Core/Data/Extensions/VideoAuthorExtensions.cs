@@ -1,6 +1,6 @@
-using Domain.Entities;
-using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Data.Extensions;
 

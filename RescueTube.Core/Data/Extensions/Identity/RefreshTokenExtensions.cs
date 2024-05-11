@@ -1,4 +1,4 @@
-using Domain.Entities.Identity;
+using RescueTube.Domain.Entities.Identity;
 
 namespace RescueTube.Core.Data.Extensions.Identity;
 

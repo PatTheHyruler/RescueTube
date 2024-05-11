@@ -1,15 +1,15 @@
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using DAL.EF.Converters;
-using Domain.Entities;
-using Domain.Entities.Identity;
-using Domain.Entities.Localization;
-using Domain.Enums;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RescueTube.Domain.Entities;
+using RescueTube.Domain.Entities.Identity;
+using RescueTube.Domain.Entities.Localization;
+using RescueTube.Domain.Enums;
 
 namespace DAL.EF;
 

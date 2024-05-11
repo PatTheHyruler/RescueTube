@@ -5,11 +5,11 @@ using BLL.YouTube.Jobs.Registration;
 using BLL.YouTube.Services;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Utils.Validation;
-using Domain.Enums;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RescueTube.Core;
+using RescueTube.Domain.Enums;
 using YoutubeDLSharp;
 
 namespace BLL.YouTube;

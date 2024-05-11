@@ -1,4 +1,4 @@
-namespace Domain.Contracts;
+namespace RescueTube.Domain.Contracts;
 
 public interface IFetchableUnofficial
 {

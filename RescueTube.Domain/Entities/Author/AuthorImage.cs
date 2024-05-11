@@ -1,7 +1,7 @@
-using Domain.Base;
-using Domain.Enums;
+using RescueTube.Domain.Base;
+using RescueTube.Domain.Enums;
 
-namespace Domain.Entities;
+namespace RescueTube.Domain.Entities;
 
 public class AuthorImage : BaseIdDbEntity
 {

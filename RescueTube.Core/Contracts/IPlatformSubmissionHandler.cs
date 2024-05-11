@@ -1,6 +1,6 @@
-using Domain.Enums;
 using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.Exceptions;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Contracts;
 

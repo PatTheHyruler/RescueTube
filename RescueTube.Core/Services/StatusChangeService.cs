@@ -1,6 +1,6 @@
-using Domain.Entities;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
 
