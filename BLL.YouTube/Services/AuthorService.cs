@@ -1,6 +1,6 @@
-using BLL.Data.Extensions;
-using BLL.Events;
-using BLL.Events.Events;
+using RescueTube.Core.Data.Extensions;
+using RescueTube.Core.Events;
+using RescueTube.Core.Events.Events;
 using BLL.YouTube.Base;
 using BLL.YouTube.Extensions;
 using Domain.Entities;

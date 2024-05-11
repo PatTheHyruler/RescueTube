@@ -45,7 +45,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\BLL.YouTube\BLL.YouTube.csproj" />
-      <ProjectReference Include="..\BLL\BLL.csproj" />
+      <ProjectReference Include="..\RescueTube.Core\RescueTube.Core.csproj" />
       <ProjectReference Include="..\DAL.EF.Postgres\DAL.EF.Postgres.csproj" />
       <ProjectReference Include="..\DAL.EF\DAL.EF.csproj" />
       <ProjectReference Include="..\Resources\Resources.csproj" />

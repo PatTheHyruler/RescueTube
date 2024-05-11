@@ -1,5 +1,5 @@
-﻿using BLL.Contracts;
-using BLL.Utils.Validation;
+﻿using RescueTube.Core.Contracts;
+using RescueTube.Core.Utils.Validation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DAL.EF;

@@ -1,5 +1,5 @@
-using BLL.DTO.Enums;
-using BLL.Utils.Pagination.Contracts;
+using RescueTube.Core.DTO.Enums;
+using RescueTube.Core.Utils.Pagination.Contracts;
 
 namespace WebApp.ViewModels.Video;
 

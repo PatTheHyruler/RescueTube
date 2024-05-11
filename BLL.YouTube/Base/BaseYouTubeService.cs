@@ -1,4 +1,4 @@
-using BLL.Base;
+using RescueTube.Core.Base;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

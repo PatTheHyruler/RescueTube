@@ -1,6 +1,6 @@
-using BLL.Identity.Exceptions;
-using BLL.Identity.Options;
-using BLL.Identity.Services;
+using RescueTube.Core.Identity.Exceptions;
+using RescueTube.Core.Identity.Options;
+using RescueTube.Core.Identity.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;

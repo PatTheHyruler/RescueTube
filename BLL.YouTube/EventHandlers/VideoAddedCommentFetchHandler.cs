@@ -1,5 +1,5 @@
-using BLL.Events.Events;
 using BLL.YouTube.Jobs;
+using RescueTube.Core.Events.Events;
 using Hangfire;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;

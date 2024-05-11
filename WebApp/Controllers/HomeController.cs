@@ -1,4 +1,4 @@
-using BLL.Identity;
+using RescueTube.Core.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

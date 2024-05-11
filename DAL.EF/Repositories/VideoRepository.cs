@@ -1,7 +1,7 @@
-﻿using BLL.Data.Extensions;
-using BLL.Data.Pagination;
-using BLL.Data.Repositories;
-using BLL.DTO.Enums;
+﻿using RescueTube.Core.Data.Extensions;
+using RescueTube.Core.Data.Pagination;
+using RescueTube.Core.Data.Repositories;
+using RescueTube.Core.DTO.Enums;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;

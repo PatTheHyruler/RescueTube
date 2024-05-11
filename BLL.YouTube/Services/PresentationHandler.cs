@@ -1,5 +1,5 @@
-using BLL.Contracts;
-using BLL.DTO.Entities;
+using RescueTube.Core.Contracts;
+using RescueTube.Core.DTO.Entities;
 using BLL.YouTube.Utils;
 using Domain.Enums;
 

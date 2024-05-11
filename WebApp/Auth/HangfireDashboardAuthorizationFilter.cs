@@ -1,4 +1,4 @@
-using BLL.Identity.Services;
+using RescueTube.Core.Identity.Services;
 using Hangfire.Dashboard;
 
 namespace WebApp.Auth;

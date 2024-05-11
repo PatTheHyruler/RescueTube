@@ -1,8 +1,8 @@
-using BLL.Contracts;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RescueTube.Core.Contracts;
 
 namespace DAL.EF.Postgres;
 

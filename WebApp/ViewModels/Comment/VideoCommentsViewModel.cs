@@ -1,5 +1,5 @@
-﻿using BLL.DTO.Entities;
-using BLL.Utils.Pagination.Contracts;
+﻿using RescueTube.Core.DTO.Entities;
+using RescueTube.Core.Utils.Pagination.Contracts;
 
 namespace WebApp.ViewModels.Comment;
 

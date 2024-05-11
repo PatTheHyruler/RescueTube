@@ -1,5 +1,5 @@
 using System.Text;
-using BLL.Events.Events;
+using RescueTube.Core.Events.Events;
 using BLL.YouTube.Base;
 using BLL.YouTube.Extensions;
 using BLL.YouTube.Utils;
@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RescueTube.Core;
 using YoutubeDLSharp.Metadata;
 
 namespace BLL.YouTube.Services;

@@ -1,6 +1,6 @@
-using BLL;
-using BLL.Exceptions;
-using BLL.Identity;
+using RescueTube.Core;
+using RescueTube.Core.Exceptions;
+using RescueTube.Core.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.ViewModels;

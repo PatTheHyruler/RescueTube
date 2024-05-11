@@ -1,4 +1,4 @@
-using BLL.Utils.Pagination.Contracts;
+using RescueTube.Core.Utils.Pagination.Contracts;
 
 namespace WebApp.ViewModels;
 

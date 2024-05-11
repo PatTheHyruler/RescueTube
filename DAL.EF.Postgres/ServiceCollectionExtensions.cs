@@ -1,9 +1,9 @@
-﻿using BLL.Data;
-using BLL.Data.Repositories;
-using DAL.EF.Repositories;
+﻿using DAL.EF.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RescueTube.Core.Data;
+using RescueTube.Core.Data.Repositories;
 
 namespace DAL.EF.Postgres;
 

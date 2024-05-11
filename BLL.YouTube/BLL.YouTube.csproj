@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\BLL\BLL.csproj" />
+      <ProjectReference Include="..\RescueTube.Core\RescueTube.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>

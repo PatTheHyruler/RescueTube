@@ -1,7 +1,7 @@
-using BLL.Contracts;
-using BLL.Data.Extensions;
-using BLL.DTO.Entities;
-using BLL.Exceptions;
+using RescueTube.Core.Contracts;
+using RescueTube.Core.Data.Extensions;
+using RescueTube.Core.DTO.Entities;
+using RescueTube.Core.Exceptions;
 using BLL.YouTube.Base;
 using BLL.YouTube.Utils;
 using Domain.Enums;

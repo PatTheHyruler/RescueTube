@@ -1,5 +1,5 @@
-﻿using BLL.Data;
-using BLL.Data.Repositories;
+﻿using RescueTube.Core.Data;
+using RescueTube.Core.Data.Repositories;
 
 namespace DAL.EF;
 

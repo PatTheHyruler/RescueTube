@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
-using BLL;
-using BLL.Identity;
+using RescueTube.Core;
+using RescueTube.Core.Identity;
 using BLL.YouTube;
 using DAL.EF;
 using DAL.EF.Postgres;
