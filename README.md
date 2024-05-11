@@ -16,7 +16,7 @@ Start local dev DB:
 
 ## Migrations
 (In solution root directory)
-* Add migration: `dotnet ef migrations add --context PostgresAppDbContext MigrationName --project DAL.EF --startup-project WebApp`
-* Remove migration: `dotnet ef migrations remove --context PostgresAppDbContext --project DAL.EF --startup-project WebApp`
-* Update to latest migration: `dotnet ef database update --context PostgresAppDbContext --project DAL.EF --startup-project WebApp`
-* Add migration: `dotnet ef database update --context PostgresAppDbContext MigrationName --project DAL.EF --startup-project WebApp`
+* Add migration: `dotnet ef migrations add --project DAL.EF.Postgres --startup-project WebApp`
+* Remove migration: `dotnet ef migrations remove --project DAL.EF.Postgres --startup-project WebApp`
+* Update to latest migration: `dotnet ef database update --project DAL.EF.Postgres --startup-project WebApp`
+* Add migration: `dotnet ef database update MigrationName --project DAL.EF.Postgres --startup-project WebApp`

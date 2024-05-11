@@ -1,0 +1,27 @@
+﻿using BLL.DTO.Enums;
+using Domain.Entities;
+using Domain.Enums;
+using Utils.Pagination.Contracts;
+
+namespace BLL.Data.Repositories;
+
+public interface IVideoRepository
+{
+    public class VideoSearchParams
+    {
+        public EPlatform? Platform { get; set; }
+        public string? Name { get; set; }
+        public string? Author { get; set; }
+        public ICollection<Guid>? CategoryIds { get; set; }
+        public Guid? UserId { get; set; }
+        public Guid? UserAuthorId { get; set; }
+        public bool AccessAllowed { get; set; }
+        public IPaginationQuery PaginationQuery { get; set; }
+        public EVideoSortingOptions SortingOptions { get; set; }
+        public bool Descending { get; set; }
+    }
+
+    public IQueryable<Video> SearchVideos(VideoSearchParams search);
+
+    public IQueryable<Video> WhereUserIsAllowedToAccessVideoOrVideoIsPublic(IQueryable<Video> query, Guid? userId);
+}

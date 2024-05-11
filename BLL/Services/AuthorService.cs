@@ -12,7 +12,7 @@ public class AuthorService : BaseService
 
     public async Task DownloadAuthorImages(Guid authorId, CancellationToken ct = default)
     {
-        var images = Ctx.Images
+        var images = DbCtx.Images
             .Where(i => i.FailedFetchAttempts < 3 &&
                         i.AuthorImages!.Any(ai =>
                             ai.AuthorId == authorId && ai.ValidUntil == null))

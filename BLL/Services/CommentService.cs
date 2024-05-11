@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using BLL.Base;
+using BLL.Data.Pagination;
 using BLL.DTO.Entities;
-using DAL.EF.Pagination;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Utils.Pagination;
@@ -23,7 +23,7 @@ public class CommentService : BaseService
     public async Task<VideoComments?> GetVideoComments(Guid videoId, IPaginationQuery paginationQuery,
         CancellationToken ct = default)
     {
-        var videoData = await Ctx.Videos
+        var videoData = await DbCtx.Videos
             .Where(v => v.Id == videoId)
             .Select(v => new
             {
@@ -36,7 +36,7 @@ public class CommentService : BaseService
         }
 
         paginationQuery.ConformValues();
-        var commentRootsQuery = Ctx.Comments
+        var commentRootsQuery = DbCtx.Comments
             .Where(c => c.VideoId == videoId && c.ConversationRootId == null)
             .OrderByDescending(c => c.CreatedAt)
             .ThenByDescending(c => c.OrderIndex)

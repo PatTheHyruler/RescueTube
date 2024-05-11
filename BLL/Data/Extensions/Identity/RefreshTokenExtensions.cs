@@ -1,6 +1,6 @@
 using Domain.Entities.Identity;
 
-namespace DAL.EF.Extensions.Identity;
+namespace BLL.Data.Extensions.Identity;
 
 public static class RefreshTokenExtensions
 {

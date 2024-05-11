@@ -1,5 +1,4 @@
 using DAL.Contracts;
-using DAL.EF.DbContexts;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

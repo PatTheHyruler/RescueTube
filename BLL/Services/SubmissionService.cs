@@ -44,7 +44,7 @@ public class SubmissionService : BaseService
 
     public async Task<Submission> Add(Video video, Guid submitterId, bool autoSubmit)
     {
-        var submission = Ctx.Submissions.Add(new Submission(video, submitterId, autoSubmit));
+        var submission = DbCtx.Submissions.Add(new Submission(video, submitterId, autoSubmit));
         if (autoSubmit) await ServiceUow.AuthorizationService.AuthorizeVideoIfNotAuthorized(submitterId, video.Id);
         return submission.Entity;
     }
@@ -52,7 +52,7 @@ public class SubmissionService : BaseService
     public Submission Add(string idOnPlatform, EPlatform platform, EEntityType entityType, Guid submitterId,
         bool autoSubmit)
     {
-        return Ctx.Submissions.Add(new Submission(idOnPlatform, platform, entityType, submitterId, autoSubmit)).Entity;
+        return DbCtx.Submissions.Add(new Submission(idOnPlatform, platform, entityType, submitterId, autoSubmit)).Entity;
     }
 
     public SubmissionService(IServiceProvider services, ILogger<SubmissionService> logger) : base(services, logger)

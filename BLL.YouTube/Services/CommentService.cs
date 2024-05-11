@@ -42,7 +42,7 @@ public class CommentService : BaseYouTubeService
             return;
         }
 
-        var video = await Ctx.Videos
+        var video = await DbCtx.Videos
             .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoIdOnPlatform)
             .Include(v => v.Comments!)
             .ThenInclude(v => v.CommentStatisticSnapshots)
@@ -121,7 +121,7 @@ public class CommentService : BaseYouTubeService
                 }
             }
 
-            Ctx.Comments.Add(comment);
+            DbCtx.Comments.Add(comment);
             video.Comments.Add(comment);
         }
 

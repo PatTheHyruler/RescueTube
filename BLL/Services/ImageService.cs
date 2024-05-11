@@ -21,7 +21,7 @@ public class ImageService : BaseService
 
     public async Task UpdateImage(Guid imageId, CancellationToken ct)
     {
-        var image = await Ctx.Images
+        var image = await DbCtx.Images
             .Where(e => e.Id == imageId)
             .Include(e => e.AuthorImages)
             .Include(e => e.VideoImages)
@@ -130,7 +130,7 @@ public class ImageService : BaseService
             Width = image.Width,
             Height = image.Height,
         };
-        Ctx.Images.Add(newImage);
+        DbCtx.Images.Add(newImage);
 
         var currentTime = DateTime.UtcNow;
 
@@ -139,7 +139,7 @@ public class ImageService : BaseService
             foreach (var videoImage in image.VideoImages)
             {
                 videoImage.ValidUntil = currentTime;
-                Ctx.VideoImages.Add(new VideoImage
+                DbCtx.VideoImages.Add(new VideoImage
                 {
                     ImageType = videoImage.ImageType,
                     ValidSince = currentTime,
@@ -156,7 +156,7 @@ public class ImageService : BaseService
             foreach (var authorImage in image.AuthorImages)
             {
                 authorImage.ValidUntil = currentTime;
-                Ctx.AuthorImages.Add(new AuthorImage
+                DbCtx.AuthorImages.Add(new AuthorImage
                 {
                     ImageType = authorImage.ImageType,
                     ValidSince = currentTime,

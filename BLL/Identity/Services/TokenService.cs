@@ -1,11 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using BLL.Data.Extensions.Identity;
 using BLL.DTO.Entities.Identity;
 using BLL.DTO.Exceptions.Identity;
 using BLL.DTO.Mappers;
 using BLL.Identity.Options;
-using DAL.EF.Extensions.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -38,7 +38,7 @@ public class TokenService
             TimeSpan.FromDays(_jwtBearerOptions.RefreshTokenExpiresInDays),
             HashJwt(jwt),
             userId);
-        _identityUow.Ctx.RefreshTokens.Add(token.ToDomainToken());
+        _identityUow.DbCtx.RefreshTokens.Add(token.ToDomainToken());
         return token;
     }
 
@@ -108,7 +108,7 @@ public class TokenService
         var user = await _identityUow.UserManager.FindByNameAsync(userName)
                    ?? throw new InvalidJwtException();
 
-        var userRefreshTokens = await _identityUow.Ctx.RefreshTokens
+        var userRefreshTokens = await _identityUow.DbCtx.RefreshTokens
             .FilterValid(user.Id, refreshToken, HashJwt(jwt))
             .ToListAsync();
         if (userRefreshTokens.Count == 0)
@@ -168,14 +168,14 @@ public class TokenService
 
         var userId = principal.GetUserIdIfExists() ?? throw new InvalidJwtException();
         var jwtHash = HashJwt(jwt);
-        await _identityUow.Ctx.RefreshTokens
+        await _identityUow.DbCtx.RefreshTokens
             .Filter(userId, refreshToken, jwtHash)
             .ExecuteDeleteAsync();
     }
 
     public async Task DeleteExpiredRefreshTokensAsync()
     {
-        await _identityUow.Ctx.RefreshTokens
+        await _identityUow.DbCtx.RefreshTokens
             .Where(r => r.ExpiresAt < DateTime.UtcNow)
             .ExecuteDeleteAsync();
     }

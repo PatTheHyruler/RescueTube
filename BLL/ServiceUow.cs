@@ -1,5 +1,5 @@
+using BLL.Data;
 using BLL.Services;
-using DAL.EF.DbContexts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BLL;
@@ -13,8 +13,8 @@ public class ServiceUow
         _services = services;
     }
 
-    private AppDbContext? _ctx;
-    public AppDbContext Ctx => _ctx ??= _services.GetRequiredService<AppDbContext>();
+    private IDataUow? _dataUow;
+    public IDataUow DataUow => _dataUow ??= _services.GetRequiredService<IDataUow>();
 
     public SubmissionService SubmissionService => _services.GetRequiredService<SubmissionService>();
     public AuthorizationService AuthorizationService => _services.GetRequiredService<AuthorizationService>();
@@ -29,5 +29,5 @@ public class ServiceUow
     public VideoPresentationService VideoPresentationService =>
         _services.GetRequiredService<VideoPresentationService>();
 
-    public Task SaveChangesAsync() => Ctx.SaveChangesAsync();
+    public Task SaveChangesAsync() => DataUow.SaveChangesAsync();
 }

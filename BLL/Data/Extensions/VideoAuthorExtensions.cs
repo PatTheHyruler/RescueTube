@@ -2,7 +2,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.EF.Extensions;
+namespace BLL.Data.Extensions;
 
 public static class VideoAuthorExtensions
 {
@@ -38,4 +38,5 @@ public static class VideoAuthorExtensions
 
         return query;
     }
+
 }

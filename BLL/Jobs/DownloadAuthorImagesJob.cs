@@ -19,12 +19,12 @@ public class DownloadAuthorImagesJob
     public async Task DownloadAuthorImages(Guid authorId, CancellationToken ct)
     {
         await _authorService.DownloadAuthorImages(authorId, ct);
-        await _authorService.Ctx.SaveChangesAsync(CancellationToken.None);
+        await _authorService.DataUow.SaveChangesAsync(CancellationToken.None);
     }
 
     public async Task DownloadAllNotDownloadedAuthorImages(CancellationToken ct)
     {
-        var imageIds = _authorService.Ctx.AuthorImages
+        var imageIds = _authorService.DbCtx.AuthorImages
             .Where(e => e.Image!.LocalFilePath == null &&
                         e.Image.FailedFetchAttempts < 3 &&
                         e.Image.Url != null)

@@ -1,8 +1,8 @@
+using BLL.Data.Extensions;
 using BLL.Events;
 using BLL.Events.Events;
 using BLL.YouTube.Base;
 using BLL.YouTube.Extensions;
-using DAL.EF.Extensions;
 using Domain.Entities;
 using Domain.Enums;
 using MediatR;
@@ -31,7 +31,7 @@ public class AuthorService : BaseYouTubeService
     public async Task AddAndSetAuthor(Video video, VideoData videoData)
     {
         var author = await AddOrGetAuthor(videoData);
-        Ctx.VideoAuthors.SetVideoAuthor(video.Id, author.Id);
+        DbCtx.VideoAuthors.SetVideoAuthor(video.Id, author.Id);
     }
 
     private async Task<Author> AddOrGetAuthor(string id, Func<Author> newAuthorFunc)
@@ -57,7 +57,7 @@ public class AuthorService : BaseYouTubeService
         }
 
         var fetchedAuthors =
-            await Ctx.Authors.Filter(EPlatform.YouTube, notCachedIds.Select(e => e.AuthorId)).ToListAsync();
+            await DbCtx.Authors.Filter(EPlatform.YouTube, notCachedIds.Select(e => e.AuthorId)).ToListAsync();
 
         foreach (var arg in notCachedIds)
         {
@@ -72,8 +72,8 @@ public class AuthorService : BaseYouTubeService
                 var author = arg.NewAuthorFunc();
                 await TryFetchExtraAuthorData(author, arg); // TODO: Move this to a background job
 
-                Ctx.Authors.Add(author);
-                Ctx.RegisterSavedChangesCallbackRunOnce(() =>
+                DbCtx.Authors.Add(author);
+                DataUow.RegisterSavedChangesCallbackRunOnce(() =>
                     _mediator.Publish(new AuthorAddedEvent(
                         author.Id, EPlatform.YouTube, author.IdOnPlatform)));
                 _cachedAuthors.TryAdd(arg.AuthorId, author);

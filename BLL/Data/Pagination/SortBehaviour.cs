@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace DAL.EF.Pagination;
+namespace BLL.Data.Pagination;
 
 public record SortBehaviour<TEntity>(Expression<Func<TEntity, dynamic>> OrderExpression, bool Descending)
 {

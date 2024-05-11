@@ -1,7 +1,7 @@
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.EF.Extensions;
+namespace BLL.Data.Extensions;
 
 public static class EntityAccessPermissionExtensions
 {

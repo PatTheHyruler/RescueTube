@@ -1,7 +1,7 @@
 using Utils.Pagination;
 using Utils.Pagination.Contracts;
 
-namespace DAL.EF.Pagination;
+namespace BLL.Data.Pagination;
 
 public static class PaginationExtensions
 {

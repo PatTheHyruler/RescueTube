@@ -1,3 +1,4 @@
+using BLL.Data;
 using DAL.Contracts;
 using DAL.EF.Converters;
 using Domain.Entities;
@@ -10,10 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace DAL.EF.DbContexts;
+namespace DAL.EF;
 
-public class AppDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole,
-    UserLogin, RoleClaim, UserToken>
+public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole,
+    UserLogin, RoleClaim, UserToken>, IAppDbContext
 {
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
@@ -48,7 +49,7 @@ public class AppDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserR
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
 
-    public AppDbContext(DbContextOptions options,
+    protected AppDbContext(DbContextOptions options,
         IOptions<DbLoggingOptions> dbLoggingOptions,
         ILoggerFactory? loggerFactory = null) : base(options)
     {

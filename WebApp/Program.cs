@@ -103,7 +103,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.AddCustomIdentity();
+builder.AddCustomIdentity<AppDbContext>();
 builder.Services.AddBll();
 builder.Services.AddYouTube();
 

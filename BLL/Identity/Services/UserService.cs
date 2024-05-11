@@ -105,7 +105,7 @@ public class UserService
 
     public async Task<User?> GetUserWithRolesAsync(Guid userId)
     {
-        return await _identityUow.Ctx.Users
+        return await _identityUow.DbCtx.Users
             .Where(u => u.Id == userId)
             .Include(u => u.UserRoles!)
             .ThenInclude(ur => ur.Role)

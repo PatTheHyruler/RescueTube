@@ -1,5 +1,5 @@
+using BLL.Data;
 using BLL.Services;
-using DAL.EF.DbContexts;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,26 +8,26 @@ namespace BLL.Jobs;
 public class DownloadVideoImagesJob
 {
     private readonly VideoService _videoService;
-    private readonly AppDbContext _dbCtx;
+    private readonly IDataUow _dataUow;
     private readonly IBackgroundJobClient _backgroundJobs;
 
-    public DownloadVideoImagesJob(VideoService videoService, AppDbContext dbCtx,
+    public DownloadVideoImagesJob(VideoService videoService, IDataUow dataUow,
         IBackgroundJobClient backgroundJobs)
     {
         _videoService = videoService;
-        _dbCtx = dbCtx;
+        _dataUow = dataUow;
         _backgroundJobs = backgroundJobs;
     }
 
     public async Task DownloadVideoImages(Guid videoId, CancellationToken ct)
     {
         await _videoService.DownloadVideoImages(videoId, ct);
-        await _videoService.Ctx.SaveChangesAsync(CancellationToken.None);
+        await _videoService.DataUow.SaveChangesAsync(CancellationToken.None);
     }
 
     public async Task DownloadAllNotDownloadedVideoImages(CancellationToken ct)
     {
-        var imageIds = _dbCtx.VideoImages
+        var imageIds = _dataUow.Ctx.VideoImages
             .Where(e => e.Image!.LocalFilePath == null &&
                         e.Image.FailedFetchAttempts < 3 &&
                         e.Image.Url != null)

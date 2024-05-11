@@ -19,13 +19,13 @@ public class DownloadVideoJob
     public async Task DownloadVideo(Guid videoId, CancellationToken ct)
     {
         await _videoService.DownloadVideo(videoId, ct);
-        await _videoService.Ctx.SaveChangesAsync(CancellationToken.None);
+        await _videoService.DataUow.SaveChangesAsync(CancellationToken.None);
     }
 
     public async Task DownloadNotDownloadedVideos(CancellationToken ct)
     {
         var addedToArchiveAtCutoff = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1));
-        var videoIds = _videoService.Ctx.Videos
+        var videoIds = _videoService.DbCtx.Videos
             .Where(v => v.VideoFiles!.Count == 0
                         && v.FailedDownloadAttempts < 3
                         && v.AddedToArchiveAt < addedToArchiveAtCutoff)

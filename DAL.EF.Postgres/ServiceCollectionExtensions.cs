@@ -1,28 +1,32 @@
-﻿using DAL.Contracts;
-using DAL.EF.DbContexts;
+﻿using BLL.Data;
+using BLL.Data.Repositories;
+using DAL.EF.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Utils.Validation;
 
 namespace DAL.EF.Postgres;
 
 public static class ServiceCollectionExtensions
 {
-    private static void AddDbLoggingOptions(this IServiceCollection services)
-    {
-        services.AddOptionsFull<DbLoggingOptions>(DbLoggingOptions.Section);
-    }
-    
+    private static PostgresAppDbContext GetPostgresAppDbContext(IServiceProvider s) =>
+        s.GetRequiredService<PostgresAppDbContext>();
+
     public static IServiceCollection AddDbPersistenceEfPostgres(this IServiceCollection services,
         IConfiguration configuration)
     {
-        services
-            .AddDbLoggingOptions();
+        services.AddDbLoggingOptions();
         var connectionString = configuration.GetConnectionString("RescueTubePostgres");
-        services.AddDbContext<AppDbContext, PostgresAppDbContext>(
+        services.AddDbContext<PostgresAppDbContext>(
             o => o.UseNpgsql(connectionString));
-        services.AddScoped<AppDbContext, PostgresAppDbContext>();
+        services.AddScoped<AppDbContext>(GetPostgresAppDbContext);
+        services.AddScoped<IAppDbContext>(GetPostgresAppDbContext);
+
+        services.AddScoped<VideoRepository>();
+        services.AddScoped<IVideoRepository>(s => s.GetRequiredService<VideoRepository>());
+
+        services.AddScoped<DataUow>();
+        services.AddScoped<IDataUow>(s => s.GetRequiredService<DataUow>());
         return services;
     }
 }

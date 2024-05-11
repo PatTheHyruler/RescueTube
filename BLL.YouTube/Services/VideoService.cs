@@ -1,5 +1,4 @@
 using System.Text;
-using BLL.Events;
 using BLL.Events.Events;
 using BLL.YouTube.Base;
 using BLL.YouTube.Extensions;
@@ -139,9 +138,9 @@ public class VideoService : BaseYouTubeService
                 videoData.ID, videoData.ChannelID, videoData.Channel);
         }
 
-        Ctx.Videos.Add(video);
+        DbCtx.Videos.Add(video);
 
-        Ctx.RegisterSavedChangesCallbackRunOnce(() =>
+        DataUow.RegisterSavedChangesCallbackRunOnce(() =>
             _mediator.Publish(new VideoAddedEvent(
                 video.Id, EPlatform.YouTube, videoData.ID)));
         // TODO: Comments callback subscribe
@@ -154,7 +153,7 @@ public class VideoService : BaseYouTubeService
 
     public async Task DownloadVideo(Guid videoId, CancellationToken ct)
     {
-        var query = Ctx.Videos
+        var query = DbCtx.Videos
             .Where(e => e.Platform == EPlatform.YouTube)
             .Include(e => e.VideoFiles)
             .Where(e => e.VideoFiles!.Count == 0)
@@ -179,7 +178,7 @@ public class VideoService : BaseYouTubeService
                 errorString);
             // Since we throw an exception here, we can't expect the callers of this function to call SaveChanges()
             // Also, executing this update in the DB should avoid potential concurrency issues
-            await Ctx.Videos
+            await DbCtx.Videos
                 .Where(e => e.Id == video.Id)
                 .ExecuteUpdateAsync(e => e.SetProperty(
                         v => v.FailedDownloadAttempts,
@@ -205,7 +204,7 @@ public class VideoService : BaseYouTubeService
         var infoJsonPath = AppPaths.GetFilePathWithoutExtension(videoFilePath) + ".info.json";
         video.InfoJsonPath = AppPaths.GetPathRelativeToDownloads(infoJsonPath, appPathOptions);
         video.InfoJson = await File.ReadAllTextAsync(infoJsonPath, CancellationToken.None);
-        Ctx.VideoFiles.Add(new VideoFile
+        DbCtx.VideoFiles.Add(new VideoFile
         {
             FilePath = AppPaths.GetPathRelativeToDownloads(videoFilePath, appPathOptions),
             ValidSince = DateTime.UtcNow, // Questionable semantics?

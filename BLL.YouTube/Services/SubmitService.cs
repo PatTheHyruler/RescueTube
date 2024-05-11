@@ -1,9 +1,9 @@
 using BLL.Contracts;
 using BLL.Contracts.Exceptions;
+using BLL.Data.Extensions;
 using BLL.DTO.Entities;
 using BLL.YouTube.Base;
 using BLL.YouTube.Utils;
-using DAL.EF.Extensions;
 using Domain.Enums;
 using Microsoft.Extensions.Logging;
 
@@ -27,7 +27,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 
     private async Task<LinkSubmissionSuccessResult> SubmitVideo(string idOnPlatform, Guid submitterId, bool autoSubmit)
     {
-        var previouslyArchivedVideo = await Ctx.Videos.GetByIdOnPlatformAsync(idOnPlatform, EPlatform.YouTube);
+        var previouslyArchivedVideo = await DbCtx.Videos.GetByIdOnPlatformAsync(idOnPlatform, EPlatform.YouTube);
         if (previouslyArchivedVideo != null)
         {
             return new LinkSubmissionSuccessResult(

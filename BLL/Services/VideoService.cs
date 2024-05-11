@@ -12,7 +12,7 @@ public class VideoService : BaseService
 
     public async Task DownloadVideoImages(Guid videoId, CancellationToken ct = default)
     {
-        var images = Ctx.Images
+        var images = DbCtx.Images
             .Where(e => e.FailedFetchAttempts < 3 &&
                         e.VideoImages!.Any(vi =>
                             vi.VideoId == videoId && vi.ValidUntil == null))

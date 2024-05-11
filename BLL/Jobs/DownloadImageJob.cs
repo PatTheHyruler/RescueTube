@@ -14,6 +14,6 @@ public class DownloadImageJob
     public async Task DownloadImage(Guid imageId, CancellationToken ct)
     {
         await _imageService.UpdateImage(imageId, ct);
-        await _imageService.Ctx.SaveChangesAsync(ct);
+        await _imageService.DataUow.SaveChangesAsync(ct);
     }
 }

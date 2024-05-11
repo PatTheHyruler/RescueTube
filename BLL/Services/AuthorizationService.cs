@@ -1,8 +1,8 @@
 using System.Security.Claims;
 using System.Security.Principal;
 using BLL.Base;
+using BLL.Data.Extensions;
 using BLL.Identity;
-using DAL.EF.Extensions;
 using Domain.Entities;
 using Microsoft.Extensions.Logging;
 using BLL.Identity.Services;
@@ -18,8 +18,8 @@ public class AuthorizationService : BaseService
 
     public async Task AuthorizeVideoIfNotAuthorized(Guid userId, Guid videoId)
     {
-        if (await Ctx.EntityAccessPermissions.VideoPermissionExistsAsync(userId, videoId)) return;
-        Ctx.EntityAccessPermissions.Add(new EntityAccessPermission
+        if (await DbCtx.EntityAccessPermissions.VideoPermissionExistsAsync(userId, videoId)) return;
+        DbCtx.EntityAccessPermissions.Add(new EntityAccessPermission
         {
             UserId = userId,
             VideoId = videoId,
@@ -41,10 +41,8 @@ public class AuthorizationService : BaseService
             return true;
         }
 
-        return await Ctx.Videos
-            .Where(v => v.Id == videoId)
-            .WhereUserIsAllowedToAccessVideoOrVideoIsPublic(
-                Ctx, user?.GetUserId())
-            .AnyAsync();
+        var videos = DbCtx.Videos.Where(v => v.Id == videoId);
+        videos = DataUow.VideoRepo.WhereUserIsAllowedToAccessVideoOrVideoIsPublic(videos, user?.GetUserIdIfExists());
+        return await videos.AnyAsync();
     }
 }

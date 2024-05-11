@@ -1,4 +1,4 @@
-using DAL.EF.DbContexts;
+using BLL.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -11,8 +11,8 @@ public abstract class BaseService
     private ServiceUow? _serviceUow;
     public ServiceUow ServiceUow => _serviceUow ??= Services.GetRequiredService<ServiceUow>();
 
-    private AppDbContext? _ctx;
-    public AppDbContext Ctx => _ctx ??= Services.GetRequiredService<AppDbContext>();
+    public IDataUow DataUow => ServiceUow.DataUow;
+    public IAppDbContext DbCtx => DataUow.Ctx;
 
     protected readonly ILogger Logger;
 

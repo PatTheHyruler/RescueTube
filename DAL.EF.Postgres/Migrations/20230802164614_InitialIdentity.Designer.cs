@@ -2,7 +2,6 @@
 
 #nullable disable
 
-using DAL.EF.DbContexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;

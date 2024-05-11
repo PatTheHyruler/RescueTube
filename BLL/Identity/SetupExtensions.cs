@@ -1,11 +1,11 @@
 using System.Text;
 using BLL.Identity.Options;
 using BLL.Identity.Services;
-using DAL.EF.DbContexts;
 using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -17,7 +17,7 @@ namespace BLL.Identity;
 
 public static class SetupExtensions
 {
-    public static IServiceCollection AddCustomIdentity(this WebApplicationBuilder builder)
+    public static IServiceCollection AddCustomIdentity<TContext>(this WebApplicationBuilder builder) where TContext : DbContext
     {
         var services = builder.Services;
         var configuration = builder.Configuration;
@@ -34,7 +34,7 @@ public static class SetupExtensions
 
         services.AddIdentityCore<User>()
             .AddRoles<Role>()
-            .AddEntityFrameworkStores<AppDbContext>()
+            .AddEntityFrameworkStores<TContext>()
             .AddDefaultTokenProviders();
 
         services.TryAddScoped<IRoleValidator<Role>, RoleValidator<Role>>();

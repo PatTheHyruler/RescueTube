@@ -12,7 +12,7 @@ public class StatusChangeService : BaseService
     
     public Task Push(StatusChangeEvent statusChangeEvent)
     {
-        Ctx.StatusChangeEvents.Add(statusChangeEvent);
+        DbCtx.StatusChangeEvents.Add(statusChangeEvent);
         return Task.CompletedTask; // This method will likely become more complicated and require async later
     }
 }

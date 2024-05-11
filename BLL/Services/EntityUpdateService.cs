@@ -1,6 +1,6 @@
 using BLL.Base;
+using BLL.Data;
 using BLL.Utils;
-using DAL.EF.DbContexts;
 using Domain.Contracts;
 using Domain.Entities;
 using Microsoft.Extensions.Logging;
@@ -9,11 +9,11 @@ namespace BLL.Services;
 
 public class EntityUpdateService : BaseService
 {
-    private readonly AppDbContext _dbCtx;
+    private readonly IDataUow _dataUow;
     
-    public EntityUpdateService(IServiceProvider services, ILogger<EntityUpdateService> logger, AppDbContext dbCtx) : base(services, logger)
+    public EntityUpdateService(IServiceProvider services, ILogger<EntityUpdateService> logger, IDataUow dataUow) : base(services, logger)
     {
-        _dbCtx = dbCtx;
+        _dataUow = dataUow;
     }
 
     public async Task UpdateComment(Comment comment, Comment newCommentData)
@@ -40,7 +40,7 @@ public class EntityUpdateService : BaseService
             newStats.CommentId = comment.Id;
 
             comment.CommentStatisticSnapshots.Add(newStats);
-            Ctx.CommentStatisticSnapshots.Add(newStats);
+            DataUow.Ctx.CommentStatisticSnapshots.Add(newStats);
         }
 
         comment.AuthorIsCreator ??= newCommentData.AuthorIsCreator;
@@ -54,7 +54,7 @@ public class EntityUpdateService : BaseService
 
         if (changed)
         {
-            _dbCtx.CommentHistories.Add(commentHistory);
+            _dataUow.Ctx.CommentHistories.Add(commentHistory);
         }
     }
     

@@ -1,5 +1,5 @@
+using BLL.Data;
 using BLL.Identity.Services;
-using DAL.EF.DbContexts;
 using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,8 +15,9 @@ public sealed class IdentityUow
         _services = services;
     }
 
-    private AppDbContext? _ctx;
-    public AppDbContext Ctx => _ctx ??= _services.GetRequiredService<AppDbContext>();
+    private IDataUow? _dataUow;
+    public IDataUow DataUow => _dataUow ??= _services.GetRequiredService<IDataUow>();
+    public IAppDbContext DbCtx => DataUow.Ctx;
 
     private UserManager<User>? _userManager;
     public UserManager<User> UserManager => _userManager ??= _services.GetRequiredService<UserManager<User>>();
@@ -34,8 +35,5 @@ public sealed class IdentityUow
     /// </summary>
     public TokenService TokenService => _tokenService ??= _services.GetRequiredService<TokenService>();
 
-    public async Task SaveChangesAsync()
-    {
-        await Ctx.SaveChangesAsync();
-    }
+    public Task SaveChangesAsync() => DataUow.SaveChangesAsync();
 }
