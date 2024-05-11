@@ -24,6 +24,13 @@ public class VideoController : Controller
     [Authorize]
     public async Task<IActionResult> Search(VideoSearchQueryModel model)
     {
+        var response = await _serviceUow.VideoPresentationService.SearchVideosAsync(
+            platformQuery: null, /*TODO*/ nameQuery: model.NameQuery, authorQuery: model.AuthorQuery,
+            categoryIds: null, // TODO
+            user: User, userAuthorId: null, // TODO
+            paginationQuery: model,
+            sortingOptions: model.SortingOptions, descending: model.Descending
+        );
         var viewModel = new VideoSearchViewModel
         {
             NameQuery = model.NameQuery,
@@ -32,13 +39,8 @@ public class VideoController : Controller
             Limit = model.Limit,
             SortingOptions = model.SortingOptions,
             Descending = model.Descending,
-            Videos = await _serviceUow.VideoPresentationService.SearchVideosAsync(
-                platformQuery: null, /*TODO*/ nameQuery: model.NameQuery, authorQuery: model.AuthorQuery,
-                categoryIds: null, // TODO
-                user: User, userAuthorId: null, // TODO
-                page: model.Page, limit: model.Limit,
-                sortingOptions: model.SortingOptions, descending: model.Descending
-            )
+            Videos = response.Result,
+            PaginationResult = response.PaginationResult,
         };
 
         return View(viewModel);

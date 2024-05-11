@@ -62,7 +62,6 @@ public class VideoRepository : BaseRepository, IVideoRepository
         query = query.Paginate(search.PaginationQuery);
 
         return query;
-
     }
 
     public IQueryable<Video> WhereUserIsAllowedToAccessVideoOrVideoIsPublic(IQueryable<Video> query, Guid? userId)

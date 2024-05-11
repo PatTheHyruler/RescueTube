@@ -1,5 +1,3 @@
-using RescueTube.Core.Utils.Pagination.Contracts;
-
 namespace RescueTube.Core.Utils.Pagination;
 
 public static class PaginationUtils
@@ -39,18 +37,24 @@ public static class PaginationUtils
         return Math.Max(total.Value - 1, 0) / limit;
     }
 
-    public static void ConformValues(ref int? total, ref int limit, ref int page)
+    public static IPaginationQuery ToClamped(this IPaginationQuery query)
     {
-        total = ClampTotal(total);
-        limit = ClampLimit(limit);
-        page = ClampPage(total, limit, page);
+        return new PaginationQuery
+        {
+            Limit = ClampLimit(query.Limit),
+            Page = query.Page,
+        };
     }
 
-    public static void ConformValues(this IPaginationQuery query)
+    public static PaginationResult ToPaginationResult(this IPaginationQuery query, int amountOnPage, int? totalResults = null)
     {
-        query.Total = ClampTotal(query.Total);
-        query.Limit = ClampLimit(query.Limit);
-        query.Page = ClampPage(query.Total, query.Limit, query.Page);
+        return new PaginationResult
+        {
+            Limit = query.Limit,
+            Page = query.Page,
+            AmountOnPage = amountOnPage,
+            TotalResults = totalResults,
+        };
     }
 
     public static int GetSkipAmount(this IPaginationQuery query)

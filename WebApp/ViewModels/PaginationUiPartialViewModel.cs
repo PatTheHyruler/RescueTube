@@ -1,11 +1,11 @@
-using RescueTube.Core.Utils.Pagination.Contracts;
+using RescueTube.Core.Utils.Pagination;
 
 namespace WebApp.ViewModels;
 
-public class PaginationUiPartialViewModel : IPaginationQuery
+public class PaginationUiPartialViewModel : IPaginationResult
 {
     public int Limit { get; set; }
     public int Page { get; set; }
-    public int? Total { get; set; }
+    public int? TotalResults { get; set; }
     public int AmountOnPage { get; set; }
 }

@@ -10,7 +10,6 @@ using RescueTube.Core.Data.Repositories;
 using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.DTO.Enums;
 using RescueTube.Core.Utils.Pagination;
-using RescueTube.Core.Utils.Pagination.Contracts;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 
@@ -21,17 +20,16 @@ public class VideoPresentationService : BaseService
     private readonly IMapper _mapper;
     private readonly IEnumerable<IPlatformVideoPresentationHandler> _videoPresentationHandlers;
 
-    public async Task<List<VideoSimple>> SearchVideosAsync(
+    public async Task<PaginationResponse<List<VideoSimple>>> SearchVideosAsync(
         EPlatform? platformQuery, string? nameQuery,
         string? authorQuery, ICollection<Guid>? categoryIds,
         ClaimsPrincipal user, Guid? userAuthorId,
-        int page, int limit,
+        IPaginationQuery paginationQuery,
         EVideoSortingOptions sortingOptions, bool descending)
     {
         var userId = user.GetUserIdIfExists();
         var accessAllowed = AuthorizationService.IsAllowedToAccessVideoByRole(user);
-        int? total = null;
-        PaginationUtils.ConformValues(ref total, ref limit, ref page);
+        paginationQuery = paginationQuery.ToClamped();
         var videos = await DataUow.VideoRepo.SearchVideos(new IVideoRepository.VideoSearchParams
             {
                 Platform = platformQuery,
@@ -39,7 +37,7 @@ public class VideoPresentationService : BaseService
                 CategoryIds = categoryIds, UserId = userId,
                 UserAuthorId = userAuthorId,
                 AccessAllowed = accessAllowed,
-                PaginationQuery = new PaginationQuery { Page = page, Limit = limit, Total = total },
+                PaginationQuery = paginationQuery,
                 SortingOptions = sortingOptions, Descending = descending,
             })
             // .Select(VideoMapper.VideoToVideoSimpleExpression)
@@ -48,7 +46,11 @@ public class VideoPresentationService : BaseService
             .ToListAsync();
         MakePresentable(videos);
 
-        return videos;
+        return new PaginationResponse<List<VideoSimple>>
+        {
+            Result = videos,
+            PaginationResult = paginationQuery.ToPaginationResult(videos.Count),
+        };
     }
 
     public async Task<VideoSimple?> GetVideoSimple(Guid videoId)

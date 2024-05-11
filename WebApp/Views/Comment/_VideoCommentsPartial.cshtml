@@ -1,5 +1,4 @@
 ﻿@using WebApp.Utils
-@using WebApp.ViewModels
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WebApp.ViewModels.Comment.VideoCommentsViewModel
 
@@ -15,22 +14,11 @@ else
 {
     <h4>Comments</h4>
     <h6>Last fetched: @Context.SpanFor(Model.VideoComments.LastCommentsFetch)</h6>
-    <partial name="_PaginationUiPartial" model="PaginationViewModel"/>
+    <partial name="_PaginationUiPartial" model="@Model.PaginationResult"/>
     <div class="d-flex flex-column gap-1">
         @foreach (var comment in Model.VideoComments.Comments)
         {
             <partial name="_CommentPartial" model="@comment"/>
         }
     </div>
-}
-
-@functions
-{
-    PaginationUiPartialViewModel PaginationViewModel => new()
-    {
-        Limit = Model.Limit,
-        Page = Model.Page,
-        Total = Model.Total,
-        AmountOnPage = Model.VideoComments.Comments.Count
-    };
 }

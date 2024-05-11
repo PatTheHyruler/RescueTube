@@ -1,5 +1,4 @@
 using RescueTube.Core.Utils.Pagination;
-using RescueTube.Core.Utils.Pagination.Contracts;
 
 namespace RescueTube.Core.Data.Pagination;
 
@@ -54,7 +53,7 @@ public static class PaginationExtensions
         this IQueryable<TEntity> query,
         IPaginationQuery paginationParams)
     {
-        paginationParams.ConformValues();
+        paginationParams = paginationParams.ToClamped();
         var skipAmount = paginationParams.GetSkipAmount();
 
         return query.Skip(skipAmount).Take(paginationParams.Limit);
@@ -64,7 +63,7 @@ public static class PaginationExtensions
         this IEnumerable<TEntity> query,
         IPaginationQuery paginationParams)
     {
-        paginationParams.ConformValues();
+        paginationParams = paginationParams.ToClamped();
         var skipAmount = paginationParams.GetSkipAmount();
 
         return query.Skip(skipAmount).Take(paginationParams.Limit);

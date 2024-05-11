@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
 using RescueTube.Core.DTO.Entities;
-using RescueTube.Core.Utils.Pagination.Contracts;
 
 namespace RescueTube.Core.Services;
 
@@ -20,7 +19,7 @@ public class CommentService : BaseService
         _mapper = mapper;
     }
 
-    public async Task<VideoComments?> GetVideoComments(Guid videoId, IPaginationQuery paginationQuery,
+    public async Task<PaginationResponse<VideoComments>?> GetVideoComments(Guid videoId, IPaginationQuery paginationQuery,
         CancellationToken ct = default)
     {
         var videoData = await DbCtx.Videos
@@ -35,14 +34,14 @@ public class CommentService : BaseService
             return null;
         }
 
-        paginationQuery.ConformValues();
+        paginationQuery = paginationQuery.ToClamped();
         var commentRootsQuery = DbCtx.Comments
             .Where(c => c.VideoId == videoId && c.ConversationRootId == null)
             .OrderByDescending(c => c.CreatedAt)
             .ThenByDescending(c => c.OrderIndex)
             .ThenByDescending(c => c.Id);
 
-        paginationQuery.Total = await commentRootsQuery.CountAsync(cancellationToken: ct);
+        var totalResults = await commentRootsQuery.CountAsync(cancellationToken: ct);
 
         var commentRoots = await commentRootsQuery
             .Paginate(paginationQuery)
@@ -56,6 +55,10 @@ public class CommentService : BaseService
             Comments = commentRoots,
         };
 
-        return result;
+        return new PaginationResponse<VideoComments>
+        {
+            Result = result,
+            PaginationResult = paginationQuery.ToPaginationResult(commentRoots.Count, totalResults),
+        };
     }
 }

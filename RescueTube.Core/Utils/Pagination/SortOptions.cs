@@ -1,4 +1,4 @@
-namespace RescueTube.Core.Utils.Pagination.Contracts;
+namespace RescueTube.Core.Utils.Pagination;
 
 public class SortOptions
 {

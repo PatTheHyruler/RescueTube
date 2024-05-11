@@ -1,12 +1,10 @@
 ﻿using RescueTube.Core.DTO.Entities;
-using RescueTube.Core.Utils.Pagination.Contracts;
+using RescueTube.Core.Utils.Pagination;
 
 namespace WebApp.ViewModels.Comment;
 
-public class VideoCommentsViewModel : IPaginationQuery
+public class VideoCommentsViewModel : VideoCommentsQueryViewModel
 {
     public required VideoComments VideoComments { get; set; }
-    public int Page { get; set; }
-    public int Limit { get; set; } = 50;
-    public int? Total { get; set; }
+    public required IPaginationResult PaginationResult { get; set; }
 }

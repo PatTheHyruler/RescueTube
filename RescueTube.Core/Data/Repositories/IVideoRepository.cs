@@ -1,5 +1,5 @@
 ﻿using RescueTube.Core.DTO.Enums;
-using RescueTube.Core.Utils.Pagination.Contracts;
+using RescueTube.Core.Utils.Pagination;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 
