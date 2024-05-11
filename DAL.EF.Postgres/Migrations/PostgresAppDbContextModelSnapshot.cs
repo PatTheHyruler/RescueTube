@@ -22,7 +22,7 @@ namespace DAL.EF.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Domain.Entities.Author", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Author", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -89,7 +89,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("Authors");
                 });
 
-            modelBuilder.Entity("Domain.Entities.AuthorImage", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.AuthorImage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -123,7 +123,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AuthorImages");
                 });
 
-            modelBuilder.Entity("Domain.Entities.AuthorStatisticSnapshot", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.AuthorStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -148,7 +148,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AuthorStatisticSnapshots");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Caption", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Caption", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -199,7 +199,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("Captions");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Category", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -233,7 +233,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Comment", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Comment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -318,7 +318,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("Domain.Entities.CommentHistory", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.CommentHistory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -358,7 +358,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("CommentHistories");
                 });
 
-            modelBuilder.Entity("Domain.Entities.CommentStatisticSnapshot", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.CommentStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -389,7 +389,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("CommentStatisticSnapshots");
                 });
 
-            modelBuilder.Entity("Domain.Entities.EntityAccessPermission", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.EntityAccessPermission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -415,7 +415,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("EntityAccessPermissions");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.RefreshToken", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -442,7 +442,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.Role", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.Role", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -469,7 +469,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.RoleClaim", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.RoleClaim", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -493,7 +493,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetRoleClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.User", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -561,7 +561,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserClaim", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserClaim", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -585,7 +585,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetUserClaims", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserLogin", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserLogin", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasColumnType("text");
@@ -606,7 +606,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserRole", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -621,7 +621,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserToken", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserToken", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -640,7 +640,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Image", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Image", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -691,7 +691,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("Images");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Localization.TextTranslation", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslation", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -720,7 +720,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("TextTranslations");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Localization.TextTranslationKey", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslationKey", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -731,7 +731,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("TextTranslationKeys");
                 });
 
-            modelBuilder.Entity("Domain.Entities.StatusChangeEvent", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.StatusChangeEvent", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -767,7 +767,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("StatusChangeEvents");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Submission", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Submission", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -817,7 +817,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("Submissions");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Video", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Video", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -919,7 +919,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("Videos");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoAuthor", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoAuthor", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -944,7 +944,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("VideoAuthors");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoCategory", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoCategory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -970,7 +970,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("VideoCategories");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoFile", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoFile", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1014,7 +1014,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("VideoFiles");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoImage", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoImage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1051,7 +1051,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("VideoImages");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoStatisticSnapshot", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1082,7 +1082,7 @@ namespace DAL.EF.Migrations
                     b.ToTable("VideoStatisticSnapshots");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoTag", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoTag", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1112,9 +1112,9 @@ namespace DAL.EF.Migrations
                     b.ToTable("VideoTags");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Author", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Author", b =>
                 {
-                    b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Bio")
+                    b.HasOne("RescueTube.Domain.Entities.Localization.TextTranslationKey", "Bio")
                         .WithMany()
                         .HasForeignKey("BioId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1122,15 +1122,15 @@ namespace DAL.EF.Migrations
                     b.Navigation("Bio");
                 });
 
-            modelBuilder.Entity("Domain.Entities.AuthorImage", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.AuthorImage", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "Author")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
                         .WithMany("AuthorImages")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Image", "Image")
+                    b.HasOne("RescueTube.Domain.Entities.Image", "Image")
                         .WithMany("AuthorImages")
                         .HasForeignKey("ImageId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1141,9 +1141,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("Image");
                 });
 
-            modelBuilder.Entity("Domain.Entities.AuthorStatisticSnapshot", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.AuthorStatisticSnapshot", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "Author")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
                         .WithMany("AuthorStatisticSnapshots")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1152,9 +1152,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("Author");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Caption", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Caption", b =>
                 {
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("Captions")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1163,14 +1163,14 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Category", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Category", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "Creator")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Creator")
                         .WithMany("CreatedCategories")
                         .HasForeignKey("CreatorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Name")
+                    b.HasOne("RescueTube.Domain.Entities.Localization.TextTranslationKey", "Name")
                         .WithMany()
                         .HasForeignKey("NameId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1181,25 +1181,25 @@ namespace DAL.EF.Migrations
                     b.Navigation("Name");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Comment", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Comment", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "Author")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Comment", "ConversationRoot")
+                    b.HasOne("RescueTube.Domain.Entities.Comment", "ConversationRoot")
                         .WithMany("ConversationReplies")
                         .HasForeignKey("ConversationRootId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.Comment", "ReplyTarget")
+                    b.HasOne("RescueTube.Domain.Entities.Comment", "ReplyTarget")
                         .WithMany("DirectReplies")
                         .HasForeignKey("ReplyTargetId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("Comments")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1214,9 +1214,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.CommentHistory", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.CommentHistory", b =>
                 {
-                    b.HasOne("Domain.Entities.Comment", "Current")
+                    b.HasOne("RescueTube.Domain.Entities.Comment", "Current")
                         .WithMany("CommentHistories")
                         .HasForeignKey("CurrentId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1225,9 +1225,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("Current");
                 });
 
-            modelBuilder.Entity("Domain.Entities.CommentStatisticSnapshot", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.CommentStatisticSnapshot", b =>
                 {
-                    b.HasOne("Domain.Entities.Comment", "Comment")
+                    b.HasOne("RescueTube.Domain.Entities.Comment", "Comment")
                         .WithMany("CommentStatisticSnapshots")
                         .HasForeignKey("CommentId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1236,20 +1236,20 @@ namespace DAL.EF.Migrations
                     b.Navigation("Comment");
                 });
 
-            modelBuilder.Entity("Domain.Entities.EntityAccessPermission", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.EntityAccessPermission", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "Author")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
                         .WithMany("EntityAccessPermissions")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.Identity.User", "User")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "User")
                         .WithMany("EntityAccessPermissions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("EntityAccessPermissions")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1261,9 +1261,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.RefreshToken", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.RefreshToken", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.User", "User")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1272,9 +1272,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.RoleClaim", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.RoleClaim", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.Role", "Role")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.Role", "Role")
                         .WithMany("RoleClaims")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1283,9 +1283,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserClaim", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserClaim", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.User", "User")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "User")
                         .WithMany("UserClaims")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1294,9 +1294,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserLogin", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserLogin", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.User", "User")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "User")
                         .WithMany("UserLogins")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1305,15 +1305,15 @@ namespace DAL.EF.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserRole", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserRole", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.Role", "Role")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Identity.User", "User")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1324,9 +1324,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserToken", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserToken", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.User", "User")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "User")
                         .WithMany("UserTokens")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1335,9 +1335,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Localization.TextTranslation", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslation", b =>
                 {
-                    b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Key")
+                    b.HasOne("RescueTube.Domain.Entities.Localization.TextTranslationKey", "Key")
                         .WithMany("Translations")
                         .HasForeignKey("KeyId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1346,14 +1346,14 @@ namespace DAL.EF.Migrations
                     b.Navigation("Key");
                 });
 
-            modelBuilder.Entity("Domain.Entities.StatusChangeEvent", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.StatusChangeEvent", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "Author")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
                         .WithMany("StatusChangeEvents")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("StatusChangeEvents")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1363,20 +1363,20 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Submission", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Submission", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.User", "AddedBy")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "AddedBy")
                         .WithMany()
                         .HasForeignKey("AddedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Identity.User", "ApprovedBy")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "ApprovedBy")
                         .WithMany()
                         .HasForeignKey("ApprovedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany()
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1388,14 +1388,14 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Video", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Video", b =>
                 {
-                    b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Description")
+                    b.HasOne("RescueTube.Domain.Entities.Localization.TextTranslationKey", "Description")
                         .WithMany()
                         .HasForeignKey("DescriptionId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Title")
+                    b.HasOne("RescueTube.Domain.Entities.Localization.TextTranslationKey", "Title")
                         .WithMany()
                         .HasForeignKey("TitleId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1405,15 +1405,15 @@ namespace DAL.EF.Migrations
                     b.Navigation("Title");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoAuthor", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoAuthor", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "Author")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
                         .WithMany("VideoAuthors")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("VideoAuthors")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1424,20 +1424,20 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoCategory", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoCategory", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "AssignedBy")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "AssignedBy")
                         .WithMany("AssignedVideoCategories")
                         .HasForeignKey("AssignedById")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Domain.Entities.Category", "Category")
+                    b.HasOne("RescueTube.Domain.Entities.Category", "Category")
                         .WithMany("VideoCategories")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("VideoCategories")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1450,9 +1450,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoFile", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoFile", b =>
                 {
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("VideoFiles")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1461,15 +1461,15 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoImage", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoImage", b =>
                 {
-                    b.HasOne("Domain.Entities.Image", "Image")
+                    b.HasOne("RescueTube.Domain.Entities.Image", "Image")
                         .WithMany("VideoImages")
                         .HasForeignKey("ImageId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("VideoImages")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1480,9 +1480,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoStatisticSnapshot", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoStatisticSnapshot", b =>
                 {
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("VideoStatisticSnapshots")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1491,9 +1491,9 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.VideoTag", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.VideoTag", b =>
                 {
-                    b.HasOne("Domain.Entities.Video", "Video")
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany("VideoTags")
                         .HasForeignKey("VideoId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1502,7 +1502,7 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Author", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Author", b =>
                 {
                     b.Navigation("AssignedVideoCategories");
 
@@ -1519,12 +1519,12 @@ namespace DAL.EF.Migrations
                     b.Navigation("VideoAuthors");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Category", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Category", b =>
                 {
                     b.Navigation("VideoCategories");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Comment", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Comment", b =>
                 {
                     b.Navigation("CommentHistories");
 
@@ -1535,14 +1535,14 @@ namespace DAL.EF.Migrations
                     b.Navigation("DirectReplies");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.Role", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.Role", b =>
                 {
                     b.Navigation("RoleClaims");
 
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.User", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.User", b =>
                 {
                     b.Navigation("EntityAccessPermissions");
 
@@ -1555,19 +1555,19 @@ namespace DAL.EF.Migrations
                     b.Navigation("UserTokens");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Image", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Image", b =>
                 {
                     b.Navigation("AuthorImages");
 
                     b.Navigation("VideoImages");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Localization.TextTranslationKey", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslationKey", b =>
                 {
                     b.Navigation("Translations");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Video", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Video", b =>
                 {
                     b.Navigation("Captions");
 

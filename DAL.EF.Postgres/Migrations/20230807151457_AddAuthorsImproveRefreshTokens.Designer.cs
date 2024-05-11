@@ -24,7 +24,7 @@ namespace DAL.EF.Postgres.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Domain.Entities.Author", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Author", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -87,7 +87,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("Authors");
                 });
 
-            modelBuilder.Entity("Domain.Entities.AuthorImage", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.AuthorImage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -121,7 +121,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("AuthorImages");
                 });
 
-            modelBuilder.Entity("Domain.Entities.AuthorStatisticSnapshot", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.AuthorStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -143,7 +143,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("AuthorStatisticSnapshots");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.RefreshToken", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -170,7 +170,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("RefreshTokens");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.Role", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.Role", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -197,7 +197,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.User", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -265,7 +265,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserRole", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -280,7 +280,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("AspNetUserRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Image", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Image", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -322,7 +322,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("Images");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Localization.TextTranslation", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslation", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -351,7 +351,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("TextTranslations");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Localization.TextTranslationKey", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslationKey", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -450,9 +450,9 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Entities.Author", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Author", b =>
                 {
-                    b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Bio")
+                    b.HasOne("RescueTube.Domain.Entities.Localization.TextTranslationKey", "Bio")
                         .WithMany()
                         .HasForeignKey("BioId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -461,15 +461,15 @@ namespace DAL.EF.Postgres.Migrations
                     b.Navigation("Bio");
                 });
 
-            modelBuilder.Entity("Domain.Entities.AuthorImage", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.AuthorImage", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "Author")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
                         .WithMany("AuthorImages")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Image", "Image")
+                    b.HasOne("RescueTube.Domain.Entities.Image", "Image")
                         .WithMany()
                         .HasForeignKey("ImageId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -480,9 +480,9 @@ namespace DAL.EF.Postgres.Migrations
                     b.Navigation("Image");
                 });
 
-            modelBuilder.Entity("Domain.Entities.AuthorStatisticSnapshot", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.AuthorStatisticSnapshot", b =>
                 {
-                    b.HasOne("Domain.Entities.Author", "Author")
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
                         .WithMany("AuthorStatisticSnapshots")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -491,9 +491,9 @@ namespace DAL.EF.Postgres.Migrations
                     b.Navigation("Author");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.RefreshToken", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.RefreshToken", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.User", "User")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -502,15 +502,15 @@ namespace DAL.EF.Postgres.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.UserRole", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.UserRole", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.Role", "Role")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Entities.Identity.User", "User")
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -521,9 +521,9 @@ namespace DAL.EF.Postgres.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Localization.TextTranslation", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslation", b =>
                 {
-                    b.HasOne("Domain.Entities.Localization.TextTranslationKey", "Key")
+                    b.HasOne("RescueTube.Domain.Entities.Localization.TextTranslationKey", "Key")
                         .WithMany("Translations")
                         .HasForeignKey("KeyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -534,7 +534,7 @@ namespace DAL.EF.Postgres.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.Role", null)
+                    b.HasOne("RescueTube.Domain.Entities.Identity.Role", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -543,7 +543,7 @@ namespace DAL.EF.Postgres.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.User", null)
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -552,7 +552,7 @@ namespace DAL.EF.Postgres.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.User", null)
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -561,31 +561,31 @@ namespace DAL.EF.Postgres.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Entities.Identity.User", null)
+                    b.HasOne("RescueTube.Domain.Entities.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Entities.Author", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Author", b =>
                 {
                     b.Navigation("AuthorImages");
 
                     b.Navigation("AuthorStatisticSnapshots");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.Role", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.Role", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Identity.User", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Identity.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Domain.Entities.Localization.TextTranslationKey", b =>
+            modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslationKey", b =>
                 {
                     b.Navigation("Translations");
                 });

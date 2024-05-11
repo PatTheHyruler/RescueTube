@@ -8,7 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\RescueTube.Core\RescueTube.Core.csproj" />
-      <ProjectReference Include="..\Domain\Domain.csproj" />
+      <ProjectReference Include="..\RescueTube.Domain\RescueTube.Domain.csproj" />
     </ItemGroup>
 
     <ItemGroup>

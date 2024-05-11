@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApp", "WebApp\WebApp.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL.EF", "DAL.EF\DAL.EF.csproj", "{BFAE2818-603F-4DAA-96C8-B007DEDB6B96}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{8E9CC52D-83A4-451E-A73F-FCDE8CEBE8A9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RescueTube.Domain", "RescueTube.Domain\RescueTube.Domain.csproj", "{8E9CC52D-83A4-451E-A73F-FCDE8CEBE8A9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{D968AB42-5ED9-4532-A7D9-F4791AADA1AB}"
 	ProjectSection(SolutionItems) = preProject

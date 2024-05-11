@@ -22,7 +22,7 @@ namespace DAL.EF.Postgres.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Domain.Identity.Role", b =>
+            modelBuilder.Entity("RescueTube.Domain.Identity.Role", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -49,7 +49,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Identity.User", b =>
+            modelBuilder.Entity("RescueTube.Domain.Identity.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -117,7 +117,7 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Identity.UserRole", b =>
+            modelBuilder.Entity("RescueTube.Domain.Identity.UserRole", b =>
                 {
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -220,15 +220,15 @@ namespace DAL.EF.Postgres.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Domain.Identity.UserRole", b =>
+            modelBuilder.Entity("RescueTube.Domain.Identity.UserRole", b =>
                 {
-                    b.HasOne("Domain.Identity.Role", "Role")
+                    b.HasOne("RescueTube.Domain.Identity.Role", "Role")
                         .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Domain.Identity.User", "User")
+                    b.HasOne("RescueTube.Domain.Identity.User", "User")
                         .WithMany("UserRoles")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -241,7 +241,7 @@ namespace DAL.EF.Postgres.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Identity.Role", null)
+                    b.HasOne("RescueTube.Domain.Identity.Role", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -250,7 +250,7 @@ namespace DAL.EF.Postgres.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Identity.User", null)
+                    b.HasOne("RescueTube.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -259,7 +259,7 @@ namespace DAL.EF.Postgres.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Identity.User", null)
+                    b.HasOne("RescueTube.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -268,19 +268,19 @@ namespace DAL.EF.Postgres.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("Domain.Identity.User", null)
+                    b.HasOne("RescueTube.Domain.Identity.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Identity.Role", b =>
+            modelBuilder.Entity("RescueTube.Domain.Identity.Role", b =>
                 {
                     b.Navigation("UserRoles");
                 });
 
-            modelBuilder.Entity("Domain.Identity.User", b =>
+            modelBuilder.Entity("RescueTube.Domain.Identity.User", b =>
                 {
                     b.Navigation("UserRoles");
                 });
