@@ -1,4 +1,4 @@
-namespace BLL.YouTube.Utils;
+namespace RescueTube.YouTube.Utils;
 
 public record ThumbnailQuality(string Name, string ShortName, int Width, int Height)
 {

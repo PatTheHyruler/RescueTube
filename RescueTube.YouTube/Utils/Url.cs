@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace BLL.YouTube.Utils;
+namespace RescueTube.YouTube.Utils;
 
 public static class Url
 {

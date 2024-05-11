@@ -1,18 +1,18 @@
 using System.Runtime.InteropServices;
-using BLL.YouTube.EventHandlers;
-using BLL.YouTube.Jobs;
-using BLL.YouTube.Jobs.Registration;
-using BLL.YouTube.Services;
-using RescueTube.Core.Contracts;
-using RescueTube.Core.Utils.Validation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RescueTube.Core;
+using RescueTube.Core.Contracts;
+using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.EventHandlers;
+using RescueTube.YouTube.Jobs;
+using RescueTube.YouTube.Jobs.Registration;
+using RescueTube.YouTube.Services;
 using YoutubeDLSharp;
 
-namespace BLL.YouTube;
+namespace RescueTube.YouTube;
 
 public static class Setup
 {

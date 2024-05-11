@@ -1,11 +1,11 @@
-using BLL.YouTube.Jobs;
-using RescueTube.Core.Events.Events;
 using Hangfire;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using RescueTube.Core.Events.Events;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.Jobs;
 
-namespace BLL.YouTube.EventHandlers;
+namespace RescueTube.YouTube.EventHandlers;
 
 public class VideoAddedDownloadHandler : INotificationHandler<VideoAddedEvent>
 {

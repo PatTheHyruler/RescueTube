@@ -1,4 +1,4 @@
-namespace BLL.YouTube.Utils;
+namespace RescueTube.YouTube.Utils;
 
 public class ThumbnailQualityComparer : IComparer<string?>
 {

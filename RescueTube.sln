@@ -24,7 +24,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RescueTube.Core", "RescueTu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{D609D4D8-2F45-40DB-BD03-00EBC986DE05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLL.YouTube", "BLL.YouTube\BLL.YouTube.csproj", "{1EC1065D-B981-4E16-9573-0BECF2C7D1C1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RescueTube.YouTube", "RescueTube.YouTube\RescueTube.YouTube.csproj", "{1EC1065D-B981-4E16-9573-0BECF2C7D1C1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Resources", "Resources\Resources.csproj", "{B2AA416B-C30F-460F-9C30-2336A67FC8DE}"
 EndProject

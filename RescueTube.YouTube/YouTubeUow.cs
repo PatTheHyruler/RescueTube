@@ -1,13 +1,13 @@
 using System.Runtime.InteropServices;
-using BLL.YouTube.Services;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.Services;
 using YoutubeDLSharp;
 using YoutubeDLSharp.Options;
 using YoutubeExplode;
 
-namespace BLL.YouTube;
+namespace RescueTube.YouTube;
 
 public class YouTubeUow
 {

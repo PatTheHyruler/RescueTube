@@ -1,8 +1,8 @@
-using BLL.YouTube.Services;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.YouTube.Services;
 
-namespace BLL.YouTube.Jobs;
+namespace RescueTube.YouTube.Jobs;
 
 public class DownloadVideoJob
 {

@@ -1,9 +1,9 @@
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using YoutubeDLSharp.Metadata;
-using Url = BLL.YouTube.Utils.Url;
+using Url = RescueTube.YouTube.Utils.Url;
 
-namespace BLL.YouTube.Extensions;
+namespace RescueTube.YouTube.Extensions;
 
 public static class ConversionExtensions
 {

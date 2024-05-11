@@ -1,20 +1,20 @@
 using System.Text;
-using RescueTube.Core.Events.Events;
-using BLL.YouTube.Base;
-using BLL.YouTube.Extensions;
-using BLL.YouTube.Utils;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RescueTube.Core;
+using RescueTube.Core.Events.Events;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.Base;
+using RescueTube.YouTube.Extensions;
+using RescueTube.YouTube.Utils;
 using YoutubeDLSharp.Metadata;
 
-namespace BLL.YouTube.Services;
+namespace RescueTube.YouTube.Services;
 
 public class VideoService : BaseYouTubeService
 {

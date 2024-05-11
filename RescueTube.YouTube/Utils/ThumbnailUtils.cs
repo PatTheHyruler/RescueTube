@@ -2,7 +2,7 @@ using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using YoutubeDLSharp.Metadata;
 
-namespace BLL.YouTube.Utils;
+namespace RescueTube.YouTube.Utils;
 
 public static class ThumbnailUtils
 {

@@ -1,16 +1,15 @@
-using RescueTube.Core.Data.Extensions;
-using RescueTube.Core.Events;
-using RescueTube.Core.Events.Events;
-using BLL.YouTube.Base;
-using BLL.YouTube.Extensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.Data.Extensions;
+using RescueTube.Core.Events.Events;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.Base;
+using RescueTube.YouTube.Extensions;
 using YoutubeDLSharp.Metadata;
 
-namespace BLL.YouTube.Services;
+namespace RescueTube.YouTube.Services;
 
 public class AuthorService : BaseYouTubeService
 {

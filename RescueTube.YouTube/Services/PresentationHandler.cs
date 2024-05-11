@@ -1,9 +1,9 @@
 using RescueTube.Core.Contracts;
 using RescueTube.Core.DTO.Entities;
-using BLL.YouTube.Utils;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.Utils;
 
-namespace BLL.YouTube.Services;
+namespace RescueTube.YouTube.Services;
 
 public class PresentationHandler : IPlatformVideoPresentationHandler
 {

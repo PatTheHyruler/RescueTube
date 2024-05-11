@@ -1,4 +1,4 @@
-namespace BLL.YouTube;
+namespace RescueTube.YouTube;
 
 public class YouTubeOptions
 {

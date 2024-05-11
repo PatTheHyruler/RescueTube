@@ -1,9 +1,9 @@
-using BLL.YouTube.Services;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.Services;
 
-namespace BLL.YouTube.Jobs;
+namespace RescueTube.YouTube.Jobs;
 
 public class FetchCommentsJob
 {

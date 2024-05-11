@@ -2,7 +2,7 @@ using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace BLL.YouTube.Jobs.Registration;
+namespace RescueTube.YouTube.Jobs.Registration;
 
 public class RegisterYouTubeJobsService : BackgroundService
 {

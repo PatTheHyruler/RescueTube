@@ -1,13 +1,13 @@
-using RescueTube.Core.Services;
-using BLL.YouTube.Base;
-using BLL.YouTube.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.Services;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.Base;
+using RescueTube.YouTube.Extensions;
 using YoutubeDLSharp.Metadata;
 using Video = RescueTube.Domain.Entities.Video;
 
-namespace BLL.YouTube.Services;
+namespace RescueTube.YouTube.Services;
 
 public class CommentService : BaseYouTubeService
 {

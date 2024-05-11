@@ -1,8 +1,8 @@
-using RescueTube.Core.Base;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.Base;
 
-namespace BLL.YouTube.Base;
+namespace RescueTube.YouTube.Base;
 
 public class BaseYouTubeService : BaseService
 {

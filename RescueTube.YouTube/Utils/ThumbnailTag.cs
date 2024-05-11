@@ -1,4 +1,4 @@
-namespace BLL.YouTube.Utils;
+namespace RescueTube.YouTube.Utils;
 
 public record ThumbnailTag(string Identifier)
 {

@@ -1,7 +1,7 @@
 ﻿using Hangfire;
 using YoutubeDLSharp;
 
-namespace BLL.YouTube.Jobs;
+namespace RescueTube.YouTube.Jobs;
 
 public class UpdateYtDlpJob
 {
