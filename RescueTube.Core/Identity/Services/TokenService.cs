@@ -121,7 +121,7 @@ public class TokenService
 
         var userRefreshToken = userRefreshTokens.Single();
         userRefreshToken.ExpiresAt =
-            DateTime.UtcNow.AddMinutes(
+            DateTimeOffset.UtcNow.AddMinutes(
                 _jwtBearerOptions.ExtendOldRefreshTokenExpirationByMinutes);
 
         var newRefreshToken = CreateAndAddRefreshToken(user.Id, jwt);
@@ -176,7 +176,7 @@ public class TokenService
     public async Task DeleteExpiredRefreshTokensAsync()
     {
         await _identityUow.DbCtx.RefreshTokens
-            .Where(r => r.ExpiresAt < DateTime.UtcNow)
+            .Where(r => r.ExpiresAt < DateTimeOffset.UtcNow)
             .ExecuteDeleteAsync();
     }
 }

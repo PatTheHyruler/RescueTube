@@ -25,8 +25,8 @@ public class FetchCommentsJob
 
     public async Task QueueVideosForCommentFetch(CancellationToken ct)
     {
-        var lastCommentsFetchCutoff = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1));
-        var addedToArchiveAtCutoff = DateTime.UtcNow.Subtract(TimeSpan.FromHours(1));
+        var lastCommentsFetchCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
+        var addedToArchiveAtCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromHours(1));
         var videoIdsOnPlatform = _commentService.DbCtx.Videos
             .Where(v => (v.LastCommentsFetch < lastCommentsFetchCutoff
                          || v.LastCommentsFetch == null)

@@ -20,8 +20,8 @@ public class Author : BaseIdDbEntity, IMainArchiveEntity
 
     public ICollection<AuthorImage>? AuthorImages { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
 
     public EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
@@ -31,11 +31,11 @@ public class Author : BaseIdDbEntity, IMainArchiveEntity
     public EPrivacyStatus PrivacyStatus { get; set; }
 
     public int FailedExtraDataFetchAttempts { get; set; }
-    public DateTime? LastFetchUnofficial { get; set; }
-    public DateTime? LastSuccessfulFetchUnofficial { get; set; }
-    public DateTime? LastFetchOfficial { get; set; }
-    public DateTime? LastSuccessfulFetchOfficial { get; set; }
-    public DateTime AddedToArchiveAt { get; set; }
+    public DateTimeOffset? LastFetchUnofficial { get; set; }
+    public DateTimeOffset? LastSuccessfulFetchUnofficial { get; set; }
+    public DateTimeOffset? LastFetchOfficial { get; set; }
+    public DateTimeOffset? LastSuccessfulFetchOfficial { get; set; }
+    public DateTimeOffset AddedToArchiveAt { get; set; }
 
     public ICollection<VideoAuthor>? VideoAuthors { get; set; }
 

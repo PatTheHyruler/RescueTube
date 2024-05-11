@@ -24,7 +24,7 @@ public class DownloadVideoJob
 
     public async Task DownloadNotDownloadedVideos(CancellationToken ct)
     {
-        var addedToArchiveAtCutoff = DateTime.UtcNow.Subtract(TimeSpan.FromDays(1));
+        var addedToArchiveAtCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
         var videoIds = _videoService.DbCtx.Videos
             .Where(v => v.VideoFiles!.Count == 0
                         && v.FailedDownloadAttempts < 3

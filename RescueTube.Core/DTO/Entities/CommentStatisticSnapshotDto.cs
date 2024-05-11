@@ -7,5 +7,5 @@ public class CommentStatisticSnapshotDto
     public long? ReplyCount { get; set; }
     public bool? IsFavorited { get; set; }
 
-    public DateTime ValidAt { get; set; }
+    public DateTimeOffset ValidAt { get; set; }
 }

@@ -9,8 +9,8 @@ public class TextTranslation : BaseIdDbEntity
     public required string Content { get; set; }
     public string? Culture { get; set; }
 
-    public DateTime? ValidSince { get; set; }
-    public DateTime? ValidUntil { get; set; }
+    public DateTimeOffset? ValidSince { get; set; }
+    public DateTimeOffset? ValidUntil { get; set; }
 
     public Guid KeyId { get; set; }
     public TextTranslationKey? Key { get; set; }

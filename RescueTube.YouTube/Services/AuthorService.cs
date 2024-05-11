@@ -93,7 +93,7 @@ public class AuthorService : BaseYouTubeService
                 author.AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
                 {
                     ImageType = EImageType.ProfilePicture,
-                    LastFetched = DateTime.UtcNow,
+                    LastFetched = DateTimeOffset.UtcNow,
 
                     Image = new Image
                     {

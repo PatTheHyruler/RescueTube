@@ -5,7 +5,7 @@ public interface IHistoryEntity<TEntity> : IIdDatabaseEntity where TEntity : IId
     public Guid CurrentId { get; set; }
     public TEntity? Current { get; set; }
 
-    public DateTime? LastOfficialValidAt { get; set; }
-    public DateTime LastValidAt { get; set; }
-    public DateTime FirstNotValidAt { get; set; }
+    public DateTimeOffset? LastOfficialValidAt { get; set; }
+    public DateTimeOffset LastValidAt { get; set; }
+    public DateTimeOffset FirstNotValidAt { get; set; }
 }

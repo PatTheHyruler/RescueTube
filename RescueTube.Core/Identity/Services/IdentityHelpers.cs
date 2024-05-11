@@ -14,12 +14,12 @@ public static class IdentityHelpers
     {
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
-        var expires = DateTime.UtcNow.AddSeconds(expiresInSeconds);
+        var expires = DateTimeOffset.UtcNow.AddSeconds(expiresInSeconds);
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: expires,
+            expires: expires.UtcDateTime,
             signingCredentials: signingCredentials
         );
         return new JwtSecurityTokenHandler().WriteToken(token);

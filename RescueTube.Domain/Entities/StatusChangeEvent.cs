@@ -10,7 +10,7 @@ public class StatusChangeEvent : BaseIdDbEntity
     public bool? NewAvailability { get; set; }
     public EPrivacyStatus? PreviousPrivacyStatus { get; set; }
     public EPrivacyStatus? NewPrivacyStatus { get; set; }
-    public DateTime OccurredAt { get; set; }
+    public DateTimeOffset OccurredAt { get; set; }
 
     public Guid? AuthorId { get; set; }
     public Author? Author { get; set; }
@@ -22,9 +22,9 @@ public class StatusChangeEvent : BaseIdDbEntity
     }
     
     private StatusChangeEvent(IPrivacyEntity entity, EPrivacyStatus? newPrivacyStatus,
-        bool? newAvailability, DateTime? occurredAt)
+        bool? newAvailability, DateTimeOffset? occurredAt)
     {
-        OccurredAt = occurredAt ?? DateTime.UtcNow;
+        OccurredAt = occurredAt ?? DateTimeOffset.UtcNow;
         PreviousAvailability = entity.IsAvailable;
         NewAvailability = newAvailability;
         PreviousPrivacyStatus = entity.PrivacyStatus;
@@ -35,14 +35,14 @@ public class StatusChangeEvent : BaseIdDbEntity
     }
 
     public StatusChangeEvent(Video video, EPrivacyStatus? newPrivacyStatus, bool? newAvailability,
-        DateTime? occurredAt = null) :
+        DateTimeOffset? occurredAt = null) :
         this(video as IPrivacyEntity, newPrivacyStatus, newAvailability, occurredAt)
     {
         VideoId = video.Id;
     }
     
     public StatusChangeEvent(Author author, EPrivacyStatus? newPrivacyStatus, bool? newAvailability,
-        DateTime? occurredAt = null) :
+        DateTimeOffset? occurredAt = null) :
         this(author as IPrivacyEntity, newPrivacyStatus, newAvailability, occurredAt)
     {
         AuthorId = author.Id;

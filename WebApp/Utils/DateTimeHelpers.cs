@@ -4,19 +4,19 @@ using Microsoft.AspNetCore.Localization;
 
 namespace WebApp.Utils;
 
-public static class DateTimeHelpers
+public static class DateTimeOffsetHelpers
 {
-    private static IHtmlContent SpanFor(DateTime? value, string culture = "en-US")
+    private static IHtmlContent SpanFor(DateTimeOffset? value, string culture = "en-US")
     {
         return new HtmlString($"<span class='date-time-local' culture='{culture}'>{value.ToString()} UTC</span>");
     }
 
-    public static IHtmlContent ToSpan(this DateTime value, HttpContext context) =>
+    public static IHtmlContent ToSpan(this DateTimeOffset value, HttpContext context) =>
         SpanFor(value, context.CurrentCultureName());
 
     public static CultureInfo CurrentUiCulture(this HttpContext context) =>
         context.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture ??
-        new CultureInfo("en-US").UseConstantDateTime();
+        new CultureInfo("en-US").UseConstantDateTimeOffset();
 
     public static string CurrentUiCultureName(this HttpContext context) =>
         context.Features.Get<IRequestCultureFeature>()?.RequestCulture.UICulture.Name ?? "en-US";
@@ -24,10 +24,10 @@ public static class DateTimeHelpers
     public static string CurrentCultureName(this HttpContext context) =>
         context.Features.Get<IRequestCultureFeature>()?.RequestCulture.Culture.Name ?? "en-US";
 
-    public static IHtmlContent SpanFor(this HttpContext context, DateTime? value) =>
+    public static IHtmlContent SpanFor(this HttpContext context, DateTimeOffset? value) =>
         SpanFor(value, context.CurrentCultureName());
 
-    public static CultureInfo UseConstantDateTime(this CultureInfo cultureInfo)
+    public static CultureInfo UseConstantDateTimeOffset(this CultureInfo cultureInfo)
     {
         try
         {

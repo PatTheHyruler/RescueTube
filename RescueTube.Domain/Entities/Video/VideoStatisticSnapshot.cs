@@ -9,7 +9,7 @@ public class VideoStatisticSnapshot : BaseIdDbEntity
     public long? DislikeCount { get; set; }
     public long? CommentCount { get; set; }
 
-    public DateTime ValidAt { get; set; }
+    public DateTimeOffset ValidAt { get; set; }
 
     public Guid VideoId { get; set; }
     public Video? Video { get; set; }

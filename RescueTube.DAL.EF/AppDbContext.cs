@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
-using RescueTube.DAL.EF.Converters;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Identity;
 using RescueTube.Domain.Entities.Localization;
@@ -95,10 +94,6 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
         configurationBuilder
             .Properties<EEntityType>()
             .HaveConversion<EnumToStringConverter<EEntityType>>();
-
-        configurationBuilder
-            .Properties<DateTime>()
-            .HaveConversion<DateTimeConverter>();
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

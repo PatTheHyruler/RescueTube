@@ -39,7 +39,7 @@ public static class ConversionExtensions
                 new()
                 {
                     FollowerCount = videoData.ChannelFollowerCount,
-                    ValidAt = DateTime.UtcNow,
+                    ValidAt = DateTimeOffset.UtcNow,
                 }
             },
 
@@ -47,7 +47,7 @@ public static class ConversionExtensions
             IsAvailable = true,
             PrivacyStatus = EPrivacyStatus.Private,
 
-            AddedToArchiveAt = DateTime.UtcNow,
+            AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
     }
     
@@ -67,7 +67,7 @@ public static class ConversionExtensions
             {
                 new()
                 {
-                    LastFetched = DateTime.UtcNow,
+                    LastFetched = DateTimeOffset.UtcNow,
                     ImageType = EImageType.ProfilePicture,
                     Image = new Image
                     {
@@ -77,9 +77,9 @@ public static class ConversionExtensions
                 }
             },
 
-            LastFetchUnofficial = DateTime.UtcNow,
-            LastSuccessfulFetchUnofficial = DateTime.UtcNow,
-            AddedToArchiveAt = DateTime.UtcNow,
+            LastFetchUnofficial = DateTimeOffset.UtcNow,
+            LastSuccessfulFetchUnofficial = DateTimeOffset.UtcNow,
+            AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
 
         return domainAuthor;
@@ -111,9 +111,9 @@ public static class ConversionExtensions
             IsAvailable = true,
             PrivacyStatus = EPrivacyStatus.Private,
 
-            LastFetchUnofficial = DateTime.UtcNow,
-            LastSuccessfulFetchUnofficial = DateTime.UtcNow,
-            AddedToArchiveAt = DateTime.UtcNow
+            LastFetchUnofficial = DateTimeOffset.UtcNow,
+            LastSuccessfulFetchUnofficial = DateTimeOffset.UtcNow,
+            AddedToArchiveAt = DateTimeOffset.UtcNow
         };
     }
 }

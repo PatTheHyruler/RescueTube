@@ -8,7 +8,7 @@ public static class DomainHistoryExtensions
     public static CommentHistory ToHistory(this Comment comment, Comment newComment)
     {
         var history = comment.ToHistoryBase<Comment, CommentHistory>(newComment);
-        history.LastOfficialValidAt = GetMaxDateTime(comment.DeletedAt, comment.UpdatedAt, comment.CreatedAt);
+        history.LastOfficialValidAt = GetMaxDateTimeOffset(comment.DeletedAt, comment.UpdatedAt, comment.CreatedAt);
 
         history.Content = comment.Content;
         history.CreatedAtVideoTimecode = comment.CreatedAtVideoTimecode;
@@ -28,22 +28,22 @@ public static class DomainHistoryExtensions
         {
             CurrentId = entity.Id,
             Current = entity,
-            FirstNotValidAt = GetMaxDateTime(
+            FirstNotValidAt = GetMaxDateTimeOffset(
                 newEntity.LastFetchOfficial, newEntity.LastFetchUnofficial
-                ) ?? DateTime.UtcNow,
-            LastValidAt = GetMaxDateTime(entity.LastSuccessfulFetchUnofficial, entity.LastSuccessfulFetchOfficial)
-                ?? DateTime.UtcNow,
+                ) ?? DateTimeOffset.UtcNow,
+            LastValidAt = GetMaxDateTimeOffset(entity.LastSuccessfulFetchUnofficial, entity.LastSuccessfulFetchOfficial)
+                ?? DateTimeOffset.UtcNow,
         };
 
         return history;
     }
 
-    private static DateTime? GetMaxDateTime(params DateTime?[] values)
+    private static DateTimeOffset? GetMaxDateTimeOffset(params DateTimeOffset?[] values)
     {
-        return values.Aggregate<DateTime?, DateTime?>(null, GetMaxDateTime);
+        return values.Aggregate<DateTimeOffset?, DateTimeOffset?>(null, GetMaxDateTimeOffset);
     }
 
-    private static DateTime? GetMaxDateTime(DateTime? existing, DateTime? replacement)
+    private static DateTimeOffset? GetMaxDateTimeOffset(DateTimeOffset? existing, DateTimeOffset? replacement)
     {
         if (existing == null)
         {

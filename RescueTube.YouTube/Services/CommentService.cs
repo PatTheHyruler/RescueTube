@@ -28,7 +28,7 @@ public class CommentService : BaseYouTubeService
             return;
         }
 
-        var commentsFetched = DateTime.UtcNow;
+        var commentsFetched = DateTimeOffset.UtcNow;
         Logger.LogInformation(
             "Fetched {CommentsAmount} comments from YouTube for video {VideoId}",
             videoData.Comments.Length, videoIdOnPlatform
@@ -68,7 +68,7 @@ public class CommentService : BaseYouTubeService
         {
             if (commentDatas.All(c => c.ID != comment.IdOnPlatform))
             {
-                comment.DeletedAt ??= DateTime.UtcNow;
+                comment.DeletedAt ??= DateTimeOffset.UtcNow;
             }
             else
             {

@@ -17,7 +17,7 @@ namespace DAL.EF.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -28,13 +28,13 @@ namespace DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("AddedToArchiveAt")
+                    b.Property<DateTimeOffset>("AddedToArchiveAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("BioId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset?>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("DisplayName")
@@ -50,16 +50,16 @@ namespace DAL.EF.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastFetchOfficial")
+                    b.Property<DateTimeOffset?>("LastFetchOfficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastFetchUnofficial")
+                    b.Property<DateTimeOffset?>("LastFetchUnofficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastSuccessfulFetchOfficial")
+                    b.Property<DateTimeOffset?>("LastSuccessfulFetchOfficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastSuccessfulFetchUnofficial")
+                    b.Property<DateTimeOffset?>("LastSuccessfulFetchUnofficial")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Platform")
@@ -73,7 +73,7 @@ namespace DAL.EF.Migrations
                     b.Property<string>("PrivacyStatusOnPlatform")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UserName")
@@ -105,13 +105,13 @@ namespace DAL.EF.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("LastFetched")
+                    b.Property<DateTimeOffset?>("LastFetched")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidSince")
+                    b.Property<DateTimeOffset?>("ValidSince")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidUntil")
+                    b.Property<DateTimeOffset?>("ValidUntil")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -138,7 +138,7 @@ namespace DAL.EF.Migrations
                     b.Property<long?>("PaidFollowerCount")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("ValidAt")
+                    b.Property<DateTimeOffset>("ValidAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -170,7 +170,7 @@ namespace DAL.EF.Migrations
                     b.Property<string>("IdOnPlatform")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("LastFetched")
+                    b.Property<DateTimeOffset?>("LastFetched")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
@@ -183,10 +183,10 @@ namespace DAL.EF.Migrations
                     b.Property<string>("Url")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("ValidSince")
+                    b.Property<DateTimeOffset?>("ValidSince")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidUntil")
+                    b.Property<DateTimeOffset?>("ValidUntil")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("VideoId")
@@ -239,7 +239,7 @@ namespace DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("AddedToArchiveAt")
+                    b.Property<DateTimeOffset>("AddedToArchiveAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("AuthorId")
@@ -254,13 +254,13 @@ namespace DAL.EF.Migrations
                     b.Property<Guid?>("ConversationRootId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset?>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<TimeSpan?>("CreatedAtVideoTimecode")
                         .HasColumnType("interval");
 
-                    b.Property<DateTime?>("DeletedAt")
+                    b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("IdOnPlatform")
@@ -270,16 +270,16 @@ namespace DAL.EF.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastFetchOfficial")
+                    b.Property<DateTimeOffset?>("LastFetchOfficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastFetchUnofficial")
+                    b.Property<DateTimeOffset?>("LastFetchUnofficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastSuccessfulFetchOfficial")
+                    b.Property<DateTimeOffset?>("LastSuccessfulFetchOfficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastSuccessfulFetchUnofficial")
+                    b.Property<DateTimeOffset?>("LastSuccessfulFetchUnofficial")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<long>("OrderIndex")
@@ -299,7 +299,7 @@ namespace DAL.EF.Migrations
                     b.Property<Guid?>("ReplyTargetId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("VideoId")
@@ -327,7 +327,7 @@ namespace DAL.EF.Migrations
                     b.Property<string>("Content")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset?>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<TimeSpan?>("CreatedAtVideoTimecode")
@@ -336,19 +336,19 @@ namespace DAL.EF.Migrations
                     b.Property<Guid>("CurrentId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("DeletedAt")
+                    b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("FirstNotValidAt")
+                    b.Property<DateTimeOffset>("FirstNotValidAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastOfficialValidAt")
+                    b.Property<DateTimeOffset?>("LastOfficialValidAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("LastValidAt")
+                    b.Property<DateTimeOffset>("LastValidAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -379,7 +379,7 @@ namespace DAL.EF.Migrations
                     b.Property<long?>("ReplyCount")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("ValidAt")
+                    b.Property<DateTimeOffset>("ValidAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -421,7 +421,7 @@ namespace DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("ExpiresAt")
+                    b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("JwtHash")
@@ -707,10 +707,10 @@ namespace DAL.EF.Migrations
                     b.Property<Guid>("KeyId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("ValidSince")
+                    b.Property<DateTimeOffset?>("ValidSince")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidUntil")
+                    b.Property<DateTimeOffset?>("ValidUntil")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -746,7 +746,7 @@ namespace DAL.EF.Migrations
                     b.Property<string>("NewPrivacyStatus")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("OccurredAt")
+                    b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool?>("PreviousAvailability")
@@ -773,19 +773,19 @@ namespace DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("AddedAt")
+                    b.Property<DateTimeOffset>("AddedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("AddedById")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("ApprovedAt")
+                    b.Property<DateTimeOffset?>("ApprovedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("ApprovedById")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("CompletedAt")
+                    b.Property<DateTimeOffset?>("CompletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("EntityType")
@@ -823,10 +823,10 @@ namespace DAL.EF.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("AddedToArchiveAt")
+                    b.Property<DateTimeOffset>("AddedToArchiveAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTimeOffset?>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("DefaultAudioLanguage")
@@ -863,25 +863,25 @@ namespace DAL.EF.Migrations
                     b.Property<bool?>("IsLiveStreamRecording")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastCommentsFetch")
+                    b.Property<DateTimeOffset?>("LastCommentsFetch")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastFetchOfficial")
+                    b.Property<DateTimeOffset?>("LastFetchOfficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastFetchUnofficial")
+                    b.Property<DateTimeOffset?>("LastFetchUnofficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastSuccessfulFetchOfficial")
+                    b.Property<DateTimeOffset?>("LastSuccessfulFetchOfficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LastSuccessfulFetchUnofficial")
+                    b.Property<DateTimeOffset?>("LastSuccessfulFetchUnofficial")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LiveStreamEndedAt")
+                    b.Property<DateTimeOffset?>("LiveStreamEndedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("LiveStreamStartedAt")
+                    b.Property<DateTimeOffset?>("LiveStreamStartedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Platform")
@@ -895,10 +895,10 @@ namespace DAL.EF.Migrations
                     b.Property<string>("PrivacyStatusOnPlatform")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("PublishedAt")
+                    b.Property<DateTimeOffset?>("PublishedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("RecordedAt")
+                    b.Property<DateTimeOffset?>("RecordedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("StreamId")
@@ -907,7 +907,7 @@ namespace DAL.EF.Migrations
                     b.Property<Guid?>("TitleId")
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("UpdatedAt")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -992,13 +992,13 @@ namespace DAL.EF.Migrations
                     b.Property<string>("Key")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("LastFetched")
+                    b.Property<DateTimeOffset?>("LastFetched")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidSince")
+                    b.Property<DateTimeOffset?>("ValidSince")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidUntil")
+                    b.Property<DateTimeOffset?>("ValidUntil")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("VideoId")
@@ -1027,16 +1027,16 @@ namespace DAL.EF.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("LastFetched")
+                    b.Property<DateTimeOffset?>("LastFetched")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("Preference")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("ValidSince")
+                    b.Property<DateTimeOffset?>("ValidSince")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidUntil")
+                    b.Property<DateTimeOffset?>("ValidUntil")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("VideoId")
@@ -1066,7 +1066,7 @@ namespace DAL.EF.Migrations
                     b.Property<long?>("LikeCount")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("ValidAt")
+                    b.Property<DateTimeOffset>("ValidAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("VideoId")
@@ -1096,10 +1096,10 @@ namespace DAL.EF.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("ValidSince")
+                    b.Property<DateTimeOffset?>("ValidSince")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("ValidUntil")
+                    b.Property<DateTimeOffset?>("ValidUntil")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("VideoId")

@@ -7,9 +7,9 @@ public class VideoImage : BaseIdDbEntity
 {
     public EImageType ImageType { get; set; }
 
-    public DateTime? ValidSince { get; set; }
-    public DateTime? ValidUntil { get; set; }
-    public DateTime? LastFetched { get; set; }
+    public DateTimeOffset? ValidSince { get; set; }
+    public DateTimeOffset? ValidUntil { get; set; }
+    public DateTimeOffset? LastFetched { get; set; }
 
     public int? Preference { get; set; }
 

@@ -9,7 +9,7 @@ public class CommentStatisticSnapshot : BaseIdDbEntity
     public long? ReplyCount { get; set; }
     public bool? IsFavorited { get; set; }
 
-    public DateTime ValidAt { get; set; }
+    public DateTimeOffset ValidAt { get; set; }
 
     public Guid CommentId { get; set; }
     public Comment? Comment { get; set; }

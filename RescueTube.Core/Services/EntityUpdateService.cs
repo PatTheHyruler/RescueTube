@@ -62,7 +62,7 @@ public class EntityUpdateService : BaseService
         where TEntity : IMainArchiveEntity
     {
         entity.CreatedAt ??= newEntityData.CreatedAt;
-        entity.UpdatedAt ??= newEntityData.UpdatedAt ?? DateTime.UtcNow;
+        entity.UpdatedAt ??= newEntityData.UpdatedAt ?? DateTimeOffset.UtcNow;
 
         var statusChangeEvent = entity switch
         {

@@ -9,11 +9,11 @@ public class RefreshToken : BaseIdDbEntity
 
     public string Token { get; set; } = Guid.NewGuid().ToString();
 
-    public DateTime ExpiresAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
 
     public required string JwtHash { get; set; }
 
-    public bool IsExpired => ExpiresAt <= DateTime.UtcNow;
+    public bool IsExpired => ExpiresAt <= DateTimeOffset.UtcNow;
 
     public RefreshToken()
     {
@@ -22,7 +22,7 @@ public class RefreshToken : BaseIdDbEntity
     [SetsRequiredMembers]
     public RefreshToken(TimeSpan expiresIn, string jwtHash, Guid userId)
     {
-        ExpiresAt = DateTime.UtcNow.AddMilliseconds(expiresIn.TotalMilliseconds);
+        ExpiresAt = DateTimeOffset.UtcNow.AddMilliseconds(expiresIn.TotalMilliseconds);
         JwtHash = jwtHash;
         UserId = userId;
     }

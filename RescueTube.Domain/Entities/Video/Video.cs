@@ -31,17 +31,17 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
     public int FailedAuthorFetches { get; set; }
     public string? InfoJsonPath { get; set; }
     public string? InfoJson { get; set; }
-    public DateTime? LastCommentsFetch { get; set; }
+    public DateTimeOffset? LastCommentsFetch { get; set; }
 
     public bool? IsLiveStreamRecording { get; set; }
     public string? StreamId { get; set; }
-    public DateTime? LiveStreamStartedAt { get; set; }
-    public DateTime? LiveStreamEndedAt { get; set; }
+    public DateTimeOffset? LiveStreamStartedAt { get; set; }
+    public DateTimeOffset? LiveStreamEndedAt { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public DateTime? PublishedAt { get; set; }
-    public DateTime? RecordedAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
+    public DateTimeOffset? PublishedAt { get; set; }
+    public DateTimeOffset? RecordedAt { get; set; }
     
     public EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
@@ -50,11 +50,11 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
     public bool IsAvailable { get; set; }
     public EPrivacyStatus PrivacyStatus { get; set; }
 
-    public DateTime? LastFetchUnofficial { get; set; }
-    public DateTime? LastSuccessfulFetchUnofficial { get; set; }
-    public DateTime? LastFetchOfficial { get; set; }
-    public DateTime? LastSuccessfulFetchOfficial { get; set; }
-    public DateTime AddedToArchiveAt { get; set; }
+    public DateTimeOffset? LastFetchUnofficial { get; set; }
+    public DateTimeOffset? LastSuccessfulFetchUnofficial { get; set; }
+    public DateTimeOffset? LastFetchOfficial { get; set; }
+    public DateTimeOffset? LastSuccessfulFetchOfficial { get; set; }
+    public DateTimeOffset AddedToArchiveAt { get; set; }
 
     public ICollection<VideoAuthor>? VideoAuthors { get; set; }
     public ICollection<VideoCategory>? VideoCategories { get; set; }

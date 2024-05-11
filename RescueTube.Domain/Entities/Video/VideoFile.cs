@@ -11,9 +11,9 @@ public class VideoFile : BaseIdDbEntity
     public int? Height { get; set; }
     public int? BitrateBps { get; set; }
 
-    public DateTime? ValidSince { get; set; }
-    public DateTime? ValidUntil { get; set; }
-    public DateTime? LastFetched { get; set; }
+    public DateTimeOffset? ValidSince { get; set; }
+    public DateTimeOffset? ValidUntil { get; set; }
+    public DateTimeOffset? LastFetched { get; set; }
 
     public Guid VideoId { get; set; }
     public Video? Video { get; set; }

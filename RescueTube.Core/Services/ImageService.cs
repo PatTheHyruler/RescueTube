@@ -92,7 +92,7 @@ public class ImageService : BaseService
         var fileNameBuilder = new StringBuilder()
             .Append(image.Url?.ToFileNameSanitized(100) ?? "NULL")
             .Append('_')
-            .Append(DateTime.UtcNow.Ticks)
+            .Append(DateTimeOffset.UtcNow.Ticks)
             .Append('_')
             .Append(Guid.NewGuid().ToString().Replace("-", ""));
         if (image.Ext != null)
@@ -132,7 +132,7 @@ public class ImageService : BaseService
         };
         DbCtx.Images.Add(newImage);
 
-        var currentTime = DateTime.UtcNow;
+        var currentTime = DateTimeOffset.UtcNow;
 
         if (image.VideoImages != null)
         {

@@ -8,7 +8,7 @@ public static class RefreshTokenExtensions
         Guid userId, string refreshToken, string jwtHash)
     {
         return entities.Filter(userId, refreshToken, jwtHash)
-            .Where(e => e.ExpiresAt > DateTime.UtcNow);
+            .Where(e => e.ExpiresAt > DateTimeOffset.UtcNow);
     }
 
     public static IQueryable<RefreshToken> Filter(this IQueryable<RefreshToken> entities,

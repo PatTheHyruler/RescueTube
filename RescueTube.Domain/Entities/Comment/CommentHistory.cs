@@ -8,14 +8,14 @@ public class CommentHistory : BaseIdDbEntity, IHistoryEntity<Comment>
     public Guid CurrentId { get; set; }
     public Comment? Current { get; set; }
     
-    public DateTime? LastOfficialValidAt { get; set; }
-    public DateTime LastValidAt { get; set; }
-    public DateTime FirstNotValidAt { get; set; }
+    public DateTimeOffset? LastOfficialValidAt { get; set; }
+    public DateTimeOffset LastValidAt { get; set; }
+    public DateTimeOffset FirstNotValidAt { get; set; }
 
     public string? Content { get; set; }
     public TimeSpan? CreatedAtVideoTimecode { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
-    public DateTime? DeletedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
+    public DateTimeOffset? DeletedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
 }

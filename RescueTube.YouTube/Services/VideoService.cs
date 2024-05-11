@@ -87,7 +87,7 @@ public class VideoService : BaseYouTubeService
                     DislikeCount = videoData.DislikeCount,
                     CommentCount = videoData.CommentCount,
 
-                    ValidAt = DateTime.UtcNow,
+                    ValidAt = DateTimeOffset.UtcNow,
                 }
             },
 
@@ -96,7 +96,7 @@ public class VideoService : BaseYouTubeService
                 {
                     Culture = kvp.Key,
                     Ext = subtitleData.Ext,
-                    LastFetched = DateTime.UtcNow,
+                    LastFetched = DateTimeOffset.UtcNow,
                     Name = subtitleData.Name,
                     Platform = EPlatform.YouTube,
                     Url = subtitleData.Url,
@@ -123,9 +123,9 @@ public class VideoService : BaseYouTubeService
             IsAvailable = videoData.Availability.ToPrivacyStatus().IsAvailable(),
             PrivacyStatus = EPrivacyStatus.Private,
 
-            LastFetchUnofficial = DateTime.UtcNow,
-            LastSuccessfulFetchUnofficial = DateTime.UtcNow,
-            AddedToArchiveAt = DateTime.UtcNow,
+            LastFetchUnofficial = DateTimeOffset.UtcNow,
+            LastSuccessfulFetchUnofficial = DateTimeOffset.UtcNow,
+            AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
 
         try
@@ -193,9 +193,9 @@ public class VideoService : BaseYouTubeService
         {
             foreach (var videoFile in video.VideoFiles)
             {
-                if (videoFile.ValidUntil == null || videoFile.ValidUntil > DateTime.UtcNow)
+                if (videoFile.ValidUntil == null || videoFile.ValidUntil > DateTimeOffset.UtcNow)
                 {
-                    videoFile.ValidUntil = DateTime.UtcNow;
+                    videoFile.ValidUntil = DateTimeOffset.UtcNow;
                 }
             }
         }
@@ -208,8 +208,8 @@ public class VideoService : BaseYouTubeService
         DbCtx.VideoFiles.Add(new VideoFile
         {
             FilePath = AppPaths.GetPathRelativeToDownloads(videoFilePath, appPathOptions),
-            ValidSince = DateTime.UtcNow, // Questionable semantics?
-            LastFetched = DateTime.UtcNow,
+            ValidSince = DateTimeOffset.UtcNow, // Questionable semantics?
+            LastFetched = DateTimeOffset.UtcNow,
             Video = video,
         });
     }

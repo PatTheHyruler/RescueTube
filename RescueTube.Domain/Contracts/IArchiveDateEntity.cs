@@ -2,5 +2,5 @@ namespace RescueTube.Domain.Contracts;
 
 public interface IArchiveDateEntity
 {
-    public DateTime AddedToArchiveAt { get; set; }
+    public DateTimeOffset AddedToArchiveAt { get; set; }
 }

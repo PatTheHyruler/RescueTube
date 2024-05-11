@@ -11,11 +11,11 @@ public class CommentDto
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
     public bool IsAvailable { get; set; }
     public EPrivacyStatus PrivacyStatus { get; set; }
-    public DateTime? LastFetchUnofficial { get; set; }
-    public DateTime? LastSuccessfulFetchUnofficial { get; set; }
-    public DateTime? LastFetchOfficial { get; set; }
-    public DateTime? LastSuccessfulFetchOfficial { get; set; }
-    public DateTime AddedToArchiveAt { get; set; }
+    public DateTimeOffset? LastFetchUnofficial { get; set; }
+    public DateTimeOffset? LastSuccessfulFetchUnofficial { get; set; }
+    public DateTimeOffset? LastFetchOfficial { get; set; }
+    public DateTimeOffset? LastSuccessfulFetchOfficial { get; set; }
+    public DateTimeOffset AddedToArchiveAt { get; set; }
 
     public required AuthorSimple Author { get; set; }
 
@@ -24,12 +24,12 @@ public class CommentDto
     
     public string? Content { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
     public bool? AuthorIsCreator { get; set; }
 
     public TimeSpan? CreatedAtVideoTimecode { get; set; }
-    public DateTime? DeletedAt { get; set; }
+    public DateTimeOffset? DeletedAt { get; set; }
     
     public long OrderIndex { get; set; }
 

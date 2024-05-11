@@ -11,7 +11,7 @@ public class RefreshToken : BaseIdDbEntity
 
     public string Token { get; set; } = Guid.NewGuid().ToString();
 
-    public DateTime ExpiresAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
 
     public required string JwtHash { get; set; }
 }

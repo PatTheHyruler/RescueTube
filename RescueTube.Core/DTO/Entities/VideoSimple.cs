@@ -19,9 +19,9 @@ public class VideoSimple : BaseIdDbEntity
     public required string IdOnPlatform { get; set; }
 
     public required ICollection<AuthorSimple> Authors { get; set; }
-    public DateTime? CreatedAt { get; set; }
-    public DateTime? PublishedAt { get; set; }
-    public DateTime AddedToArchiveAt { get; set; }
+    public DateTimeOffset? CreatedAt { get; set; }
+    public DateTimeOffset? PublishedAt { get; set; }
+    public DateTimeOffset AddedToArchiveAt { get; set; }
 
     public string? Url { get; set; }
     public string? EmbedUrl { get; set; }
