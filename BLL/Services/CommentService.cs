@@ -3,10 +3,10 @@ using AutoMapper.QueryableExtensions;
 using BLL.Base;
 using BLL.Data.Pagination;
 using BLL.DTO.Entities;
+using BLL.Utils.Pagination;
+using BLL.Utils.Pagination.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Utils.Pagination;
-using Utils.Pagination.Contracts;
 
 namespace BLL.Services;
 

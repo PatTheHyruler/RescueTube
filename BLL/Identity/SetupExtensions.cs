@@ -1,6 +1,7 @@
 using System.Text;
 using BLL.Identity.Options;
 using BLL.Identity.Services;
+using BLL.Utils.Validation;
 using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -11,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Utils.Validation;
 
 namespace BLL.Identity;
 

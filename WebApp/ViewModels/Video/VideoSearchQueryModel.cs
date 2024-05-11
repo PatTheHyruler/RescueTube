@@ -1,5 +1,5 @@
 using BLL.DTO.Enums;
-using Utils.Pagination.Contracts;
+using BLL.Utils.Pagination.Contracts;
 
 namespace WebApp.ViewModels.Video;
 

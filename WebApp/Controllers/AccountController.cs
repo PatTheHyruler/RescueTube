@@ -1,4 +1,4 @@
-using BLL.DTO.Exceptions.Identity;
+using BLL.Identity.Exceptions;
 using BLL.Identity.Options;
 using BLL.Identity.Services;
 using Microsoft.AspNetCore.Authentication;

@@ -1,4 +1,4 @@
-namespace DAL.Contracts;
+namespace BLL.Contracts;
 
 public class DbLoggingOptions
 {

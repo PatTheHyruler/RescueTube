@@ -1,4 +1,4 @@
-using DAL.Contracts;
+using BLL.Contracts;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

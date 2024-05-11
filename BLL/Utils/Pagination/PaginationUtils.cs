@@ -1,6 +1,6 @@
-using Utils.Pagination.Contracts;
+using BLL.Utils.Pagination.Contracts;
 
-namespace Utils.Pagination;
+namespace BLL.Utils.Pagination;
 
 public static class PaginationUtils
 {

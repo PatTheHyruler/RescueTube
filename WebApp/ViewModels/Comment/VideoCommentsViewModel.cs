@@ -1,5 +1,5 @@
 ﻿using BLL.DTO.Entities;
-using Utils.Pagination.Contracts;
+using BLL.Utils.Pagination.Contracts;
 
 namespace WebApp.ViewModels.Comment;
 

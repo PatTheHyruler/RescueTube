@@ -1,5 +1,5 @@
+using BLL.Contracts;
 using BLL.Data;
-using DAL.Contracts;
 using DAL.EF.Converters;
 using Domain.Entities;
 using Domain.Entities.Identity;

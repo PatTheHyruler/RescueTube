@@ -1,8 +1,8 @@
 using BLL.Jobs;
 using BLL.Jobs.Registration;
 using BLL.Services;
+using BLL.Utils.Validation;
 using Microsoft.Extensions.DependencyInjection;
-using Utils.Validation;
 
 namespace BLL;
 

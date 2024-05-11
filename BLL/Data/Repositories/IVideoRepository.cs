@@ -1,7 +1,7 @@
 ﻿using BLL.DTO.Enums;
+using BLL.Utils.Pagination.Contracts;
 using Domain.Entities;
 using Domain.Enums;
-using Utils.Pagination.Contracts;
 
 namespace BLL.Data.Repositories;
 
@@ -16,7 +16,7 @@ public interface IVideoRepository
         public Guid? UserId { get; set; }
         public Guid? UserAuthorId { get; set; }
         public bool AccessAllowed { get; set; }
-        public IPaginationQuery PaginationQuery { get; set; }
+        public required IPaginationQuery PaginationQuery { get; set; }
         public EVideoSortingOptions SortingOptions { get; set; }
         public bool Descending { get; set; }
     }

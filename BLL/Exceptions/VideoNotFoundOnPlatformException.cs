@@ -1,4 +1,4 @@
-namespace BLL.Contracts.Exceptions;
+namespace BLL.Exceptions;
 
 public class VideoNotFoundOnPlatformException : ApplicationException
 {

@@ -1,4 +1,4 @@
-namespace Utils.Pagination.Contracts;
+namespace BLL.Utils.Pagination.Contracts;
 
 public class SortOptions
 {

@@ -1,5 +1,5 @@
 using BLL.DTO.Entities.Identity;
-using BLL.DTO.Exceptions.Identity;
+using BLL.Identity.Exceptions;
 using BLL.Identity.Options;
 using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity;

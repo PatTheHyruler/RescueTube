@@ -1,4 +1,4 @@
-namespace BLL.DTO.Exceptions.Identity;
+namespace BLL.Identity.Exceptions;
 
 public class UserNotApprovedException : ApplicationException
 {

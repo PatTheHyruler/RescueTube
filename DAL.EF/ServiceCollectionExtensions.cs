@@ -1,6 +1,6 @@
-﻿using DAL.Contracts;
+﻿using BLL.Contracts;
+using BLL.Utils.Validation;
 using Microsoft.Extensions.DependencyInjection;
-using Utils.Validation;
 
 namespace DAL.EF;
 

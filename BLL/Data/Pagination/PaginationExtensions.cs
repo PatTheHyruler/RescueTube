@@ -1,5 +1,5 @@
-using Utils.Pagination;
-using Utils.Pagination.Contracts;
+using BLL.Utils.Pagination;
+using BLL.Utils.Pagination.Contracts;
 
 namespace BLL.Data.Pagination;
 

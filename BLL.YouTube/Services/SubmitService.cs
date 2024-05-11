@@ -1,7 +1,7 @@
 using BLL.Contracts;
-using BLL.Contracts.Exceptions;
 using BLL.Data.Extensions;
 using BLL.DTO.Entities;
+using BLL.Exceptions;
 using BLL.YouTube.Base;
 using BLL.YouTube.Utils;
 using Domain.Enums;

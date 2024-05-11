@@ -1,5 +1,5 @@
 using BLL;
-using BLL.Contracts.Exceptions;
+using BLL.Exceptions;
 using BLL.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

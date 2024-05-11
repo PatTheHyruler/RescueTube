@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using BLL.Contracts;
+using BLL.Utils.Validation;
 using BLL.YouTube.EventHandlers;
 using BLL.YouTube.Jobs;
 using BLL.YouTube.Jobs.Registration;
@@ -8,7 +9,6 @@ using Domain.Enums;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Utils.Validation;
 using YoutubeDLSharp;
 
 namespace BLL.YouTube;

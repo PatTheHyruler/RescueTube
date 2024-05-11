@@ -7,12 +7,12 @@ using BLL.Data.Repositories;
 using BLL.DTO.Entities;
 using BLL.DTO.Enums;
 using BLL.Identity.Services;
+using BLL.Utils.Pagination;
+using BLL.Utils.Pagination.Contracts;
 using Domain.Entities;
 using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Utils.Pagination;
-using Utils.Pagination.Contracts;
 
 namespace BLL.Services;
 
