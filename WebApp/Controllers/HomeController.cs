@@ -12,9 +12,9 @@ public class HomeController : Controller
         return View();
     }
 
-    [Authorize(Roles = RoleNames.Admin)]
+    [Authorize(Roles = RoleNames.AdminOrSuperAdmin)]
     public IActionResult Secret()
     {
-        return View();
+        return Ok(new { Message = "Nice, you can access the secret :D" });
     }
 }

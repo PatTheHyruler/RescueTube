@@ -7,8 +7,8 @@ namespace RescueTube.Core.DTO.Entities;
 
 public class VideoSimple : BaseIdDbEntity
 {
-    public ICollection<TextTranslation>? Title { get; set; }
-    public ICollection<TextTranslation>? Description { get; set; }
+    public required ICollection<TextTranslation> Title { get; set; }
+    public required ICollection<TextTranslation> Description { get; set; }
 
     public required List<Image> Thumbnails { get; set; }
     public Image? Thumbnail { get; set; }
