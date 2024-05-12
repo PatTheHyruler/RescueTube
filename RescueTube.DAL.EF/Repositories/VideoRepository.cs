@@ -55,7 +55,7 @@ public class VideoRepository : BaseRepository, IVideoRepository
             case EVideoSortingOptions.CreatedAt:
                 query = search.Descending
                     ? query.OrderByDescending(v => v.PublishedAt).ThenByDescending(v => v.CreatedAt)
-                    : query.OrderBy(v => v.PublishedAt).ThenByDescending(v => v.CreatedAt);
+                    : query.OrderBy(v => v.PublishedAt).ThenBy(v => v.CreatedAt);
                 break;
         }
 
