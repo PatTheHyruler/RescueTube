@@ -9,6 +9,6 @@ public class AuthorSimpleDtoV1
     public string? DisplayName { get; set; }
     public EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
-    public IEnumerable<ImageDtoV1>? ProfileImages { get; set; }
+    public required IEnumerable<ImageDtoV1> ProfileImages { get; set; }
     public string? UrlOnPlatform { get; set; }
 }
