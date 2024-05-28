@@ -64,18 +64,6 @@ public class CommentService : BaseYouTubeService
         var commentsWithoutParent = new List<(RescueTube.Domain.Entities.Comment Comment, string Parent)>();
         var commentsWithoutRoot = new List<(RescueTube.Domain.Entities.Comment Comment, string Root)>();
 
-        foreach (var comment in video.Comments)
-        {
-            if (commentDatas.All(c => c.ID != comment.IdOnPlatform))
-            {
-                comment.DeletedAt ??= DateTimeOffset.UtcNow;
-            }
-            else
-            {
-                comment.DeletedAt = null;
-            }
-        }
-
         var authorFetchArgs = commentDatas.Where(c => video.Comments
                 .All(e => e.IdOnPlatform != c.ID))
             .DistinctBy(c => c.AuthorID)

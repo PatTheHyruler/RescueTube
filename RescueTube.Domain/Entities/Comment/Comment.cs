@@ -40,7 +40,6 @@ public class Comment : BaseIdDbEntity, IMainArchiveEntity
     public bool? AuthorIsCreator { get; set; }
 
     public TimeSpan? CreatedAtVideoTimecode { get; set; }
-    public DateTimeOffset? DeletedAt { get; set; }
 
     public long OrderIndex { get; set; }
 

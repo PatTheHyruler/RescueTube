@@ -1,4 +1,4 @@
-using RescueTube.Core.Extensions;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Contracts;
 
 namespace RescueTube.Core.Tests;

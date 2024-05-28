@@ -1,5 +1,5 @@
 ﻿@using WebApp.Utils
-@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using RescueTube.Core.Utils
 @model RescueTube.Core.DTO.Entities.CommentDto
 
 <div class="border border-3 p-2 rounded-2">
@@ -9,9 +9,13 @@
         {
             <div>@Context.SpanFor(Model.CreatedAt)</div>
         }
-        @if (Model.DeletedAt != null)
+        @if (Model.IsLikelyDeleted())
         {
-            <div class="text-danger">Deleted at @Context.SpanFor(Model.DeletedAt)</div>
+            <div class="text-danger">
+                Likely deleted, 
+                last successful fetch: @Context.SpanFor(Model.LastSuccessfulFetch()), 
+                latest attempt: @Context.SpanFor(Model.LastFetch())
+            </div>
         }
         <div class="white-space-text-block border border-1 rounded-2 p-2">@Model.Content</div>
     </div>

@@ -16,6 +16,5 @@ public class CommentHistory : BaseIdDbEntity, IHistoryEntity<Comment>
     public TimeSpan? CreatedAtVideoTimecode { get; set; }
 
     public DateTimeOffset? CreatedAt { get; set; }
-    public DateTimeOffset? DeletedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
 }

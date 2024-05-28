@@ -8,12 +8,11 @@ public static class DomainHistoryExtensions
     public static CommentHistory ToHistory(this Comment comment, Comment newComment)
     {
         var history = comment.ToHistoryBase<Comment, CommentHistory>(newComment);
-        history.LastOfficialValidAt = GetMaxDateTimeOffset(comment.DeletedAt, comment.UpdatedAt, comment.CreatedAt);
+        history.LastOfficialValidAt = GetMaxDateTimeOffset(comment.UpdatedAt, comment.CreatedAt);
 
         history.Content = comment.Content;
         history.CreatedAtVideoTimecode = comment.CreatedAtVideoTimecode;
         history.CreatedAt = comment.CreatedAt;
-        history.DeletedAt = comment.DeletedAt;
         history.UpdatedAt = comment.UpdatedAt;
 
         return history;

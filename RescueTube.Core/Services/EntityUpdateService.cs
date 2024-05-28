@@ -46,7 +46,6 @@ public class EntityUpdateService : BaseService
         comment.AuthorIsCreator ??= newCommentData.AuthorIsCreator;
 
         comment.CreatedAtVideoTimecode ??= newCommentData.CreatedAtVideoTimecode;
-        comment.DeletedAt ??= newCommentData.DeletedAt;
 
         comment.OrderIndex = newCommentData.OrderIndex;
 

@@ -15,4 +15,6 @@ public static class DomainExtensions
 
     public static DateTimeOffset? LastSuccessfulFetch(this IFetchable entity) =>
         GetLatest(entity.LastSuccessfulFetchOfficial, entity.LastSuccessfulFetchUnofficial);
+
+    public static bool IsLikelyDeleted(this IFetchable entity) => entity.LastFetch() > entity.LastSuccessfulFetch();
 }

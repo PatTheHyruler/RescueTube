@@ -1,11 +1,12 @@
-﻿using RescueTube.Domain.Enums;
+﻿using RescueTube.Domain.Contracts;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.DTO.Entities;
 
-public class CommentDto
+public class CommentDto : IFetchable
 {
     public Guid Id { get; set; }
-    
+
     public EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
@@ -21,7 +22,7 @@ public class CommentDto
 
     public ICollection<CommentDto>? ConversationReplies { get; set; }
     public ICollection<CommentDto>? DirectReplies { get; set; }
-    
+
     public string? Content { get; set; }
 
     public DateTimeOffset? CreatedAt { get; set; }
@@ -29,8 +30,7 @@ public class CommentDto
     public bool? AuthorIsCreator { get; set; }
 
     public TimeSpan? CreatedAtVideoTimecode { get; set; }
-    public DateTimeOffset? DeletedAt { get; set; }
-    
+
     public long OrderIndex { get; set; }
 
     public CommentStatisticSnapshotDto? Statistics { get; set; }
