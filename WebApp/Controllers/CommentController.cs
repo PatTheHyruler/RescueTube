@@ -22,7 +22,7 @@ public class CommentController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> VideoComments([FromRoute] Guid videoId, [FromQuery] VideoCommentsQueryViewModel model)
     {
-        if (!await _authorizationService.IsAllowedToAccessVideo(User, videoId))
+        if (!await _authorizationService.IsVideoAccessAllowed(videoId, User))
         {
             return NotFound();
         }

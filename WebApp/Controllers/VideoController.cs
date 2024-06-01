@@ -48,7 +48,7 @@ public class VideoController : Controller
 
     public async Task<IActionResult> Watch([FromRoute] Guid id, [FromQuery] VideoWatchViewModel model)
     {
-        if (!await _serviceUow.AuthorizationService.IsAllowedToAccessVideo(User, id))
+        if (!await _serviceUow.AuthorizationService.IsVideoAccessAllowed(id, User))
         {
             return NotFound();
         }
@@ -68,7 +68,7 @@ public class VideoController : Controller
     [Authorize]
     public async Task<IResult> VideoFile([FromRoute] Guid videoId)
     {
-        if (!await _serviceUow.AuthorizationService.IsAllowedToAccessVideo(User, videoId))
+        if (!await _serviceUow.AuthorizationService.IsVideoAccessAllowed(videoId, User))
         {
             return Results.NotFound();
         }

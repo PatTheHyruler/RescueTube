@@ -78,17 +78,19 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 builder.Services.AddSwaggerGen();
 
-const string corsAllowAllName = "CorsAllowAll";
-const string corsAllowCredentialsName = "CorsAllowCredentials";
+const string corsAllowAllName = AuthHelpers.CorsPolicies.CorsAllowAll;
+const string corsAllowCredentialsName = AuthHelpers.CorsPolicies.CorsAllowCredentials;
 builder.Services.AddCors(options =>
 {
-    var allowCredentialsOrigins = builder.Configuration.GetValue<List<string>?>("AllowedCorsCredentialOrigins");
+    var allowCredentialsOrigins = builder.Configuration
+        .GetSection("AllowedCorsCredentialOrigins")
+        .Get<string[]>();
     options.AddPolicy(corsAllowCredentialsName, policy =>
     {
         policy.AllowAnyHeader();
         policy.AllowAnyMethod();
 
-        if (allowCredentialsOrigins is { Count: > 0 })
+        if (allowCredentialsOrigins is { Length: > 0 })
         {
             policy.WithOrigins(allowCredentialsOrigins.ToArray());
         }

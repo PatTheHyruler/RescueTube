@@ -34,7 +34,7 @@ public class AuthorizationService : BaseService
         return user.IsInRole(RoleNames.Admin) || user.IsInRole(RoleNames.SuperAdmin);
     }
 
-    public async Task<bool> IsAllowedToAccessVideo(ClaimsPrincipal? user, Guid videoId)
+    public async Task<bool> IsVideoAccessAllowed(Guid videoId, ClaimsPrincipal? user = null)
     {
         if (IsAllowedToAccessVideoByRole(user))
         {

@@ -58,15 +58,24 @@ public class TokenService
     /// Generate a new JWT for given <see cref="ClaimsPrincipal"/>.
     /// </summary>
     /// <param name="claimsPrincipal">The <see cref="ClaimsPrincipal"/> to create a JWT for.</param>
+    /// <param name="expiresInSeconds">The amount of seconds the JWT should be valid for</param>
+    /// <param name="audienceSuffix">Suffix to append to the default configured JWT audience</param>
     /// <returns>The created JWT.</returns>
-    public string GenerateJwt(ClaimsPrincipal claimsPrincipal)
+    public string GenerateJwt(ClaimsPrincipal claimsPrincipal, int? expiresInSeconds = null,
+        string? audienceSuffix = null)
     {
+        if (expiresInSeconds is <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(expiresInSeconds), expiresInSeconds,
+                "JWT expiration must be positive");
+        }
+
         return IdentityHelpers.GenerateJwt(
             claimsPrincipal.Claims,
             _jwtBearerOptions.Key,
             _jwtBearerOptions.Issuer,
-            _jwtBearerOptions.Audience,
-            _jwtBearerOptions.ExpiresInSeconds
+            _jwtBearerOptions.Audience + audienceSuffix,
+            expiresInSeconds ?? _jwtBearerOptions.ExpiresInSeconds
         );
     }
 
@@ -97,11 +106,7 @@ public class TokenService
             throw new InvalidJwtException();
         }
 
-        if (!IdentityHelpers.ValidateToken(jwt, _jwtBearerOptions.Key, _jwtBearerOptions.Issuer,
-                _jwtBearerOptions.Audience, ignoreExpiration: true))
-        {
-            throw new InvalidJwtException();
-        }
+        ValidateJwt(jwt, ignoreExpiration: true);
 
         var userName = jwtToken.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value
                        ?? throw new InvalidJwtException();
@@ -159,12 +164,7 @@ public class TokenService
             throw new InvalidJwtException();
         }
 
-        if (!IdentityHelpers.ValidateToken(jwt, _jwtBearerOptions.Key,
-                _jwtBearerOptions.Issuer, _jwtBearerOptions.Audience,
-                ignoreExpiration: true))
-        {
-            throw new InvalidJwtException();
-        }
+        ValidateJwt(jwt, ignoreExpiration: true);
 
         var userId = principal.GetUserIdIfExists() ?? throw new InvalidJwtException();
         var jwtHash = HashJwt(jwt);
@@ -178,5 +178,23 @@ public class TokenService
         await _identityUow.DbCtx.RefreshTokens
             .Where(r => r.ExpiresAt < DateTimeOffset.UtcNow)
             .ExecuteDeleteAsync();
+    }
+
+    public ClaimsPrincipal ValidateJwt(string jwt, bool ignoreExpiration = true, string? audienceSuffix = null)
+    {
+        var validationParameters = IdentityHelpers.GetValidationParameters(
+            key: _jwtBearerOptions.Key, issuer: _jwtBearerOptions.Issuer,
+            audience: _jwtBearerOptions.Audience + audienceSuffix,
+            validateLifeTime: !ignoreExpiration
+        );
+        var tokenHandler = new JwtSecurityTokenHandler();
+        try
+        {
+            return tokenHandler.ValidateToken(jwt, validationParameters, out _);
+        }
+        catch (Exception)
+        {
+            throw new InvalidJwtException();
+        }
     }
 }

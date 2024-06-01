@@ -25,25 +25,7 @@ public static class IdentityHelpers
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public static bool ValidateToken(string jwt, string key,
-        string issuer, string audience, bool ignoreExpiration = true)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var validationParameters = GetValidationParameters(key, issuer, audience, !ignoreExpiration);
-
-        try
-        {
-            tokenHandler.ValidateToken(jwt, validationParameters, out _);
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    private static TokenValidationParameters GetValidationParameters(string key,
+    public static TokenValidationParameters GetValidationParameters(string key,
         string issuer, string audience, bool validateLifeTime = true)
     {
         return new TokenValidationParameters

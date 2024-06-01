@@ -20,4 +20,10 @@ public static class AuthHelpers
         nameof(IdentityErrorDescriber.InvalidUserName),
         nameof(IdentityErrorDescriber.DuplicateUserName)
     ];
+
+    public static class CorsPolicies
+    {
+        public const string CorsAllowCredentials = "CorsAllowCredentials";
+        public const string CorsAllowAll = "CorsAllowAll";
+    }
 }

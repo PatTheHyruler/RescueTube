@@ -1,7 +1,9 @@
 using System.Text;
 using RescueTube.Core.Utils.Validation;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -81,6 +83,21 @@ public static class SetupExtensions
         return authBuilder;
     }
 
+    private static Func<RedirectContext<CookieAuthenticationOptions>, Task> CookieApiRedirectOverride(int statusCode) =>
+        ctx =>
+        {
+            if (ctx.Request.Path.StartsWithSegments("/api"))
+            {
+                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            }
+            else
+            {
+                ctx.Response.Redirect(ctx.RedirectUri);
+            }
+
+            return Task.CompletedTask;
+        };
+
     private static AuthenticationBuilder AddIdentityCookiesCustom(this AuthenticationBuilder authBuilder,
         IServiceCollection services, IConfiguration config)
     {
@@ -94,6 +111,8 @@ public static class SetupExtensions
             .ApplicationCookie?
             .Configure(o =>
             {
+                o.Events.OnRedirectToLogin = CookieApiRedirectOverride(StatusCodes.Status401Unauthorized);
+                o.Events.OnRedirectToAccessDenied = CookieApiRedirectOverride(StatusCodes.Status403Forbidden);
                 o.LoginPath = "/Account/Login";
                 o.LogoutPath = "/Account/Logout";
                 o.SlidingExpiration = cookieOptions.SlidingExpiration;
