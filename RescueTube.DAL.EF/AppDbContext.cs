@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
+using RescueTube.DAL.EF.Converters;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Identity;
 using RescueTube.Domain.Entities.Localization;
@@ -78,7 +79,7 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
-
+        
         configurationBuilder
             .Properties<EPlatform>()
             .HaveConversion<EnumToStringConverter<EPlatform>>();
@@ -94,6 +95,9 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
         configurationBuilder
             .Properties<EEntityType>()
             .HaveConversion<EnumToStringConverter<EEntityType>>();
+
+        configurationBuilder.Properties<DateTimeOffset>()
+            .HaveConversion<DateTimeOffsetToUtcConverter>();
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
