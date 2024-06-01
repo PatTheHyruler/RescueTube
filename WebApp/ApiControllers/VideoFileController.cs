@@ -163,6 +163,7 @@ public class VideoFileController : ControllerBase
             new CookieOptions
             {
                 Expires = expiresAt, IsEssential = true, SameSite = SameSiteMode.None, Secure = true,
+                HttpOnly = true,
                 Extensions = { "Partitioned", },
             });
     }
