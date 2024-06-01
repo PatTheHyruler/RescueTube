@@ -24,28 +24,31 @@ public class SubmissionService : BaseService
     }
 
     /// <exception cref="UnrecognizedUrlException">URL was not recognized and can't be archived.</exception>
-    public Task<LinkSubmissionSuccessResult> SubmitGenericLinkAsync(string url, ClaimsPrincipal user)
+    /// <exception cref="VideoNotFoundOnPlatformException">URL was not recognized and can't be archived.</exception>
+    public Task<LinkSubmissionSuccessResult> SubmitGenericLinkAsync(
+        string url, ClaimsPrincipal user, CancellationToken ct = default)
     {
-        return SubmitGenericLinkAsync(url, user.GetUserId(), IsAllowedToAutoSubmit(user));
+        return SubmitGenericLinkAsync(url, user.GetUserId(), IsAllowedToAutoSubmit(user), ct);
     }
 
-    private async Task<LinkSubmissionSuccessResult> SubmitGenericLinkAsync(string url, Guid submitterId, bool autoSubmit)
+    private async Task<LinkSubmissionSuccessResult> SubmitGenericLinkAsync(
+        string url, Guid submitterId, bool autoSubmit, CancellationToken ct = default)
     {
         foreach (var submissionHandler in SubmissionHandlers)
         {
             if (submissionHandler.IsPlatformUrl(url))
             {
-                return await submissionHandler.SubmitLink(url, submitterId, autoSubmit);
+                return await submissionHandler.SubmitLink(url, submitterId, autoSubmit, ct);
             }
         }
 
         throw new UnrecognizedUrlException(url);
     }
 
-    public async Task<Submission> Add(Video video, Guid submitterId, bool autoSubmit)
+    public async Task<Submission> Add(Video video, Guid submitterId, bool autoSubmit, CancellationToken ct = default)
     {
         var submission = DbCtx.Submissions.Add(new Submission(video, submitterId, autoSubmit));
-        if (autoSubmit) await ServiceUow.AuthorizationService.AuthorizeVideoIfNotAuthorized(submitterId, video.Id);
+        if (autoSubmit) await ServiceUow.AuthorizationService.AuthorizeVideoIfNotAuthorized(submitterId, video.Id, ct);
         return submission.Entity;
     }
 

@@ -22,23 +22,24 @@ public class AuthorService : BaseYouTubeService
         _mediator = mediator;
     }
 
-    private async Task<Author> AddOrGetAuthor(VideoData videoData)
+    private async Task<Author> AddOrGetAuthor(VideoData videoData, CancellationToken ct = default)
     {
-        return await AddOrGetAuthor(videoData.ChannelID, videoData.ToDomainAuthor);
+        return await AddOrGetAuthor(videoData.ChannelID, videoData.ToDomainAuthor, ct);
     }
 
-    public async Task AddAndSetAuthor(Video video, VideoData videoData)
+    public async Task AddAndSetAuthor(Video video, VideoData videoData, CancellationToken ct = default)
     {
-        var author = await AddOrGetAuthor(videoData);
+        var author = await AddOrGetAuthor(videoData, ct);
         DbCtx.VideoAuthors.SetVideoAuthor(video.Id, author.Id);
     }
 
-    private async Task<Author> AddOrGetAuthor(string id, Func<Author> newAuthorFunc)
+    private async Task<Author> AddOrGetAuthor(string id, Func<Author> newAuthorFunc, CancellationToken ct = default)
     {
-        return (await AddOrGetAuthors(new[] { new AuthorFetchArg(id, newAuthorFunc) })).First();
+        return (await AddOrGetAuthors(new[] { new AuthorFetchArg(id, newAuthorFunc) }, ct)).First();
     }
 
-    internal async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs)
+    internal async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs,
+        CancellationToken ct = default)
     {
         var authors = new List<Author>();
         var notCachedIds = new List<AuthorFetchArg>();
@@ -56,7 +57,8 @@ public class AuthorService : BaseYouTubeService
         }
 
         var fetchedAuthors =
-            await DbCtx.Authors.Filter(EPlatform.YouTube, notCachedIds.Select(e => e.AuthorId)).ToListAsync();
+            await DbCtx.Authors.Filter(EPlatform.YouTube, notCachedIds.Select(e => e.AuthorId))
+                .ToListAsync(cancellationToken: ct);
 
         foreach (var arg in notCachedIds)
         {
@@ -69,12 +71,12 @@ public class AuthorService : BaseYouTubeService
             else
             {
                 var author = arg.NewAuthorFunc();
-                await TryFetchExtraAuthorData(author, arg); // TODO: Move this to a background job
+                await TryFetchExtraAuthorData(author, arg, ct); // TODO: Move this to a background job
 
                 DbCtx.Authors.Add(author);
                 DataUow.RegisterSavedChangesCallbackRunOnce(() =>
                     _mediator.Publish(new AuthorAddedEvent(
-                        author.Id, EPlatform.YouTube, author.IdOnPlatform)));
+                        author.Id, EPlatform.YouTube, author.IdOnPlatform), ct));
                 _cachedAuthors.TryAdd(arg.AuthorId, author);
                 authors.Add(author);
             }
@@ -83,13 +85,13 @@ public class AuthorService : BaseYouTubeService
         return authors;
     }
 
-    private async Task TryFetchExtraAuthorData(Author author, AuthorFetchArg arg)
+    private async Task TryFetchExtraAuthorData(Author author, AuthorFetchArg arg, CancellationToken ct = default)
     {
         if (_lastYtExplodeRateLimitHit < DateTimeOffset.Now.Subtract(TimeSpan.FromHours(1)))
         {
             try
             {
-                var channel = await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(author.IdOnPlatform);
+                var channel = await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(author.IdOnPlatform, ct);
                 author.AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
                 {
                     ImageType = EImageType.ProfilePicture,

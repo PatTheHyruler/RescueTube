@@ -45,10 +45,10 @@ public class VideoService : BaseYouTubeService
     public async Task<Video?> AddVideo(string id, CancellationToken ct = default)
     {
         var videoData = await FetchVideoDataYtdl(id, false, ct);
-        return videoData == null ? null : await AddVideo(videoData);
+        return videoData == null ? null : await AddVideo(videoData, ct);
     }
 
-    public async Task<Video> AddVideo(VideoData videoData)
+    public async Task<Video> AddVideo(VideoData videoData, CancellationToken ct = default)
     {
         var video = new Video
         {
@@ -130,7 +130,7 @@ public class VideoService : BaseYouTubeService
 
         try
         {
-            await YouTubeUow.AuthorService.AddAndSetAuthor(video, videoData);
+            await YouTubeUow.AuthorService.AddAndSetAuthor(video, videoData, ct);
         }
         catch (Exception e)
         {
@@ -143,7 +143,7 @@ public class VideoService : BaseYouTubeService
 
         DataUow.RegisterSavedChangesCallbackRunOnce(() =>
             _mediator.Publish(new VideoAddedEvent(
-                video.Id, EPlatform.YouTube, videoData.ID)));
+                video.Id, EPlatform.YouTube, videoData.ID), ct));
         // TODO: Comments callback subscribe
         // TODO: Captions downloader callback subscribe
 

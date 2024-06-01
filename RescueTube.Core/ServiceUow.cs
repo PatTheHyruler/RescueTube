@@ -29,5 +29,5 @@ public class ServiceUow
     public VideoPresentationService VideoPresentationService =>
         _services.GetRequiredService<VideoPresentationService>();
 
-    public Task SaveChangesAsync() => DataUow.SaveChangesAsync();
+    public Task SaveChangesAsync(CancellationToken ct = default) => DataUow.SaveChangesAsync(ct);
 }

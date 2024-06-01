@@ -13,30 +13,32 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 {
     public bool IsPlatformUrl(string url) => Url.IsYouTubeUrl(url);
 
-    public async Task<LinkSubmissionSuccessResult> SubmitLink(string url, Guid submitterId, bool autoSubmit)
+    public async Task<LinkSubmissionSuccessResult> SubmitLink(string url, Guid submitterId, bool autoSubmit,
+        CancellationToken ct = default)
     {
         var isVideoUrl = Url.IsVideoUrl(url, out var videoId);
         if (isVideoUrl)
         {
-            return await SubmitVideo(videoId!, submitterId, autoSubmit);
+            return await SubmitVideo(videoId!, submitterId, autoSubmit, ct);
         }
 
         // TODO
         throw new UnrecognizedUrlException(url);
     }
 
-    private async Task<LinkSubmissionSuccessResult> SubmitVideo(string idOnPlatform, Guid submitterId, bool autoSubmit)
+    private async Task<LinkSubmissionSuccessResult> SubmitVideo(string idOnPlatform, Guid submitterId, bool autoSubmit,
+        CancellationToken ct = default)
     {
-        var previouslyArchivedVideo = await DbCtx.Videos.GetByIdOnPlatformAsync(idOnPlatform, EPlatform.YouTube);
+        var previouslyArchivedVideo = await DbCtx.Videos.GetByIdOnPlatformAsync(idOnPlatform, EPlatform.YouTube, ct);
         if (previouslyArchivedVideo != null)
         {
             return new LinkSubmissionSuccessResult(
                 await ServiceUow.SubmissionService.Add(
-                    previouslyArchivedVideo, submitterId, autoSubmit),
+                    previouslyArchivedVideo, submitterId, autoSubmit, ct),
                 true);
         }
 
-        var videoData = await YouTubeUow.VideoService.FetchVideoDataYtdl(idOnPlatform, false);
+        var videoData = await YouTubeUow.VideoService.FetchVideoDataYtdl(idOnPlatform, false, ct);
         if (videoData == null) throw new VideoNotFoundOnPlatformException();
 
         if (!autoSubmit)
@@ -48,9 +50,9 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
                 false);
         }
 
-        var video = await YouTubeUow.VideoService.AddVideo(videoData);
+        var video = await YouTubeUow.VideoService.AddVideo(videoData, ct);
         return new LinkSubmissionSuccessResult(await ServiceUow.SubmissionService.Add(
-            video, submitterId, autoSubmit), false);
+            video, submitterId, autoSubmit, ct), false);
     }
 
     public bool CanHandle(EPlatform platform, EEntityType entityType)

@@ -26,12 +26,12 @@ public class SubmissionsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([FromForm] LinkSubmissionModel model)
+    public async Task<IActionResult> Create([FromForm] LinkSubmissionModel model, CancellationToken ct = default)
     {
         try
         {
-            var successResult = await _serviceUow.SubmissionService.SubmitGenericLinkAsync(model.Link, User);
-            await _serviceUow.SaveChangesAsync();
+            var successResult = await _serviceUow.SubmissionService.SubmitGenericLinkAsync(model.Link, User, ct);
+            await _serviceUow.SaveChangesAsync(ct);
             return RedirectToAction(nameof(Details), new { Id = successResult.SubmissionId });
         }
         catch (UnrecognizedUrlException e)

@@ -16,9 +16,9 @@ public class AuthorizationService : BaseService
     {
     }
 
-    public async Task AuthorizeVideoIfNotAuthorized(Guid userId, Guid videoId)
+    public async Task AuthorizeVideoIfNotAuthorized(Guid userId, Guid videoId, CancellationToken ct = default)
     {
-        if (await DbCtx.EntityAccessPermissions.VideoPermissionExistsAsync(userId, videoId)) return;
+        if (await DbCtx.EntityAccessPermissions.VideoPermissionExistsAsync(userId, videoId, ct)) return;
         DbCtx.EntityAccessPermissions.Add(new EntityAccessPermission
         {
             UserId = userId,
