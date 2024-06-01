@@ -6,12 +6,12 @@ namespace RescueTube.Core.DTO.Entities;
 
 public class LinkSubmissionSuccessResult
 {
-    public Guid SubmissionId { get; set; }
-    public EEntityType Type { get; set; }
+    public required Guid SubmissionId { get; set; }
+    public required EEntityType Type { get; set; }
     public Guid? EntityId { get; set; }
-    public EPlatform Platform { get; set; }
+    public required EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; } 
-    public bool AlreadyAdded { get; set; }
+    public required bool AlreadyAdded { get; set; }
 
     public LinkSubmissionSuccessResult()
     {

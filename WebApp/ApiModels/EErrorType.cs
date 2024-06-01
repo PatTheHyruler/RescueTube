@@ -43,4 +43,8 @@ public enum EErrorType
     /// Submitted URL is not recognized/supported by the archive.
     /// </summary>
     UnrecognizedUrl,
+    /// <summary>
+    /// Submitted identifier did not resolve to an archivable entity
+    /// </summary>
+    SubmissionEntityNotFound,
 }
