@@ -1,4 +1,4 @@
-@using BLL.DTO.Enums
+@using RescueTube.Core.DTO.Enums
 @using WebApp.Utils
 @using WebApp.ViewModels
 @model WebApp.ViewModels.Video.VideoSearchViewModel
@@ -20,17 +20,6 @@
     <input type="submit" class="btn btn-primary" value="Search"/>
 </form>
 
-<partial name="_PaginationUiPartial" model="@PaginationViewModel"/>
+<partial name="_PaginationUiPartial" model="@Model.PaginationResult"/>
 
 <partial name="_VideoResultsPartial" model="@Model.Videos"/>
-
-@functions
-{
-    PaginationUiPartialViewModel PaginationViewModel => new()
-    {
-        Limit = Model.Limit,
-        Page = Model.Page,
-        Total = null,
-        AmountOnPage = Model.Videos.Count,
-    };
-}

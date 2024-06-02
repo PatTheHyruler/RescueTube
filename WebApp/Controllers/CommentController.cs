@@ -1,10 +1,11 @@
-﻿using BLL.Services;
+﻿using RescueTube.Core.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.ViewModels.Comment;
 
 namespace WebApp.Controllers;
 
+[ApiExplorerSettings(IgnoreApi = true)]
 public class CommentController : Controller
 {
     private readonly CommentService _commentService;
@@ -19,20 +20,26 @@ public class CommentController : Controller
     [HttpGet("[Controller]/[Action]/{videoId:guid}")]
     [Authorize]
     [AllowAnonymous]
-    public async Task<IActionResult> VideoComments([FromRoute] Guid videoId, [FromQuery] VideoCommentsViewModel model)
+    public async Task<IActionResult> VideoComments([FromRoute] Guid videoId, [FromQuery] VideoCommentsQueryViewModel model)
     {
-        if (!await _authorizationService.IsAllowedToAccessVideo(User, videoId))
+        if (!await _authorizationService.IsVideoAccessAllowed(videoId, User))
         {
             return NotFound();
         }
-        var videoComments = await _commentService.GetVideoComments(videoId, model);
-        if (videoComments == null)
+        var response = await _commentService.GetVideoComments(videoId, model);
+        if (response == null)
         {
             return NotFound();
         }
 
-        model.VideoComments = videoComments;
+        var viewModel = new VideoCommentsViewModel
+        {
+            Limit = response.PaginationResult.Limit,
+            Page = response.PaginationResult.Page,
+            PaginationResult = response.PaginationResult,
+            VideoComments = response.Result,
+        };
         
-        return View(viewName: "_VideoCommentsPartial", model);
+        return View(viewName: "_VideoCommentsPartial", viewModel);
     }
 }

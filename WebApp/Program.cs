@@ -1,18 +1,23 @@
-using System.Text.Json.Serialization;
-using BLL;
-using BLL.Identity;
-using BLL.YouTube;
-using DAL.EF;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using RescueTube.Core;
+using RescueTube.Core.Identity;
 using Hangfire;
 using Hangfire.Console;
 using Hangfire.Console.Extensions;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.HttpLogging;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Options;
+using RescueTube.DAL.EF;
+using RescueTube.DAL.EF.Postgres;
+using RescueTube.YouTube;
 using Serilog;
 using Serilog.Settings.Configuration;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using WebApp.ApiModels;
 using WebApp.Auth;
+using WebApp.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,16 +56,56 @@ builder.Services.AddHangfire(configuration => configuration
 builder.Services.AddHangfireServer();
 builder.Services.AddHangfireConsoleExtensions();
 
-builder.Services.AddDbPersistenceEf(builder.Configuration);
+builder.Services.AddDbPersistenceEfPostgres(builder.Configuration);
 
-builder.Services.AddControllersWithViews(options =>
-    {
-        options.Filters.Add(typeof(AutoValidateAntiforgeryTokenAttribute));
-    })
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options => JsonUtils.ConfigureJsonSerializerOptions(options.JsonSerializerOptions));
 builder.Services.AddMvc();
 
-builder.AddCustomIdentity();
+var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+});
+apiVersioningBuilder.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+builder.Services.AddSwaggerGen();
+
+const string corsAllowAllName = AuthHelpers.CorsPolicies.CorsAllowAll;
+const string corsAllowCredentialsName = AuthHelpers.CorsPolicies.CorsAllowCredentials;
+builder.Services.AddCors(options =>
+{
+    var allowCredentialsOrigins = builder.Configuration
+        .GetSection("AllowedCorsCredentialOrigins")
+        .Get<string[]>();
+    options.AddPolicy(corsAllowCredentialsName, policy =>
+    {
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+
+        if (allowCredentialsOrigins is { Length: > 0 })
+        {
+            policy.WithOrigins(allowCredentialsOrigins.ToArray());
+        }
+
+        policy.AllowCredentials();
+    });
+    options.AddPolicy(corsAllowAllName, policy =>
+    {
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+        policy.AllowAnyOrigin();
+    });
+});
+
+builder.AddCustomIdentity<AppDbContext>();
 builder.Services.AddBll();
 builder.Services.AddYouTube();
 
@@ -74,6 +119,35 @@ app.SeedIdentity();
 app.SetupYouTube();
 
 app.UseHttpsRedirection();
+
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), apiApp =>
+{
+    apiApp.UseExceptionHandler(apiBuilder =>
+    {
+        apiBuilder.Run(async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            await context.Response.WriteAsJsonAsync(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.GenericError,
+                Message = "Something went wrong",
+            }, JsonUtils.DefaultJsonSerializerOptions);
+        });
+    });
+});
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+        foreach (var description in provider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
+        }
+    });
+}
+
 app.UseStaticFiles();
 var imagesDirectory = AppPaths.GetImagesDirectory(AppPathOptions.FromConfiguration(app.Configuration));
 var imagesDirectoryPath = Path.Combine(app.Environment.ContentRootPath, imagesDirectory);
@@ -85,6 +159,9 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseRouting();
+
+app.UseCors(corsAllowAllName);
+app.UseCors(corsAllowCredentialsName);
 
 app.UseAuthentication();
 app.UseAuthorization();

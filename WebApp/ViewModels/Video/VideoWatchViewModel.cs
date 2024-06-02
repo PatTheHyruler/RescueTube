@@ -1,4 +1,4 @@
-using BLL.DTO.Entities;
+using RescueTube.Core.DTO.Entities;
 
 namespace WebApp.ViewModels.Video;
 

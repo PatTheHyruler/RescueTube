@@ -1,4 +1,6 @@
-﻿@using BLL.Identity.Services
+﻿@using RescueTube.Core.Identity.Services
+@inject IHostEnvironment env
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -43,6 +45,14 @@
                             Secret
                         </a>
                     </li>
+                    @if (env.IsDevelopment())
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="~/swagger">
+                                Swagger
+                            </a>
+                        </li>
+                    }
                 </ul>
                 <partial name="_LoginPartial"/>
                 @* <partial name="_CultureSelectorPartial"/> *@
