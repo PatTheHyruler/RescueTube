@@ -23,4 +23,6 @@ public class VideoSimpleDtoV1
 
     public string? ExternalUrl { get; set; }
     public string? EmbedUrl { get; set; }
+
+    public DateTimeOffset? LastCommentsFetch { get; set; }
 }

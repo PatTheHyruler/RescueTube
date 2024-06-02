@@ -1,9 +1,8 @@
-﻿using RescueTube.Domain.Contracts;
-using RescueTube.Domain.Enums;
+﻿using RescueTube.Domain.Enums;
 
-namespace RescueTube.Core.DTO.Entities;
+namespace WebApp.ApiModels;
 
-public class CommentDto : IFetchable
+public class CommentDtoV1
 {
     public Guid Id { get; set; }
 
@@ -18,10 +17,10 @@ public class CommentDto : IFetchable
     public DateTimeOffset? LastSuccessfulFetchOfficial { get; set; }
     public DateTimeOffset AddedToArchiveAt { get; set; }
 
-    public required AuthorSimple Author { get; set; }
+    public required AuthorSimpleDtoV1 Author { get; set; }
 
-    public ICollection<CommentDto>? ConversationReplies { get; set; }
-    public ICollection<CommentDto>? DirectReplies { get; set; }
+    public ICollection<CommentDtoV1>? ConversationReplies { get; set; }
+    public ICollection<CommentDtoV1>? DirectReplies { get; set; }
 
     public string? Content { get; set; }
 
@@ -29,11 +28,11 @@ public class CommentDto : IFetchable
     public DateTimeOffset? UpdatedAt { get; set; }
     public bool? AuthorIsCreator { get; set; }
 
-    public TimeSpan? CreatedAtVideoTimecode { get; set; }
+    public double? CreatedAtVideoTimeSeconds { get; set; }
 
     public long OrderIndex { get; set; }
 
-    public CommentStatisticSnapshotDto? Statistics { get; set; }
+    public CommentStatisticSnapshotDtoV1? Statistics { get; set; }
 
     public Guid VideoId { get; set; }
 }

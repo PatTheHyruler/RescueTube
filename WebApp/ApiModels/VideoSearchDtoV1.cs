@@ -10,7 +10,7 @@ public class VideoSearchDtoV1 : IPaginationQuery
 
     public EVideoSortingOptions SortingOptions { get; set; }
     public bool Descending { get; set; } = true;
-    
-    public int Page { get; set; }
-    public int Limit { get; set; }
+
+    public int Page { get; set; } = 1;
+    public int Limit { get; set; } = 50;
 }

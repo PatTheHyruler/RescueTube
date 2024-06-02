@@ -42,7 +42,7 @@ public static class PaginationUtils
         return new PaginationQuery
         {
             Limit = ClampLimit(query.Limit),
-            Page = query.Page,
+            Page = Math.Max(query.Page, 0),
         };
     }
 

@@ -25,4 +25,6 @@ public class VideoSimple : BaseIdDbEntity
 
     public string? Url { get; set; }
     public string? EmbedUrl { get; set; }
+
+    public DateTimeOffset? LastCommentsFetch { get; set; }
 }

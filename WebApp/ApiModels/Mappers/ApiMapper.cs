@@ -30,6 +30,8 @@ public static class ApiMapper
             
             ExternalUrl = srcVid.Url,
             EmbedUrl = srcVid.EmbedUrl,
+            
+            LastCommentsFetch = srcVid.LastCommentsFetch,
         };
     }
 
@@ -80,6 +82,51 @@ public static class ApiMapper
             Culture = src.Culture,
             ValidSince = src.ValidSince,
             ValidUntil = src.ValidUntil,
+        };
+    }
+
+    public static CommentDtoV1 MapComment(this CommentDto src, string imageBaseUrl)
+    {
+        return new CommentDtoV1
+        {
+            Id = src.Id,
+            Platform = src.Platform,
+            IdOnPlatform = src.IdOnPlatform,
+            PrivacyStatusOnPlatform = src.PrivacyStatusOnPlatform,
+            IsAvailable = src.IsAvailable,
+            PrivacyStatus = src.PrivacyStatus,
+            LastFetchUnofficial = src.LastFetchUnofficial,
+            LastSuccessfulFetchUnofficial = src.LastSuccessfulFetchUnofficial,
+            LastFetchOfficial = src.LastFetchOfficial,
+            LastSuccessfulFetchOfficial = src.LastSuccessfulFetchOfficial,
+            AddedToArchiveAt = src.AddedToArchiveAt,
+            Author = src.Author.MapAuthorSimpleDtoV1(imageBaseUrl),
+            ConversationReplies = src.ConversationReplies?
+                .Select(c => c.MapComment(imageBaseUrl))
+                .ToList(),
+            DirectReplies = src.DirectReplies?
+                .Select(c => c.MapComment(imageBaseUrl))
+                .ToList(),
+            Content = src.Content,
+            CreatedAt = src.CreatedAt,
+            UpdatedAt = src.UpdatedAt,
+            AuthorIsCreator = src.AuthorIsCreator,
+            CreatedAtVideoTimeSeconds = src.CreatedAtVideoTimecode?.TotalSeconds,
+            OrderIndex = src.OrderIndex,
+            Statistics = src.Statistics?.MapCommentStatisticSnapshotDtoV1(),
+            VideoId = src.VideoId,
+        };
+    }
+
+    public static CommentStatisticSnapshotDtoV1 MapCommentStatisticSnapshotDtoV1(this CommentStatisticSnapshotDto src)
+    {
+        return new CommentStatisticSnapshotDtoV1
+        {
+            LikeCount = src.LikeCount,
+            DislikeCount = src.DislikeCount,
+            ReplyCount = src.ReplyCount,
+            IsFavorited = src.IsFavorited,
+            ValidAt = src.ValidAt,
         };
     }
 }
