@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LinqKit;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Data;
@@ -18,7 +19,10 @@ public static class ServiceCollectionExtensions
         services.AddDbLoggingOptions();
         var connectionString = configuration.GetConnectionString("RescueTubePostgres");
         services.AddDbContext<PostgresAppDbContext>(
-            o => o.UseNpgsql(connectionString));
+            o => o
+                .UseNpgsql(connectionString)
+                .WithExpressionExpanding()
+            );
         services.AddScoped<AppDbContext>(GetPostgresAppDbContext);
         services.AddScoped<IAppDbContext>(GetPostgresAppDbContext);
 

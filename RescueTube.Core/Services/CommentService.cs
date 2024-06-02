@@ -1,22 +1,18 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
-using RescueTube.Core.Data.Pagination;
+﻿using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.Utils.Pagination;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
+using RescueTube.Core.Data.Mappers;
 using RescueTube.Core.DTO.Entities;
 
 namespace RescueTube.Core.Services;
 
 public class CommentService : BaseService
 {
-    private readonly IMapper _mapper;
-
-    public CommentService(IServiceProvider services, ILogger<CommentService> logger, IMapper mapper) : base(services,
+    public CommentService(IServiceProvider services, ILogger<CommentService> logger) : base(services,
         logger)
     {
-        _mapper = mapper;
     }
 
     public async Task<PaginationResponse<VideoComments>?> GetVideoComments(Guid videoId, IPaginationQuery paginationQuery,
@@ -45,7 +41,7 @@ public class CommentService : BaseService
 
         var commentRoots = await commentRootsQuery
             .Paginate(paginationQuery)
-            .ProjectTo<CommentDto>(_mapper.ConfigurationProvider)
+            .Select(EntityMapper.ToCommentDto)
             .ToListAsync(cancellationToken: ct);
 
         var result = new VideoComments
