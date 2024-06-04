@@ -22,7 +22,7 @@ public static class EntityMapper
         UrlOnPlatform = null,
     };
 
-    public static Expression<Func<Comment, CommentDto>> ToCommentDto => comment => new CommentDto
+    public static Expression<Func<Comment, CommentDto>> ToCommentDto(int depth) => comment => new CommentDto
     {
         Id = comment.Id,
         Platform = comment.Platform,
@@ -36,31 +36,9 @@ public static class EntityMapper
         LastSuccessfulFetchOfficial = comment.LastSuccessfulFetchOfficial,
         AddedToArchiveAt = comment.AddedToArchiveAt,
         Author = ToAuthorSimple.Invoke(comment.Author!),
-        ConversationReplies = comment.ConversationReplies!.Select(reply => new CommentDto
-        {
-            Id = reply.Id,
-            Platform = reply.Platform,
-            IdOnPlatform = reply.IdOnPlatform,
-            PrivacyStatusOnPlatform = reply.PrivacyStatusOnPlatform,
-            IsAvailable = reply.IsAvailable,
-            PrivacyStatus = reply.PrivacyStatus,
-            LastFetchUnofficial = reply.LastFetchUnofficial,
-            LastSuccessfulFetchUnofficial = reply.LastSuccessfulFetchUnofficial,
-            LastFetchOfficial = reply.LastFetchOfficial,
-            LastSuccessfulFetchOfficial = reply.LastSuccessfulFetchOfficial,
-            AddedToArchiveAt = reply.AddedToArchiveAt,
-            Author = ToAuthorSimple.Invoke(reply.Author!),
-            ConversationReplies = null,
-            DirectReplies = null,
-            Content = reply.Content,
-            CreatedAt = reply.CreatedAt,
-            UpdatedAt = reply.UpdatedAt,
-            AuthorIsCreator = reply.AuthorIsCreator,
-            CreatedAtVideoTimecode = reply.CreatedAtVideoTimecode,
-            OrderIndex = reply.OrderIndex,
-            Statistics = GetLatestCommentStatisticSnapshotDto.Invoke(reply),
-            VideoId = reply.VideoId,
-        }).ToList(),
+        ConversationReplies = depth < 1 
+            ? comment.ConversationReplies!.Select(reply => ToCommentDto(depth + 1).Invoke(reply)).ToList()
+            : null,
         DirectReplies = null,
         Content = comment.Content,
         CreatedAt = comment.CreatedAt,

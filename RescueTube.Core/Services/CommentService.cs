@@ -1,4 +1,5 @@
-﻿using RescueTube.Core.Data.Pagination;
+﻿using LinqKit;
+using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.Utils.Pagination;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -41,7 +42,7 @@ public class CommentService : BaseService
 
         var commentRoots = await commentRootsQuery
             .Paginate(paginationQuery)
-            .Select(EntityMapper.ToCommentDto)
+            .Select(c => EntityMapper.ToCommentDto(0).Invoke(c))
             .ToListAsync(cancellationToken: ct);
 
         var result = new VideoComments
