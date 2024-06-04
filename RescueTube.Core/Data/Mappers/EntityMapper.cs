@@ -58,17 +58,7 @@ public static class EntityMapper
             AuthorIsCreator = reply.AuthorIsCreator,
             CreatedAtVideoTimecode = reply.CreatedAtVideoTimecode,
             OrderIndex = reply.OrderIndex,
-            Statistics = reply.CommentStatisticSnapshots!
-                .OrderByDescending(s => s.ValidAt)
-                .Select(s => new CommentStatisticSnapshotDto
-                {
-                    LikeCount = s.LikeCount,
-                    DislikeCount = s.DislikeCount,
-                    ReplyCount = s.ReplyCount,
-                    IsFavorited = s.IsFavorited,
-                    ValidAt = s.ValidAt,
-                })
-                .FirstOrDefault(),
+            Statistics = GetLatestCommentStatisticSnapshotDto.Invoke(reply),
             VideoId = reply.VideoId,
         }).ToList(),
         DirectReplies = null,
@@ -78,17 +68,21 @@ public static class EntityMapper
         AuthorIsCreator = comment.AuthorIsCreator,
         CreatedAtVideoTimecode = comment.CreatedAtVideoTimecode,
         OrderIndex = comment.OrderIndex,
-        Statistics = comment.CommentStatisticSnapshots!
-            .OrderByDescending(s => s.ValidAt)
-            .Select(s => new CommentStatisticSnapshotDto
-            {
-                LikeCount = s.LikeCount,
-                DislikeCount = s.DislikeCount,
-                ReplyCount = s.ReplyCount,
-                IsFavorited = s.IsFavorited,
-                ValidAt = s.ValidAt,
-            })
-            .FirstOrDefault(),
+        Statistics = GetLatestCommentStatisticSnapshotDto.Invoke(comment),
         VideoId = comment.VideoId,
     };
+
+    public static Expression<Func<Comment, CommentStatisticSnapshotDto?>> GetLatestCommentStatisticSnapshotDto =>
+        comment =>
+            comment.CommentStatisticSnapshots!
+                .OrderByDescending(s => s.ValidAt)
+                .Select(s => new CommentStatisticSnapshotDto
+                {
+                    LikeCount = s.LikeCount,
+                    DislikeCount = s.DislikeCount,
+                    ReplyCount = s.ReplyCount,
+                    IsFavorited = s.IsFavorited,
+                    ValidAt = s.ValidAt,
+                })
+                .FirstOrDefault();
 }
