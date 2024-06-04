@@ -58,9 +58,9 @@ builder.Services.AddHangfireConsoleExtensions();
 
 builder.Services.AddDbPersistenceEfPostgres(builder.Configuration);
 
-builder.Services.AddControllersWithViews()
+builder.Services.AddControllers()
     .AddJsonOptions(options => JsonUtils.ConfigureJsonSerializerOptions(options.JsonSerializerOptions));
-builder.Services.AddMvc();
+builder.Services.AddSpaStaticFiles(config => { config.RootPath = "ClientApp"; });
 
 var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
 {
@@ -148,7 +148,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseStaticFiles();
 var imagesDirectory = AppPaths.GetImagesDirectory(AppPathOptions.FromConfiguration(app.Configuration));
 var imagesDirectoryPath = Path.Combine(app.Environment.ContentRootPath, imagesDirectory);
 Directory.CreateDirectory(imagesDirectoryPath);
@@ -157,6 +156,18 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(imagesDirectoryPath),
     RequestPath = "/images",
 });
+
+app.UseStaticFiles();
+
+string[] specialPaths = ["/api", "/hangfire"];
+bool IsSpecialPath(string path) => specialPaths.Any(path.StartsWith);
+
+app.MapWhen(c => !IsSpecialPath(c.Request.Path.Value ?? ""),
+    spaAppBuilder =>
+    {
+        spaAppBuilder.UseSpaStaticFiles();
+        spaAppBuilder.UseSpa(_ => { });
+    });
 
 app.UseRouting();
 
@@ -173,9 +184,5 @@ app.UseHangfireDashboard(options: new DashboardOptions
 });
 
 app.MapControllers();
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id:guid?}");
 
 app.Run();

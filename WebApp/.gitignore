@@ -3,3 +3,4 @@ yt-dlp*
 ffprobe*
 downloads/
 Logs/
+/ClientApp/*

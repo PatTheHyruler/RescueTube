@@ -18,6 +18,7 @@
         <PackageReference Include="Htmx" Version="1.8.0" />
         <PackageReference Include="MediatR" Version="12.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.6" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -53,10 +54,7 @@
 
     <ItemGroup>
       <Folder Include="Logs\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <_ContentIncludedByDefault Remove="Views\Shared\Components\IncrementButton.razor" />
+      <Folder Include="ClientApp\" />
     </ItemGroup>
 
     <PropertyGroup>
