@@ -77,6 +77,14 @@ jobs:
             latest=auto
             prefix=${{ github.event_name != 'workflow_dispatch' && 'backend-' || '' }}
             suffix=
+      
+      - name: Format custom Docker tags properly
+        id: custom-docker-tags
+        run: |
+          input_tags="${{ github.event.inputs.docker_tags }}"
+          prefix="${{ vars.DOCKER_HUB_NAMESPACE }}/${{ vars.DOCKER_HUB_REPOSITORY }}"
+          output_tags=$(echo "$input_tags" | awk -v prefix="$prefix" -F',' '{ for (i=1; i<=NF; i++) printf "%s:%s%s", prefix, $i, (i==NF ? "" : ",") }')
+          echo "{tags}={$output_tags}" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
@@ -84,5 +92,5 @@ jobs:
           context: ./backend
           file: ./backend/WebApp/Dockerfile
           push: true
-          tags: ${{ github.event.inputs.docker_tags || steps.meta.outputs.tags }}
+          tags: ${{ steps.custom-docker-tags.outputs.tags || steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
