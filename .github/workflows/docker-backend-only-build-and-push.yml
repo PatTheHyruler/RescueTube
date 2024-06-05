@@ -1,0 +1,44 @@
+﻿name: Publish Docker image (backend only)
+
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch: 
+    inputs:
+      tag:
+        description: 'Tag of the commit to use'
+        required: true
+      docker_tags:
+        description: 'Tags to use for Docker'
+        required: true
+
+jobs:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag && format('refs/tags/{0}', github.event.inputs.tag) || github.ref }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ vars.DOCKER_HUB_NAMESPACE }}/${{ vars.DOCKER_HUB_REPOSITORY_BACKEND }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
+        with:
+          context: .
+          file: ./WebApp/Dockerfile
+          push: true
+          tags: ${{ github.event.inputs.docker_tags || steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
