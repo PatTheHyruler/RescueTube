@@ -39,7 +39,7 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<CommentHistory> CommentHistories => Set<CommentHistory>();
     public DbSet<CommentStatisticSnapshot> CommentStatisticSnapshots => Set<CommentStatisticSnapshot>();
-    
+
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<EntityAccessPermission> EntityAccessPermissions => Set<EntityAccessPermission>();
     public DbSet<StatusChangeEvent> StatusChangeEvents => Set<StatusChangeEvent>();
@@ -79,7 +79,7 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
-        
+
         configurationBuilder
             .Properties<EPlatform>()
             .HaveConversion<EnumToStringConverter<EPlatform>>();
@@ -108,6 +108,11 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
         {
             optionsBuilder.EnableSensitiveDataLogging();
         }
+    }
+
+    public Task MigrateAsync()
+    {
+        return Database.MigrateAsync();
     }
 }
 

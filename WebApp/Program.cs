@@ -115,6 +115,13 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
+if (!app.Environment.IsDevelopment())
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    await using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.MigrateAsync();
+}
+
 app.SeedIdentity();
 app.SetupYouTube();
 
