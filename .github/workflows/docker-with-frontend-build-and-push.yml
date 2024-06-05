@@ -1,6 +1,8 @@
 ﻿name: Publish image (front-end included)
 
 on:
+  release:
+    types: [ published ]
   workflow_dispatch:
     inputs:
       frontend_tag:
