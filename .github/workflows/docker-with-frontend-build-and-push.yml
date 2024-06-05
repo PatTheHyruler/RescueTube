@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Determine frontend ref to checkout
         id: determine-frontend-ref
-        run: echo "::set-output name=ref::${{ github.event.inputs.frontend_tag && format('refs/tags/{0}', github.event.inputs.frontend_tag) || 'refs/tags/latest' }}"
+        run: echo "{ref}={${{ github.event.inputs.frontend_tag && format('refs/tags/{0}', github.event.inputs.frontend_tag) || 'refs/tags/latest' }}}" >> $GITHUB_OUTPUT
 
       - name: Frontend - Checkout repository
         uses: actions/checkout@v4
@@ -51,7 +51,7 @@ jobs:
 
       - name: Determine backend ref to checkout
         id: determine-backend-ref
-        run: echo "::set-output name=ref::${{ github.event.inputs.backend_tag && format('refs/tags/{0}', github.event.inputs.backend_tag) || github.ref || 'refs/tags/latest' }}"
+        run: echo "{ref}={${{ github.event.inputs.backend_tag && format('refs/tags/{0}', github.event.inputs.backend_tag) || github.ref || 'refs/tags/latest' }}}" >> $GITHUB_OUTPUT
 
       - name: Backend - Checkout repository
         uses: actions/checkout@v4
