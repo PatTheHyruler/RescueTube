@@ -57,6 +57,12 @@
       <Folder Include="ClientApp\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="ClientApp\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>CS1591</NoWarn>
