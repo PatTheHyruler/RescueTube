@@ -84,5 +84,5 @@ jobs:
           context: ./backend
           file: ./backend/WebApp/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ github.event.inputs.docker_tags || steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
