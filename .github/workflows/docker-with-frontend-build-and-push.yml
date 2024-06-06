@@ -16,7 +16,7 @@ on:
         required: true
 
 env:
-  VITE_API_URL: ./api
+  VITE_API_URL: /api
 
 jobs:
   push_to_registry:
