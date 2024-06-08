@@ -1,10 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RescueTube.Core.Base;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
@@ -12,11 +11,13 @@ namespace RescueTube.Core.Services;
 public class ImageService : BaseService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly AppPaths _appPaths;
 
-    public ImageService(IServiceProvider services, ILogger<ImageService> logger, IHttpClientFactory httpClientFactory) :
-        base(services, logger)
+    public ImageService(IServiceProvider services, ILogger<ImageService> logger, IHttpClientFactory httpClientFactory,
+        AppPaths appPaths) : base(services, logger)
     {
         _httpClientFactory = httpClientFactory;
+        _appPaths = appPaths;
     }
 
     public async Task UpdateImage(Guid imageId, CancellationToken ct)
@@ -80,13 +81,11 @@ public class ImageService : BaseService
 
         if (imageToUpdate.LocalFilePath == null)
         {
-            var appPathOptions = Services.GetService<IOptions<AppPathOptions>>()?.Value;
-            await DownloadImage(imageToUpdate, appPathOptions, imageBytes, ct);
+            await DownloadImage(imageToUpdate, imageBytes, ct);
         }
     }
 
-    private static async Task DownloadImage(Image image,
-        AppPathOptions? appPathOptions, byte[] imageBytes, CancellationToken ct)
+    private async Task DownloadImage(Image image, byte[] imageBytes, CancellationToken ct)
     {
         if (ct.IsCancellationRequested) return;
         var fileNameBuilder = new StringBuilder()
@@ -97,11 +96,11 @@ public class ImageService : BaseService
             .Append(Guid.NewGuid().ToString().Replace("-", ""));
         if (image.Ext != null)
         {
-            fileNameBuilder.Append(".")
+            fileNameBuilder.Append('.')
                 .Append(image.Ext);
         }
 
-        var imageDirectory = AppPaths.GetImagesDirectory(image.Platform, appPathOptions);
+        var imageDirectory = _appPaths.GetImagesDirectory(image.Platform);
         Directory.CreateDirectory(imageDirectory);
         var imagePath = Path.Combine(
             imageDirectory,
@@ -111,7 +110,7 @@ public class ImageService : BaseService
         await using var fileStream = new FileStream(imagePath, FileMode.Create, FileAccess.Write);
         await fileStream.WriteAsync(imageBytes, ct);
         if (ct.IsCancellationRequested) return;
-        image.LocalFilePath = AppPaths.GetPathRelativeToDownloads(imagePath, appPathOptions);
+        image.LocalFilePath = _appPaths.GetPathRelativeToDownloads(imagePath);
     }
 
     private Image CreateUpdatedImage(Image image)
@@ -172,26 +171,26 @@ public class ImageService : BaseService
 
     private static string? GetFileExtension(HttpResponseMessage response)
     {
-        string? ext = null;
         var contentDispositionFileName = response.Content.Headers.ContentDisposition?.FileName;
         if (contentDispositionFileName != null)
         {
             var splitFileName = contentDispositionFileName.Split('.');
             if (splitFileName.Length > 1)
             {
-                var potentialExt = splitFileName[1];
-                if (potentialExt.Trim().Length > 0)
+                var potentialExt = splitFileName[^1]
+                    .Trim()
+                    .Trim('"')
+                    .Trim()
+                    .ToFileNameSanitized();
+
+                if (potentialExt.Length > 0)
                 {
-                    ext = potentialExt.ToFileNameSanitized();
+                    return potentialExt;
                 }
             }
         }
 
-        if (ext != null) return ext;
-
         var mediaType = response.Content.Headers.ContentType?.MediaType;
-        ext = AppPaths.GuessImageFileExtensionFromMediaType(mediaType);
-
-        return ext;
+        return PathUtils.GuessImageFileExtensionFromMediaType(mediaType);
     }
 }

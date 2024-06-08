@@ -10,6 +10,7 @@ using RescueTube.Core;
 using RescueTube.Core.Identity.Exceptions;
 using RescueTube.Core.Identity.Services;
 using RescueTube.Core.Services;
+using RescueTube.Core.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 using WebApp.ApiModels;
 using WebApp.ApiModels.Auth;

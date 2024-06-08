@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RescueTube.Core;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.EventHandlers;
@@ -55,8 +56,7 @@ public static class Setup
 
             return new YoutubeDL
             {
-                OutputFolder = AppPaths.GetVideosDirectory(EPlatform.YouTube,
-                    s.GetService<IOptionsSnapshot<AppPathOptions>>()?.Value),
+                OutputFolder = s.GetRequiredService<AppPaths>().GetVideosDirectory(EPlatform.YouTube),
                 RestrictFilenames = true,
                 YoutubeDLPath = Path.Combine(binariesDirectory, YoutubeDLSharp.Utils.YtDlpBinaryName),
                 FFmpegPath = Path.Combine(binariesDirectory, YoutubeDLSharp.Utils.FfmpegBinaryName),

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Registration;
 using RescueTube.Core.Services;
+using RescueTube.Core.Utils;
 
 namespace RescueTube.Core;
 
@@ -11,6 +12,7 @@ public static class BuilderExtensions
     public static IServiceCollection AddBll(this IServiceCollection services)
     {
         services.AddOptionsFull<AppPathOptions>(AppPathOptions.Section);
+        services.AddSingleton<AppPaths>();
 
         services.AddScoped<ServiceUow>();
 

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Data;
 using RescueTube.Core.Data.Repositories;
+using RescueTube.DAL.EF.MigrationUtils;
 using RescueTube.DAL.EF.Repositories;
 
 namespace RescueTube.DAL.EF.Postgres;
@@ -22,7 +23,7 @@ public static class ServiceCollectionExtensions
             o => o
                 .UseNpgsql(connectionString)
                 .WithExpressionExpanding()
-            );
+        );
         services.AddScoped<AppDbContext>(GetPostgresAppDbContext);
         services.AddScoped<IAppDbContext>(GetPostgresAppDbContext);
 
@@ -31,6 +32,9 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<DataUow>();
         services.AddScoped<IDataUow>(s => s.GetRequiredService<DataUow>());
+
+        services.AddDataMigrations<PostgresAppDbContext>();
+
         return services;
     }
 }

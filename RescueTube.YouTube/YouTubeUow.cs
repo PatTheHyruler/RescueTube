@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Services;
 using YoutubeDLSharp;
@@ -20,7 +21,7 @@ public class YouTubeUow
 
     private YoutubeDL? _youtubeDl;
     public YoutubeDL YoutubeDl =>
-        _youtubeDl ??= _services.GetRequiredService<YoutubeDL>();
+        _youtubeDl ??= _services.GetRequiredService<YoutubeDL>(); 
 
     private YoutubeClient? _youTubeExplodeClient;
     public YoutubeClient YouTubeExplodeClient => _youTubeExplodeClient ??= new YoutubeClient();
@@ -38,7 +39,7 @@ public class YouTubeUow
         WriteInfoJson = true,
         RestrictFilenames = true,
         Output = Path.Combine(
-            AppPaths.GetVideosDirectory(EPlatform.YouTube, _services.GetService<AppPathOptions>()),
+            _services.GetRequiredService<AppPaths>().GetVideosDirectory(EPlatform.YouTube),
             $"(%(channel_id)s) %(uploader).{UnnecessaryFilePartLimit}B/%(upload_date)s - %(title).{UnnecessaryFilePartLimit}B - %(id)s/{GetUniqueFileIdentifier()}.%(ext)s"
         ),
     };

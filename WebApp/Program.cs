@@ -9,7 +9,9 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using RescueTube.Core.Utils;
 using RescueTube.DAL.EF;
+using RescueTube.DAL.EF.MigrationUtils;
 using RescueTube.DAL.EF.Postgres;
 using RescueTube.YouTube;
 using Serilog;
@@ -115,11 +117,10 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-if (!app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment() || true)
 {
     await using var scope = app.Services.CreateAsyncScope();
-    await using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await dbContext.MigrateAsync();
+    await scope.ServiceProvider.MigrateDbAsync<AppDbContext>();
 }
 
 app.SeedIdentity();
@@ -155,7 +156,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-var imagesDirectory = AppPaths.GetImagesDirectory(AppPathOptions.FromConfiguration(app.Configuration));
+var imagesDirectory = app.Services.GetRequiredService<AppPaths>().GetImagesDirectoryAbsolute();
 var imagesDirectoryPath = Path.Combine(app.Environment.ContentRootPath, imagesDirectory);
 Directory.CreateDirectory(imagesDirectoryPath);
 app.UseStaticFiles(new StaticFileOptions

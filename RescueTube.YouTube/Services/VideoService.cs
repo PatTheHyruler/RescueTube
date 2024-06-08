@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RescueTube.Core;
 using RescueTube.Core.Events.Events;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
 using RescueTube.Domain.Enums;
@@ -19,11 +20,13 @@ namespace RescueTube.YouTube.Services;
 public class VideoService : BaseYouTubeService
 {
     private readonly IMediator _mediator;
+    private readonly AppPaths _appPaths;
 
-    public VideoService(IServiceProvider services, ILogger<VideoService> logger, IMediator mediator) : base(services,
-        logger)
+    public VideoService(IServiceProvider services, ILogger<VideoService> logger, IMediator mediator, AppPaths appPaths)
+        : base(services, logger)
     {
         _mediator = mediator;
+        _appPaths = appPaths;
     }
 
     public async Task<VideoData?> FetchVideoDataYtdl(string id, bool fetchComments, CancellationToken ct = default)
@@ -201,13 +204,12 @@ public class VideoService : BaseYouTubeService
         }
 
         var videoFilePath = result.Data;
-        var appPathOptions = Services.GetService<IOptions<AppPathOptions>>()?.Value;
-        var infoJsonPath = AppPaths.GetFilePathWithoutExtension(videoFilePath) + ".info.json";
-        video.InfoJsonPath = AppPaths.GetPathRelativeToDownloads(infoJsonPath, appPathOptions);
+        var infoJsonPath = PathUtils.GetFilePathWithoutExtension(videoFilePath) + ".info.json";
+        video.InfoJsonPath = _appPaths.GetPathRelativeToDownloads(infoJsonPath);
         video.InfoJson = await File.ReadAllTextAsync(infoJsonPath, CancellationToken.None);
         DbCtx.VideoFiles.Add(new VideoFile
         {
-            FilePath = AppPaths.GetPathRelativeToDownloads(videoFilePath, appPathOptions),
+            FilePath = _appPaths.GetPathRelativeToDownloads(videoFilePath),
             ValidSince = DateTimeOffset.UtcNow, // Questionable semantics?
             LastFetched = DateTimeOffset.UtcNow,
             Video = video,
