@@ -61,7 +61,7 @@ public class VideoFileController : ControllerBase
         {
             try
             {
-                var requestClaims = _tokenService.ValidateJwt(requestToken, ignoreExpiration: false,
+                var requestClaims = _tokenService.ValidateJwtGetPrincipal(requestToken, ignoreExpiration: false,
                     audienceSuffix: GetAudienceSuffix(videoId)
                 );
                 tokenValidated = true;

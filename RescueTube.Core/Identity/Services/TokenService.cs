@@ -106,7 +106,7 @@ public class TokenService
             throw new InvalidJwtException();
         }
 
-        ValidateJwt(jwt, ignoreExpiration: true);
+        ValidateJwtGetPrincipal(jwt, ignoreExpiration: true);
 
         var userName = jwtToken.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value
                        ?? throw new InvalidJwtException();
@@ -164,7 +164,7 @@ public class TokenService
             throw new InvalidJwtException();
         }
 
-        ValidateJwt(jwt, ignoreExpiration: true);
+        ValidateJwtGetPrincipal(jwt, ignoreExpiration: true);
 
         var userId = principal.GetUserIdIfExists() ?? throw new InvalidJwtException();
         var jwtHash = HashJwt(jwt);
@@ -180,7 +180,10 @@ public class TokenService
             .ExecuteDeleteAsync();
     }
 
-    public ClaimsPrincipal ValidateJwt(string jwt, bool ignoreExpiration = true, string? audienceSuffix = null)
+    public DecodedJwt ValidateJwt(
+        string jwt,
+        bool ignoreExpiration = true,
+        string? audienceSuffix = null)
     {
         var validationParameters = IdentityHelpers.GetValidationParameters(
             key: _jwtBearerOptions.Key, issuer: _jwtBearerOptions.Issuer,
@@ -190,11 +193,18 @@ public class TokenService
         var tokenHandler = new JwtSecurityTokenHandler();
         try
         {
-            return tokenHandler.ValidateToken(jwt, validationParameters, out _);
+            var principal = tokenHandler.ValidateToken(jwt, validationParameters, out var securityToken);
+            return new DecodedJwt(principal, securityToken);
         }
         catch (Exception)
         {
             throw new InvalidJwtException();
         }
+    }
+
+    public ClaimsPrincipal ValidateJwtGetPrincipal(string jwt, bool ignoreExpiration = true, string? audienceSuffix = null)
+    {
+        return ValidateJwt(jwt, ignoreExpiration: ignoreExpiration, audienceSuffix: audienceSuffix)
+            .Principal;
     }
 }

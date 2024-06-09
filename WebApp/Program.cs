@@ -5,6 +5,7 @@ using RescueTube.Core.Identity;
 using Hangfire;
 using Hangfire.Console;
 using Hangfire.Console.Extensions;
+using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.FileProviders;
@@ -57,6 +58,7 @@ builder.Services.AddHangfire(configuration => configuration
 );
 builder.Services.AddHangfireServer();
 builder.Services.AddHangfireConsoleExtensions();
+builder.Services.AddSingleton<IDashboardAsyncAuthorizationFilter, HangfireDashboardAuthorizationFilter>();
 
 builder.Services.AddDbPersistenceEfPostgres(builder.Configuration);
 
@@ -187,8 +189,10 @@ app.UseAuthorization();
 
 app.UseHangfireDashboard(options: new DashboardOptions
 {
+    AppPath = null,
     DarkModeEnabled = true,
-    Authorization = new[] { new HangfireDashboardAuthorizationFilter() }
+    Authorization = app.Services.GetRequiredService<IEnumerable<IDashboardAuthorizationFilter>>(),
+    AsyncAuthorization = app.Services.GetRequiredService<IEnumerable<IDashboardAsyncAuthorizationFilter>>(),
 });
 
 app.MapControllers();

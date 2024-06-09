@@ -253,4 +253,16 @@ public class AccountController : ControllerBase
             }
         };
     }
+
+    /// <summary>
+    /// Get a JWT token that can be passed to the Hangfire dashboard to authenticate.
+    /// </summary>
+    /// <returns>The JWT string.</returns>
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.AdminOrSuperAdmin)]
+    [HttpPost]
+    public ActionResult<string> HangfireToken()
+    {
+        var jwt = _identityUow.TokenService.GenerateJwt(User, expiresInSeconds: 60, RescueTubeIdentity.HangfireJwtSuffix);
+        return Ok(jwt);
+    }
 }

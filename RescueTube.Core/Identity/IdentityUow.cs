@@ -30,9 +30,6 @@ public sealed class IdentityUow
     public UserService UserService => _userService ??= _services.GetRequiredService<UserService>();
 
     private TokenService? _tokenService;
-    /// <summary>
-    /// For use later when adding API support. Requires review.
-    /// </summary>
     public TokenService TokenService => _tokenService ??= _services.GetRequiredService<TokenService>();
 
     public Task SaveChangesAsync() => DataUow.SaveChangesAsync();
