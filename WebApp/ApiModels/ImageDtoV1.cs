@@ -16,7 +16,7 @@ public class ImageDtoV1
     public string? OriginalUrl { get; set; }
     public string? LocalUrl { get; set; }
     public string? LocalFilePath { get; set; }
-    public required string Url { get; set; }
+    public string? Url { get; set; }
 
     public int? Width { get; set; }
     public int? Height { get; set; }

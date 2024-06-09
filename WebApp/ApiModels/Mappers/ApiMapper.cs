@@ -7,35 +7,35 @@ namespace WebApp.ApiModels.Mappers;
 
 public static class ApiMapper
 {
-    public static VideoSimpleDtoV1 MapToVideoSimpleDtoV1(this VideoSimple srcVid, string imageBaseUrl)
+    public static VideoSimpleDtoV1 MapToVideoSimpleDtoV1(this VideoSimple srcVid, string? baseUrl)
     {
         return new VideoSimpleDtoV1
         {
             Id = srcVid.Id,
             Title = srcVid.Title.Select(MapTranslation).ToList(),
             Description = srcVid.Description.Select(MapTranslation).ToList(),
-            
-            Thumbnail = srcVid.Thumbnail?.MapImage(imageBaseUrl),
-            
+
+            Thumbnail = srcVid.Thumbnail?.MapImage(baseUrl),
+
             DurationSeconds = srcVid.Duration?.TotalSeconds,
-            
+
             Platform = srcVid.Platform,
             IdOnPlatform = srcVid.IdOnPlatform,
-            
-            Authors = srcVid.Authors.Select(a => a.MapAuthorSimpleDtoV1(imageBaseUrl)).ToList(),
-            
+
+            Authors = srcVid.Authors.Select(a => a.MapAuthorSimpleDtoV1(baseUrl)).ToList(),
+
             CreatedAt = srcVid.CreatedAt,
             PublishedAt = srcVid.PublishedAt,
             AddedToArchiveAt = srcVid.AddedToArchiveAt,
-            
+
             ExternalUrl = srcVid.Url,
             EmbedUrl = srcVid.EmbedUrl,
-            
+
             LastCommentsFetch = srcVid.LastCommentsFetch,
         };
     }
 
-    public static AuthorSimpleDtoV1 MapAuthorSimpleDtoV1(this AuthorSimple src, string imageBaseUrl)
+    public static AuthorSimpleDtoV1 MapAuthorSimpleDtoV1(this AuthorSimple src, string? baseUrl)
     {
         return new AuthorSimpleDtoV1
         {
@@ -45,11 +45,11 @@ public static class ApiMapper
             Platform = src.Platform,
             IdOnPlatform = src.IdOnPlatform,
             UrlOnPlatform = src.UrlOnPlatform,
-            ProfileImages = src.ProfileImages.Select(i => i.MapImage(imageBaseUrl)),
+            ProfileImages = src.ProfileImages.Select(i => i.MapImage(baseUrl)),
         };
     }
 
-    public static ImageDtoV1 MapImage(this Image src, string imageBaseUrl)
+    public static ImageDtoV1 MapImage(this Image src, string? baseUrl)
     {
         return new ImageDtoV1
         {
@@ -63,8 +63,8 @@ public static class ApiMapper
             Ext = src.Ext,
 
             OriginalUrl = src.Url,
-            LocalUrl = src.GetLocalUrl(imageBaseUrl),
-            Url = src.GetAnyUrl(imageBaseUrl),
+            LocalUrl = src.GetLocalUrl(baseUrl),
+            Url = src.GetAnyUrl(baseUrl),
 
             LocalFilePath = src.LocalFilePath,
 
@@ -85,7 +85,7 @@ public static class ApiMapper
         };
     }
 
-    public static CommentDtoV1 MapComment(this CommentDto src, string imageBaseUrl)
+    public static CommentDtoV1 MapComment(this CommentDto src, string? baseUrl)
     {
         return new CommentDtoV1
         {
@@ -100,12 +100,12 @@ public static class ApiMapper
             LastFetchOfficial = src.LastFetchOfficial,
             LastSuccessfulFetchOfficial = src.LastSuccessfulFetchOfficial,
             AddedToArchiveAt = src.AddedToArchiveAt,
-            Author = src.Author.MapAuthorSimpleDtoV1(imageBaseUrl),
+            Author = src.Author.MapAuthorSimpleDtoV1(baseUrl),
             ConversationReplies = src.ConversationReplies?
-                .Select(c => c.MapComment(imageBaseUrl))
+                .Select(c => c.MapComment(baseUrl))
                 .ToList(),
             DirectReplies = src.DirectReplies?
-                .Select(c => c.MapComment(imageBaseUrl))
+                .Select(c => c.MapComment(baseUrl))
                 .ToList(),
             Content = src.Content,
             CreatedAt = src.CreatedAt,
