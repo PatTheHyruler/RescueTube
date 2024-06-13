@@ -17,10 +17,11 @@ public class VideoAddedCommentFetchHandler : INotificationHandler<VideoAddedEven
 
     public Task Handle(VideoAddedEvent notification, CancellationToken cancellationToken)
     {
-        using var scope = _serviceScopeFactory.CreateAsyncScope();
-        var backgroundJobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
-        backgroundJobClient.Enqueue<FetchCommentsJob>(x =>
-            x.FetchVideoComments(notification.IdOnPlatform, default));
+        // TODO: Re-enable once comments job has been reworked
+        // using var scope = _serviceScopeFactory.CreateAsyncScope();
+        // var backgroundJobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
+        // backgroundJobClient.Enqueue<FetchCommentsJob>(x =>
+        //     x.FetchVideoComments(notification.IdOnPlatform, default));
         
         return Task.CompletedTask;
     }
