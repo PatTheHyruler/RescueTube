@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace RescueTube.YouTube.Utils;
@@ -33,29 +34,14 @@ public static class Url
         return false;
     }
 
-    public static bool IsYouTubeUrl(string url)
-    {
-        return IsPlaylistUrl(url) || IsVideoUrl(url) || IsAuthorUrl(url);
-    }
-
-    public static bool IsVideoUrl(string url) => IsVideoUrl(url, out _);
-
-    public static bool IsVideoUrl(string url, out string? id) =>
+    public static bool IsVideoUrl(string url, [NotNullWhen(true)] out string? id) =>
         IsRegexUrl(url, VideoRegex, "id", out id);
 
-    public static bool IsPlaylistUrl(string url) => IsPlaylistUrl(url, out _);
-
-    public static bool IsPlaylistUrl(string url, out string? id) =>
+    public static bool IsPlaylistUrl(string url, [NotNullWhen(true)] out string? id) =>
         IsRegexUrl(url, PlaylistRegex, "id", out id);
 
     public static bool IsAuthorHandleUrl(string url, out string? handle) =>
         IsRegexUrl(url, AuthorHandleRegex, "handle", out handle);
-
-    public static bool IsAuthorUrl(string url)
-    {
-        // TODO
-        return false;
-    }
 
     public static bool IsVideoThumbnailUrl(string url, out ThumbnailQuality? quality, out ThumbnailTag? tag, out string? ext)
     {

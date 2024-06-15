@@ -7,7 +7,4 @@ public class LinkSubmissionRequestDtoV1
 {
     [Required]
     public required string Url { get; set; }
-
-    public EPlatform? PlatformHint { get; set; }
-    public EEntityType? TypeHint { get; set; }
 }

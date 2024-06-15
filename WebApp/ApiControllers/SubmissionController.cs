@@ -28,23 +28,21 @@ public class SubmissionController : ControllerBase
     /// <returns>Details about the created submission, or error details if submission failed.</returns>
     /// <response code="200">Submission created successfully.</response>
     /// <response code="400">Submitted URL not recognized as a supported URL for archiving.</response>
-    /// <response code="404">Entity matching submitted URL not found on platform</response>
     [SwaggerResponse(StatusCodes.Status200OK)]
+    [SwaggerResponse(StatusCodes.Status400BadRequest)]
     [HttpPost]
     public async Task<ActionResult<LinkSubmissionResponseDtoV1>> Create([FromBody] LinkSubmissionRequestDtoV1 input, CancellationToken ct = default)
     {
         try
         {
-            var successResult = await _serviceUow.SubmissionService.SubmitGenericLinkAsync(input.Url, User, ct);
+            var submission = _serviceUow.SubmissionService.SubmitGenericLink(input.Url, User);
             await _serviceUow.SaveChangesAsync(ct);
             return new LinkSubmissionResponseDtoV1
             {
-                SubmissionId = successResult.SubmissionId,
-                Type = successResult.Type,
-                Platform = successResult.Platform,
-                IdOnPlatform = successResult.IdOnPlatform,
-                AlreadyAdded = successResult.AlreadyAdded,
-                EntityId = successResult.EntityId,
+                SubmissionId = submission.Id,
+                Type = submission.EntityType,
+                Platform = submission.Platform,
+                IdOnPlatform = submission.IdOnPlatform,
             };
         }
         catch (UnrecognizedUrlException e)
@@ -55,18 +53,6 @@ public class SubmissionController : ControllerBase
                 Message = e.Message,
                 Details = new
                 {
-                    input.Url,
-                },
-            });
-        }
-        catch (VideoNotFoundOnPlatformException e)
-        {
-            return NotFound(new ErrorResponseDto
-            {
-                ErrorType = EErrorType.SubmissionEntityNotFound,
-                Message = e.Message,
-                Details =
-                new {
                     input.Url,
                 },
             });

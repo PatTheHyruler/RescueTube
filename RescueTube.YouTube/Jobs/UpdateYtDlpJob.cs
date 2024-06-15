@@ -13,7 +13,7 @@ public class UpdateYtDlpJob
     }
 
     [DisableConcurrentExecution(60)]
-    public async Task UpdateYouTubeDl()
+    public async Task UpdateYouTubeDlAsync()
     {
         await _youtubeDl.RunUpdate();
     }

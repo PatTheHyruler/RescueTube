@@ -1,10 +1,7 @@
 using System.Text;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using RescueTube.Core;
 using RescueTube.Core.Events.Events;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
@@ -29,7 +26,7 @@ public class VideoService : BaseYouTubeService
         _appPaths = appPaths;
     }
 
-    public async Task<VideoData?> FetchVideoDataYtdl(string id, bool fetchComments, CancellationToken ct = default)
+    public async Task<VideoData?> FetchVideoDataYtdlAsync(string id, bool fetchComments, CancellationToken ct = default)
     {
         var videoResult = await YouTubeUow.YoutubeDl.RunVideoDataFetch(
             Url.ToVideoUrl(id), fetchComments: fetchComments, ct: ct);
@@ -45,13 +42,13 @@ public class VideoService : BaseYouTubeService
         return videoResult.Data;
     }
 
-    public async Task<Video?> AddVideo(string id, CancellationToken ct = default)
+    public async Task<Video?> AddVideoAsync(string id, CancellationToken ct = default)
     {
-        var videoData = await FetchVideoDataYtdl(id, false, ct);
-        return videoData == null ? null : await AddVideo(videoData, ct);
+        var videoData = await FetchVideoDataYtdlAsync(id, false, ct);
+        return videoData == null ? null : await AddVideoAsync(videoData, ct);
     }
 
-    public async Task<Video> AddVideo(VideoData videoData, CancellationToken ct = default)
+    public async Task<Video> AddVideoAsync(VideoData videoData, CancellationToken ct = default)
     {
         var video = new Video
         {
@@ -155,7 +152,7 @@ public class VideoService : BaseYouTubeService
         return video;
     }
 
-    public async Task DownloadVideo(Guid videoId, CancellationToken ct)
+    public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
         var query = DbCtx.Videos
             .Where(e => e.Platform == EPlatform.YouTube)
@@ -164,10 +161,10 @@ public class VideoService : BaseYouTubeService
             .Where(e => e.Id == videoId);
 
         var video = await query.FirstAsync(ct);
-        await DownloadVideo(video, ct);
+        await DownloadVideoAsync(video, ct);
     }
 
-    private async Task DownloadVideo(Video video, CancellationToken ct = default)
+    private async Task DownloadVideoAsync(Video video, CancellationToken ct = default)
     {
         Logger.LogInformation("Started downloading video {IdOnPlatform} on platform {Platform}",
             video.IdOnPlatform, video.Platform);

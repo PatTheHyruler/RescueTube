@@ -26,7 +26,7 @@ public class VideoAddedDownloadHandler : INotificationHandler<VideoAddedEvent>
         using var scope = _serviceScopeFactory.CreateAsyncScope();
         var backgroundJobs = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
         backgroundJobs.Enqueue<DownloadVideoJob>(x => 
-            x.DownloadVideo(notification.Id, default));
+            x.DownloadVideoAsync(notification.Id, default));
 
         return Task.CompletedTask;
     }

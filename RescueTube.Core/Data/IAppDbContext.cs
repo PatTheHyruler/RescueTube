@@ -33,4 +33,6 @@ public interface IAppDbContext
     public DbSet<User> Users { get; }
     public DbSet<Role> Roles { get; }
     public DbSet<UserRole> UserRoles { get; }
+
+    public Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

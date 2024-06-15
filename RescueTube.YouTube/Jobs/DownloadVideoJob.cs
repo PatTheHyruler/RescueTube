@@ -1,5 +1,6 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.Core.Jobs.Filters;
 using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs;
@@ -16,13 +17,14 @@ public class DownloadVideoJob
     }
 
     [AutomaticRetry(Attempts = 0)]
-    public async Task DownloadVideo(Guid videoId, CancellationToken ct)
+    [DisableConcurrentSameArgExecution(60 * 10)]
+    public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
-        await _videoService.DownloadVideo(videoId, ct);
+        await _videoService.DownloadVideoAsync(videoId, ct);
         await _videoService.DataUow.SaveChangesAsync(CancellationToken.None);
     }
 
-    public async Task DownloadNotDownloadedVideos(CancellationToken ct)
+    public async Task DownloadNotDownloadedVideosAsync(CancellationToken ct)
     {
         var addedToArchiveAtCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
         var videoIds = _videoService.DbCtx.Videos
@@ -39,7 +41,7 @@ public class DownloadVideoJob
                 break;
             }
             _backgroundJobClient.Enqueue<DownloadVideoJob>(x =>
-                x.DownloadVideo(videoId, default));
+                x.DownloadVideoAsync(videoId, default));
         }
     }
 }

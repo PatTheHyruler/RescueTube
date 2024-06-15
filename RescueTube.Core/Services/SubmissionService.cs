@@ -1,20 +1,28 @@
 using System.Security.Claims;
 using System.Security.Principal;
+using MediatR;
 using RescueTube.Core.Identity.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
 using RescueTube.Core.Contracts;
-using RescueTube.Core.DTO.Entities;
+using RescueTube.Core.Events.Events;
 using RescueTube.Core.Exceptions;
 using RescueTube.Core.Identity;
 using RescueTube.Domain.Entities;
-using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Services;
 
 public class SubmissionService : BaseService
 {
+    private readonly IMediator _mediator;
+
+    public SubmissionService(IServiceProvider services, ILogger<SubmissionService> logger, IMediator mediator)
+        : base(services, logger)
+    {
+        _mediator = mediator;
+    }
+
     private IEnumerable<IPlatformSubmissionHandler> SubmissionHandlers =>
         Services.GetRequiredService<IEnumerable<IPlatformSubmissionHandler>>();
 
@@ -24,41 +32,32 @@ public class SubmissionService : BaseService
     }
 
     /// <exception cref="UnrecognizedUrlException">URL was not recognized and can't be archived.</exception>
-    /// <exception cref="VideoNotFoundOnPlatformException">URL was not recognized and can't be archived.</exception>
-    public Task<LinkSubmissionSuccessResult> SubmitGenericLinkAsync(
-        string url, ClaimsPrincipal user, CancellationToken ct = default)
+    public Submission SubmitGenericLink(
+        string url, ClaimsPrincipal user)
     {
-        return SubmitGenericLinkAsync(url, user.GetUserId(), IsAllowedToAutoSubmit(user), ct);
+        return SubmitGenericLink(url, user.GetUserId(), IsAllowedToAutoSubmit(user));
     }
 
-    private async Task<LinkSubmissionSuccessResult> SubmitGenericLinkAsync(
-        string url, Guid submitterId, bool autoSubmit, CancellationToken ct = default)
+    private Submission SubmitGenericLink(
+        string url, Guid submitterId, bool autoSubmit)
     {
         foreach (var submissionHandler in SubmissionHandlers)
         {
-            if (submissionHandler.IsPlatformUrl(url))
+            if (!submissionHandler.IsPlatformUrl(url, out var recognizedPlatformUrl)) continue;
+
+            var submission = new Submission(recognizedPlatformUrl.IdOnPlatform, recognizedPlatformUrl.Platform,
+                recognizedPlatformUrl.EntityType, submitterId, autoSubmit);
+            DbCtx.Submissions.Add(submission);
+            DataUow.RegisterSavedChangesCallbackRunOnce(() => _mediator.Publish(new SubmissionAddedEvent
             {
-                return await submissionHandler.SubmitLink(url, submitterId, autoSubmit, ct);
-            }
+                EntityType = submission.EntityType,
+                Platform = submission.Platform,
+                SubmissionId = submission.Id,
+                AutoSubmit = autoSubmit,
+            }));
+            return submission;
         }
 
         throw new UnrecognizedUrlException(url);
-    }
-
-    public async Task<Submission> Add(Video video, Guid submitterId, bool autoSubmit, CancellationToken ct = default)
-    {
-        var submission = DbCtx.Submissions.Add(new Submission(video, submitterId, autoSubmit));
-        if (autoSubmit) await ServiceUow.AuthorizationService.AuthorizeVideoIfNotAuthorized(submitterId, video.Id, ct);
-        return submission.Entity;
-    }
-
-    public Submission Add(string idOnPlatform, EPlatform platform, EEntityType entityType, Guid submitterId,
-        bool autoSubmit)
-    {
-        return DbCtx.Submissions.Add(new Submission(idOnPlatform, platform, entityType, submitterId, autoSubmit)).Entity;
-    }
-
-    public SubmissionService(IServiceProvider services, ILogger<SubmissionService> logger) : base(services, logger)
-    {
     }
 }

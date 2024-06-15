@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.DependencyInjection;
-using RescueTube.Core;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Services;

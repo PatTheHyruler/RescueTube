@@ -21,7 +21,7 @@ public class CommentService : BaseYouTubeService
 
     public async Task UpdateComments(string videoIdOnPlatform, CancellationToken ct)
     {
-        var videoData = await YouTubeUow.VideoService.FetchVideoDataYtdl(videoIdOnPlatform, true, ct);
+        var videoData = await YouTubeUow.VideoService.FetchVideoDataYtdlAsync(videoIdOnPlatform, true, ct);
         if (videoData?.Comments == null)
         {
             Logger.LogError("Failed to fetch comments for video {VideoId}", videoIdOnPlatform);
@@ -61,8 +61,8 @@ public class CommentService : BaseYouTubeService
         }
 
         // TODO: What to do if video has 20000 comments? Memory issues?
-        var commentsWithoutParent = new List<(RescueTube.Domain.Entities.Comment Comment, string Parent)>();
-        var commentsWithoutRoot = new List<(RescueTube.Domain.Entities.Comment Comment, string Root)>();
+        var commentsWithoutParent = new List<(Domain.Entities.Comment Comment, string Parent)>();
+        var commentsWithoutRoot = new List<(Domain.Entities.Comment Comment, string Root)>();
 
         var authorFetchArgs = commentDatas.Where(c => video.Comments
                 .All(e => e.IdOnPlatform != c.ID))
