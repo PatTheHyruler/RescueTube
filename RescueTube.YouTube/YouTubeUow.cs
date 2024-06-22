@@ -49,6 +49,9 @@ public class YouTubeUow
     private VideoService? _videoService;
     public VideoService VideoService => _videoService ??= _services.GetRequiredService<VideoService>();
 
+    private PlaylistService? _playlistService;
+    public PlaylistService PlaylistService => _playlistService ??= _services.GetRequiredService<PlaylistService>();
+    
     private AuthorService? _authorService;
     public AuthorService AuthorService => _authorService ??= _services.GetRequiredService<AuthorService>();
 }

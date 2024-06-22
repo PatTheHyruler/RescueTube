@@ -79,7 +79,7 @@ public class CommentService : BaseYouTubeService
             var existingDomainComment = video.Comments.SingleOrDefault(c => c.IdOnPlatform == commentData.ID);
             if (existingDomainComment != null)
             {
-                await _entityUpdateService.UpdateComment(existingDomainComment, comment);
+                await _entityUpdateService.UpdateComment(existingDomainComment, comment, false);
                 continue;
             }
 

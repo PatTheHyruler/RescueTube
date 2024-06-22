@@ -29,6 +29,10 @@ public interface IAppDbContext
     public DbSet<EntityAccessPermission> EntityAccessPermissions { get; }
     public DbSet<StatusChangeEvent> StatusChangeEvents { get; }
     public DbSet<Submission> Submissions { get; }
+    public DbSet<Playlist> Playlists { get; }
+    public DbSet<PlaylistItem> PlaylistItems { get; }
+    public DbSet<PlaylistItemPositionHistory> PlaylistItemPositionHistories { get; }
+    public DbSet<PlaylistImage> PlaylistImages { get; }
 
     public DbSet<User> Users { get; }
     public DbSet<Role> Roles { get; }

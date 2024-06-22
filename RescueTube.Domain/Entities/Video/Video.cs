@@ -18,14 +18,14 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
 
     public TimeSpan? Duration { get; set; }
     
-    public ICollection<VideoStatisticSnapshot>? VideoStatisticSnapshots { get; set; }
+    public List<VideoStatisticSnapshot>? VideoStatisticSnapshots { get; set; }
 
-    public ICollection<Caption>? Captions { get; set; }
-    public ICollection<VideoImage>? VideoImages { get; set; }
+    public List<Caption>? Captions { get; set; }
+    public List<VideoImage>? VideoImages { get; set; }
 
-    public ICollection<VideoTag>? VideoTags { get; set; }
+    public List<VideoTag>? VideoTags { get; set; }
 
-    public ICollection<VideoFile>? VideoFiles { get; set; }
+    public List<VideoFile>? VideoFiles { get; set; }
 
     public int FailedDownloadAttempts { get; set; }
     public int FailedAuthorFetches { get; set; }
@@ -61,4 +61,6 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
     public ICollection<StatusChangeEvent>? StatusChangeEvents { get; set; }
     public ICollection<EntityAccessPermission>? EntityAccessPermissions { get; set; }
     public ICollection<Comment>? Comments { get; set; }
+
+    public ICollection<PlaylistItem>? PlaylistItems { get; set; }
 }

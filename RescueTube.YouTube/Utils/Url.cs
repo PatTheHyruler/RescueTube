@@ -43,30 +43,26 @@ public static class Url
     public static bool IsAuthorHandleUrl(string url, out string? handle) =>
         IsRegexUrl(url, AuthorHandleRegex, "handle", out handle);
 
-    public static bool IsVideoThumbnailUrl(string url, out ThumbnailQuality? quality, out ThumbnailTag? tag, out string? ext)
+    public static bool IsVideoThumbnailUrl(string url, out ParsedThumbnailInfo parsedThumbnailInfo)
     {
-        quality = null;
-        tag = null;
-        ext = null;
+        parsedThumbnailInfo = new ParsedThumbnailInfo();
 
         var match = VideoThumbnailRegex.Match(url);
         if (!match.Success) return false;
 
-        Group? valueGroup;
-
-        if (match.Groups.TryGetValue("quality", out valueGroup) && valueGroup.Success)
+        if (match.Groups.TryGetValue("quality", out var valueGroup) && valueGroup.Success)
         {
-            quality = ThumbnailQuality.FromString(valueGroup.Value);
+            parsedThumbnailInfo.Quality = ThumbnailQuality.FromString(valueGroup.Value);
         }
 
         if (match.Groups.TryGetValue("tag", out valueGroup) && valueGroup.Success)
         {
-            tag = ThumbnailTag.FromString(valueGroup.Value);
+            parsedThumbnailInfo.Tag = ThumbnailTag.FromString(valueGroup.Value);
         }
 
         if (match.Groups.TryGetValue("ext", out valueGroup) && valueGroup.Success)
         {
-            ext = valueGroup.Value;
+            parsedThumbnailInfo.Ext = valueGroup.Value;
         }
 
         return true;

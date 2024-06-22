@@ -14,6 +14,6 @@ public static class PrivacyStatusExtensions
 {
     public static bool IsAvailable(this EPrivacyStatus? privacyStatus)
     {
-        return privacyStatus is EPrivacyStatus.Public or EPrivacyStatus.Unlisted;
+        return privacyStatus is EPrivacyStatus.Public or EPrivacyStatus.Unlisted or null;
     }
 }

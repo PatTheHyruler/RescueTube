@@ -17,10 +17,13 @@ public class StatusChangeEvent : BaseIdDbEntity
     public Guid? VideoId { get; set; }
     public Video? Video { get; set; }
 
+    public Guid? PlaylistId { get; set; }
+    public Playlist? Playlist { get; set; }
+
     public StatusChangeEvent()
     {
     }
-    
+
     private StatusChangeEvent(IPrivacyEntity entity, EPrivacyStatus? newPrivacyStatus,
         bool? newAvailability, DateTimeOffset? occurredAt)
     {
@@ -40,11 +43,18 @@ public class StatusChangeEvent : BaseIdDbEntity
     {
         VideoId = video.Id;
     }
-    
+
     public StatusChangeEvent(Author author, EPrivacyStatus? newPrivacyStatus, bool? newAvailability,
         DateTimeOffset? occurredAt = null) :
         this(author as IPrivacyEntity, newPrivacyStatus, newAvailability, occurredAt)
     {
         AuthorId = author.Id;
+    }
+
+    public StatusChangeEvent(Playlist playlist, EPrivacyStatus? newPrivacyStatus, bool? newAvailability,
+        DateTimeOffset? occurredAt = null) :
+        this(playlist as IPrivacyEntity, newPrivacyStatus, newAvailability, occurredAt)
+    {
+        PlaylistId = playlist.Id;
     }
 }

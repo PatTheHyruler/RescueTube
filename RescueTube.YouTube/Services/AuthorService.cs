@@ -17,12 +17,13 @@ public class AuthorService : BaseYouTubeService
     private readonly IMediator _mediator;
     private DateTimeOffset _lastYtExplodeRateLimitHit = DateTimeOffset.MinValue;
 
-    public AuthorService(IServiceProvider services, ILogger<AuthorService> logger, IMediator mediator) : base(services, logger)
+    public AuthorService(IServiceProvider services, ILogger<AuthorService> logger, IMediator mediator) : base(services,
+        logger)
     {
         _mediator = mediator;
     }
 
-    private async Task<Author> AddOrGetAuthor(VideoData videoData, CancellationToken ct = default)
+    public async Task<Author> AddOrGetAuthor(VideoData videoData, CancellationToken ct = default)
     {
         return await AddOrGetAuthor(videoData.ChannelID, videoData.ToDomainAuthor, ct);
     }
@@ -30,7 +31,28 @@ public class AuthorService : BaseYouTubeService
     public async Task AddAndSetAuthor(Video video, VideoData videoData, CancellationToken ct = default)
     {
         var author = await AddOrGetAuthor(videoData, ct);
-        DbCtx.VideoAuthors.SetVideoAuthor(video.Id, author.Id);
+        bool hasAuthor;
+        if (video.VideoAuthors == null)
+        {
+            hasAuthor = await DbCtx.VideoAuthors
+                .Where(va => va.Author!.Platform == EPlatform.YouTube
+                             && va.Author!.IdOnPlatform == author.IdOnPlatform
+                             && va.Role == EAuthorRole.Publisher)
+                .AnyAsync(cancellationToken: ct);
+        }
+        else
+        {
+            hasAuthor = video.VideoAuthors.Any(va =>
+                va.Author != null
+                && va.Author.Platform == EPlatform.YouTube
+                && va.Author.IdOnPlatform == author.IdOnPlatform
+                && va.Role == EAuthorRole.Publisher);
+        }
+
+        if (!hasAuthor)
+        {
+            DbCtx.VideoAuthors.SetVideoAuthor(video.Id, author.Id);
+        }
     }
 
     private async Task<Author> AddOrGetAuthor(string id, Func<Author> newAuthorFunc, CancellationToken ct = default)
@@ -117,7 +139,8 @@ public class AuthorService : BaseYouTubeService
         }
         else
         {
-            Logger.LogInformation("Skipped fetching extra data for {Platform} author {IdOnPlatform}, latest rate limit hit was at {LatestRateLimitHit}",
+            Logger.LogInformation(
+                "Skipped fetching extra data for {Platform} author {IdOnPlatform}, latest rate limit hit was at {LatestRateLimitHit}",
                 EPlatform.YouTube, arg.AuthorId, _lastYtExplodeRateLimitHit);
         }
     }

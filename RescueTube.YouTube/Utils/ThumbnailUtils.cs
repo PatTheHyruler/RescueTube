@@ -6,24 +6,28 @@ namespace RescueTube.YouTube.Utils;
 
 public static class ThumbnailUtils
 {
-    public static VideoImage ToVideoImage(this ThumbnailData data)
+    private static Image ToImage(ThumbnailData data, ParsedThumbnailInfo? parsedThumbnailInfo = null)
     {
-        Url.IsVideoThumbnailUrl(data.Url, out var quality, out var tag, out var ext);
-
-        var image = new Image
+        return new Image
         {
             Platform = EPlatform.YouTube,
             IdOnPlatform = data.ID,
 
-            Key = tag?.Identifier,
-            Quality = quality?.Name,
-            Ext = ext,
+            Key = parsedThumbnailInfo?.Tag?.Identifier,
+            Quality = parsedThumbnailInfo?.Quality?.Name,
+            Ext = parsedThumbnailInfo?.Ext,
 
             Url = data.Url,
 
-            Width = quality?.Width,
-            Height = quality?.Height,
+            Width = data.Width ?? parsedThumbnailInfo?.Quality?.Width,
+            Height = data.Height ?? parsedThumbnailInfo?.Quality?.Height,
         };
+    }
+    
+    public static VideoImage ToVideoImage(this ThumbnailData data)
+    {
+        Url.IsVideoThumbnailUrl(data.Url, out var parsedThumbnailInfo);
+        var image = ToImage(data, parsedThumbnailInfo);
 
         var videoImage = new VideoImage
         {
@@ -34,5 +38,19 @@ public static class ThumbnailUtils
         };
 
         return videoImage;
+    }
+
+    public static PlaylistImage ToPlaylistImage(this ThumbnailData data)
+    {
+        Url.IsVideoThumbnailUrl(data.Url, out var parsedVideoThumbnailInfo);
+        var image = ToImage(data, parsedVideoThumbnailInfo);
+
+        var playlistImage = new PlaylistImage
+        {
+            ImageType = EImageType.Thumbnail,
+            Image = image,
+        };
+
+        return playlistImage;
     }
 }

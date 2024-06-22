@@ -40,6 +40,7 @@ public static class Setup
 
         services.AddScoped<SubmitService>();
         services.AddScoped<VideoService>();
+        services.AddScoped<PlaylistService>();
         services.AddScoped<AuthorService>();
         services.AddScoped<CommentService>();
 

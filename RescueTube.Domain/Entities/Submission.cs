@@ -25,6 +25,9 @@ public class Submission : BaseIdDbEntity
     public Guid? VideoId { get; set; }
     public Video? Video { get; set; }
 
+    public Guid? PlaylistId { get; set; }
+    public Playlist? Playlist { get; set; }
+
     public Submission()
     {
     }

@@ -26,6 +26,8 @@ public class ServiceUow
     public VideoService VideoService => _services.GetRequiredService<VideoService>();
     public CommentService CommentService => _services.GetRequiredService<CommentService>();
 
+    public EntityUpdateService EntityUpdateService => _services.GetRequiredService<EntityUpdateService>();
+    
     public VideoPresentationService VideoPresentationService =>
         _services.GetRequiredService<VideoPresentationService>();
 

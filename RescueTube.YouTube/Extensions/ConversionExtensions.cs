@@ -11,7 +11,7 @@ public static class ConversionExtensions
     {
         return availability switch
         {
-            Availability.Private => EPrivacyStatus.Private,
+            Availability.Private => null, // We can't access private videos so if the status is private (the enum default value), it's likely incorrect
             Availability.PremiumOnly => EPrivacyStatus.PremiumOnly,
             Availability.SubscriberOnly => EPrivacyStatus.SubscriberOnly,
             Availability.NeedsAuth => EPrivacyStatus.NeedsAuth,

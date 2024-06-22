@@ -22,4 +22,5 @@ public class Image : BaseIdDbEntity
 
     public ICollection<VideoImage>? VideoImages { get; set; }
     public ICollection<AuthorImage>? AuthorImages { get; set; }
+    public ICollection<PlaylistImage>? PlaylistImages { get; set; }
 }

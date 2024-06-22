@@ -46,6 +46,11 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
 
     public DbSet<Submission> Submissions => Set<Submission>();
 
+    public DbSet<Playlist> Playlists => Set<Playlist>();
+    public DbSet<PlaylistItem> PlaylistItems => Set<PlaylistItem>();
+    public DbSet<PlaylistItemPositionHistory> PlaylistItemPositionHistories => Set<PlaylistItemPositionHistory>();
+    public DbSet<PlaylistImage> PlaylistImages => Set<PlaylistImage>();
+
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
 

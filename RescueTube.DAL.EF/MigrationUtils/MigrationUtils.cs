@@ -38,7 +38,7 @@ public static class MigrationUtils
                     throw new Exception();
                 }
 
-                await using var dbConnection = dbContext.Database.GetDbConnection();
+                var dbConnection = dbContext.Database.GetDbConnection();
                 await dbConnection.OpenAsync();
                 try
                 {
@@ -51,10 +51,7 @@ public static class MigrationUtils
                     await dbConnection.CloseAsync();
                 }
             }
-            else
-            {
-                await migrator.MigrateAsync(migration);
-            }
+            await migrator.MigrateAsync(migration);
         }
     }
 

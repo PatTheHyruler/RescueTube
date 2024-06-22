@@ -64,6 +64,10 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
                 var video = await SubmitVideoAsync(submission.IdOnPlatform, ct);
                 submission.VideoId = video.Id;
                 break;
+            case EEntityType.Playlist:
+                var playlist = await SubmitPlaylistAsync(submission.IdOnPlatform, ct);
+                submission.PlaylistId = playlist.Id;
+                break;
             default:
                 throw new ApplicationException($"Unsupported entity type {submission.EntityType}");
         }
@@ -83,5 +87,19 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 
         var addedVideo = await YouTubeUow.VideoService.AddVideoAsync(videoIdOnPlatform, ct);
         return addedVideo ?? throw new VideoNotFoundOnPlatformException();
+    }
+
+    private async Task<Playlist> SubmitPlaylistAsync(string playlistIdOnPlatform, CancellationToken ct)
+    {
+        var existingPlaylist = await DbCtx.Playlists
+            .Where(p => p.Platform == EPlatform.YouTube && p.IdOnPlatform == playlistIdOnPlatform)
+            .FirstOrDefaultAsync(ct);
+        if (existingPlaylist != null)
+        {
+            return existingPlaylist;
+        }
+
+        var addedPlaylist = await YouTubeUow.PlaylistService.AddPlaylistAsync(playlistIdOnPlatform, ct);
+        return addedPlaylist ?? throw new ApplicationException("Playlist not found on platform");
     }
 }

@@ -48,7 +48,7 @@ public class VideoService : BaseYouTubeService
         return videoData == null ? null : await AddVideoAsync(videoData, ct);
     }
 
-    public async Task<Video> AddVideoAsync(VideoData videoData, CancellationToken ct = default)
+    private Video CreateVideoFromVideoData(VideoData videoData)
     {
         var video = new Video
         {
@@ -91,7 +91,7 @@ public class VideoService : BaseYouTubeService
                 }
             },
 
-            Captions = videoData.Subtitles
+            Captions = videoData.Subtitles?
                 .SelectMany(kvp => kvp.Value.Select(subtitleData => new Caption
                 {
                     Culture = kvp.Key,
@@ -101,8 +101,8 @@ public class VideoService : BaseYouTubeService
                     Platform = EPlatform.YouTube,
                     Url = subtitleData.Url,
                 })).ToList(),
-            VideoImages = videoData.Thumbnails.Select(e => e.ToVideoImage()).ToList(),
-            VideoTags = videoData.Tags.Select(e => new VideoTag
+            VideoImages = videoData.Thumbnails?.Select(e => e.ToVideoImage()).ToList(),
+            VideoTags = videoData.Tags?.Select(e => new VideoTag
             {
                 Tag = e,
                 NormalizedTag = e
@@ -127,7 +127,42 @@ public class VideoService : BaseYouTubeService
             LastSuccessfulFetchUnofficial = DateTimeOffset.UtcNow,
             AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
+        return video;
+    }
 
+    public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, CancellationToken ct = default)
+    {
+        var video = await DbCtx.Videos
+            .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoData.ID)
+            .Include(v => v.Title)
+            .ThenInclude(t => t!.Translations)
+            .Include(v => v.Description)
+            .ThenInclude(t => t!.Translations)
+            .Include(v => v.VideoTags)
+            .Include(v => v.VideoStatisticSnapshots)
+            .Include(v => v.Captions)
+            .Include(v => v.VideoImages!)
+            .ThenInclude(vi => vi.Image)
+            .Include(v => v.VideoFiles)
+            //Authors etc???
+            .FirstOrDefaultAsync(cancellationToken: ct);
+        var isNew = video == null;
+        video ??= new Video { IdOnPlatform = videoData.ID };
+        var newVideoData = CreateVideoFromVideoData(videoData);
+        await ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew);
+
+        await TryAddAuthorAsync(video, videoData, ct);
+
+        if (isNew)
+        {
+            AddVideo(video, ct);
+        }
+
+        return video;
+    }
+
+    private async Task TryAddAuthorAsync(Video video, VideoData videoData, CancellationToken ct = default)
+    {
         try
         {
             await YouTubeUow.AuthorService.AddAndSetAuthor(video, videoData, ct);
@@ -138,12 +173,23 @@ public class VideoService : BaseYouTubeService
             Logger.LogError(e, "Failed to add author for YouTube video {VideoId}, Author ID {AuthorId} ({AuthorName})",
                 videoData.ID, videoData.ChannelID, videoData.Channel);
         }
+    }
 
+    private void AddVideo(Video video, CancellationToken ct)
+    {
         DbCtx.Videos.Add(video);
 
         DataUow.RegisterSavedChangesCallbackRunOnce(() =>
             _mediator.Publish(new VideoAddedEvent(
-                video.Id, EPlatform.YouTube, videoData.ID), ct));
+                video.Id, EPlatform.YouTube, video.IdOnPlatform), ct));
+    }
+
+    public async Task<Video> AddVideoAsync(VideoData videoData, CancellationToken ct = default)
+    {
+        var video = CreateVideoFromVideoData(videoData);
+        await TryAddAuthorAsync(video, videoData, ct);
+        AddVideo(video, ct);
+        
         // TODO: Comments callback subscribe
         // TODO: Captions downloader callback subscribe
 
