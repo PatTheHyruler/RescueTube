@@ -28,7 +28,6 @@ public static class EntityMapper
         Platform = comment.Platform,
         IdOnPlatform = comment.IdOnPlatform,
         PrivacyStatusOnPlatform = comment.PrivacyStatusOnPlatform,
-        IsAvailable = comment.IsAvailable,
         PrivacyStatus = comment.PrivacyStatus,
         LastFetchUnofficial = comment.LastFetchUnofficial,
         LastSuccessfulFetchUnofficial = comment.LastSuccessfulFetchUnofficial,

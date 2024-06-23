@@ -120,7 +120,6 @@ public class VideoService : BaseYouTubeService
             PublishedAt = videoData.ReleaseTimestamp,
 
             PrivacyStatusOnPlatform = videoData.Availability.ToPrivacyStatus(),
-            IsAvailable = videoData.Availability.ToPrivacyStatus().IsAvailable(),
             PrivacyStatus = EPrivacyStatus.Private,
 
             LastFetchUnofficial = DateTimeOffset.UtcNow,

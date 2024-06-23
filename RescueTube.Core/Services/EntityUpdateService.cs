@@ -192,17 +192,15 @@ public class EntityUpdateService : BaseService
         entity.UpdatedAt = DateTimeUtils.GetLatest(entity.UpdatedAt, newEntityData.UpdatedAt);
 
         if (!isNew &&
-            (newEntityData.PrivacyStatus != entity.PrivacyStatus
-             || newEntityData.IsAvailable != entity.IsAvailable))
+            newEntityData.PrivacyStatus != entity.PrivacyStatus)
         {
             var statusChangeEvent = entity switch
             {
-                Video video => new StatusChangeEvent(video, newEntityData.PrivacyStatus, newEntityData.IsAvailable,
+                Video video => new StatusChangeEvent(video, newEntityData.PrivacyStatus,
                     newEntityData.UpdatedAt),
                 Playlist playlist => new StatusChangeEvent(playlist, newEntityData.PrivacyStatus,
-                    newEntityData.IsAvailable,
                     newEntityData.UpdatedAt),
-                Author author => new StatusChangeEvent(author, newEntityData.PrivacyStatus, newEntityData.IsAvailable,
+                Author author => new StatusChangeEvent(author, newEntityData.PrivacyStatus,
                     newEntityData.UpdatedAt),
                 _ => null
             };
@@ -219,7 +217,6 @@ public class EntityUpdateService : BaseService
         }
 
         entity.PrivacyStatusOnPlatform ??= newEntityData.PrivacyStatusOnPlatform;
-        entity.IsAvailable = newEntityData.IsAvailable;
         entity.PrivacyStatus =
             newEntityData
                 .PrivacyStatus; // TODO: actually when updating from a fetch, this should be left at original. Handle outside update function?

@@ -15,7 +15,7 @@ public class VideoSimple : BaseIdDbEntity
 
     public TimeSpan? Duration { get; set; }
 
-    public EPlatform Platform { get; set; }
+    public required EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
 
     public required ICollection<AuthorSimple> Authors { get; set; }

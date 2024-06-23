@@ -62,7 +62,6 @@ public class PlaylistService : BaseYouTubeService
 
             UpdatedAt = ytDlData.ModifiedTimestamp?.ToUniversalTime() ?? ytDlData.ModifiedDate?.ToUniversalTime(),
             PrivacyStatusOnPlatform = ytDlData.Availability.ToPrivacyStatus(),
-            IsAvailable = true,
             PrivacyStatus = EPrivacyStatus.Private,
 
             LastFetchUnofficial = DateTimeOffset.UtcNow,

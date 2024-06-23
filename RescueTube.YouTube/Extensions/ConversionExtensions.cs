@@ -44,7 +44,6 @@ public static class ConversionExtensions
             },
 
             PrivacyStatusOnPlatform = EPrivacyStatus.Public,
-            IsAvailable = true,
             PrivacyStatus = EPrivacyStatus.Private,
 
             AddedToArchiveAt = DateTimeOffset.UtcNow,
@@ -60,7 +59,6 @@ public static class ConversionExtensions
 
             UserName = commentData.Author,
 
-            IsAvailable = true,
             PrivacyStatus = EPrivacyStatus.Private,
             
             AuthorImages = new List<AuthorImage>
@@ -108,7 +106,6 @@ public static class ConversionExtensions
 
             CreatedAt = commentData.Timestamp.ToUniversalTime(),
 
-            IsAvailable = true,
             PrivacyStatus = EPrivacyStatus.Private,
 
             LastFetchUnofficial = DateTimeOffset.UtcNow,

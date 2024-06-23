@@ -93,7 +93,6 @@ public static class ApiMapper
             Platform = src.Platform,
             IdOnPlatform = src.IdOnPlatform,
             PrivacyStatusOnPlatform = src.PrivacyStatusOnPlatform,
-            IsAvailable = src.IsAvailable,
             PrivacyStatus = src.PrivacyStatus,
             LastFetchUnofficial = src.LastFetchUnofficial,
             LastSuccessfulFetchUnofficial = src.LastSuccessfulFetchUnofficial,

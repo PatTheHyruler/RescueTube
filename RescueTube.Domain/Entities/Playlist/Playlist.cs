@@ -16,7 +16,6 @@ public class Playlist : BaseIdDbEntity, IMainArchiveEntity
     public EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
-    public bool IsAvailable { get; set; }
     public EPrivacyStatus PrivacyStatus { get; set; }
     public DateTimeOffset? LastFetchUnofficial { get; set; }
     public DateTimeOffset? LastSuccessfulFetchUnofficial { get; set; }

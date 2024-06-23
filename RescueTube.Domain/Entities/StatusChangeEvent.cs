@@ -6,8 +6,6 @@ namespace RescueTube.Domain.Entities;
 
 public class StatusChangeEvent : BaseIdDbEntity
 {
-    public bool? PreviousAvailability { get; set; }
-    public bool? NewAvailability { get; set; }
     public EPrivacyStatus? PreviousPrivacyStatus { get; set; }
     public EPrivacyStatus? NewPrivacyStatus { get; set; }
     public DateTimeOffset OccurredAt { get; set; }
@@ -24,36 +22,32 @@ public class StatusChangeEvent : BaseIdDbEntity
     {
     }
 
-    private StatusChangeEvent(IPrivacyEntity entity, EPrivacyStatus? newPrivacyStatus,
-        bool? newAvailability, DateTimeOffset? occurredAt)
+    private StatusChangeEvent(IPrivacyEntity entity, EPrivacyStatus? newPrivacyStatus, DateTimeOffset? occurredAt)
     {
         OccurredAt = occurredAt ?? DateTimeOffset.UtcNow;
-        PreviousAvailability = entity.IsAvailable;
-        NewAvailability = newAvailability;
         PreviousPrivacyStatus = entity.PrivacyStatus;
         NewPrivacyStatus = newPrivacyStatus;
 
         entity.PrivacyStatusOnPlatform = newPrivacyStatus;
-        entity.IsAvailable = newAvailability ?? entity.IsAvailable;
     }
 
-    public StatusChangeEvent(Video video, EPrivacyStatus? newPrivacyStatus, bool? newAvailability,
+    public StatusChangeEvent(Video video, EPrivacyStatus? newPrivacyStatus,
         DateTimeOffset? occurredAt = null) :
-        this(video as IPrivacyEntity, newPrivacyStatus, newAvailability, occurredAt)
+        this(video as IPrivacyEntity, newPrivacyStatus, occurredAt)
     {
         VideoId = video.Id;
     }
 
-    public StatusChangeEvent(Author author, EPrivacyStatus? newPrivacyStatus, bool? newAvailability,
+    public StatusChangeEvent(Author author, EPrivacyStatus? newPrivacyStatus,
         DateTimeOffset? occurredAt = null) :
-        this(author as IPrivacyEntity, newPrivacyStatus, newAvailability, occurredAt)
+        this(author as IPrivacyEntity, newPrivacyStatus, occurredAt)
     {
         AuthorId = author.Id;
     }
 
-    public StatusChangeEvent(Playlist playlist, EPrivacyStatus? newPrivacyStatus, bool? newAvailability,
+    public StatusChangeEvent(Playlist playlist, EPrivacyStatus? newPrivacyStatus,
         DateTimeOffset? occurredAt = null) :
-        this(playlist as IPrivacyEntity, newPrivacyStatus, newAvailability, occurredAt)
+        this(playlist as IPrivacyEntity, newPrivacyStatus, occurredAt)
     {
         PlaylistId = playlist.Id;
     }
