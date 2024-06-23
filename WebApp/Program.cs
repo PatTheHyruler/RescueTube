@@ -64,7 +64,8 @@ builder.Services.AddDbPersistenceEfPostgres(builder.Configuration);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options => JsonUtils.ConfigureJsonSerializerOptions(options.JsonSerializerOptions));
-builder.Services.AddSpaStaticFiles(config => { config.RootPath = "ClientApp"; });
+const string spaDirectory = "ClientApp";
+builder.Services.AddSpaStaticFiles(config => { config.RootPath = spaDirectory; });
 
 var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
 {
@@ -172,12 +173,16 @@ app.UseStaticFiles();
 string[] specialPaths = ["/api", "/hangfire"];
 bool IsSpecialPath(string path) => specialPaths.Any(path.StartsWith);
 
-app.MapWhen(c => !IsSpecialPath(c.Request.Path.Value ?? ""),
-    spaAppBuilder =>
-    {
-        spaAppBuilder.UseSpaStaticFiles();
-        spaAppBuilder.UseSpa(_ => { });
-    });
+var spaIndexPath = Path.Combine(app.Environment.ContentRootPath, spaDirectory, "index.html");
+if (Path.Exists(spaIndexPath))
+{
+    app.MapWhen(c => !IsSpecialPath(c.Request.Path.Value ?? ""),
+        spaAppBuilder =>
+        {
+            spaAppBuilder.UseSpaStaticFiles();
+            spaAppBuilder.UseSpa(_ => { });
+        });
+}
 
 app.UseRouting();
 
