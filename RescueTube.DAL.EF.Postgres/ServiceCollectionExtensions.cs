@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Data;
-using RescueTube.Core.Data.Repositories;
+using RescueTube.Core.Data.Specifications;
 using RescueTube.DAL.EF.MigrationUtils;
-using RescueTube.DAL.EF.Repositories;
+using RescueTube.DAL.EF.Specifications;
 
 namespace RescueTube.DAL.EF.Postgres;
 
@@ -27,8 +27,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<AppDbContext>(GetPostgresAppDbContext);
         services.AddScoped<IAppDbContext>(GetPostgresAppDbContext);
 
-        services.AddScoped<VideoRepository>();
-        services.AddScoped<IVideoRepository>(s => s.GetRequiredService<VideoRepository>());
+        services.AddScoped<VideoSpecification>();
+        services.AddScoped<IVideoSpecification>(s => s.GetRequiredService<VideoSpecification>());
+        services.AddScoped<PlaylistSpecification>();
+        services.AddScoped<IPlaylistSpecification>(s => s.GetRequiredService<PlaylistSpecification>());
+        services.AddScoped<PermissionSpecification>();
+        services.AddScoped<IPermissionSpecification>(s => s.GetRequiredService<PermissionSpecification>());
 
         services.AddScoped<DataUow>();
         services.AddScoped<IDataUow>(s => s.GetRequiredService<DataUow>());

@@ -44,8 +44,10 @@ public static class Setup
         services.AddScoped<AuthorService>();
         services.AddScoped<CommentService>();
 
+        services.AddScoped<IThumbnailComparer, ThumbnailComparer>();
+
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
-        services.AddScoped<IPlatformVideoPresentationHandler, PresentationHandler>();
+        services.AddScoped<IPlatformPresentationHandler, PresentationHandler>();
 
         services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<VideoAddedDownloadHandler>(); });
 

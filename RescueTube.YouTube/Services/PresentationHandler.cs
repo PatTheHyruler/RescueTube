@@ -5,7 +5,7 @@ using RescueTube.YouTube.Utils;
 
 namespace RescueTube.YouTube.Services;
 
-public class PresentationHandler : IPlatformVideoPresentationHandler
+public class PresentationHandler : IPlatformPresentationHandler
 {
     public bool CanHandle(VideoSimple video)
     {
@@ -16,13 +16,23 @@ public class PresentationHandler : IPlatformVideoPresentationHandler
     {
         video.Url = Url.ToVideoUrl(video.IdOnPlatform);
         video.EmbedUrl = Url.ToVideoEmbedUrl(video.IdOnPlatform);
-        var thumbnails = video.Thumbnails
-            .OrderByDescending(i => i.Quality, new ThumbnailQualityComparer())
-            .ThenByDescending(i => i.Key, new ThumbnailTagComparer());
-        video.Thumbnail = thumbnails.FirstOrDefault();
         foreach (var author in video.Authors)
         {
             Handle(author);
+        }
+    }
+
+    public bool CanHandle(PlaylistDto playlist)
+    {
+        return playlist.Platform == EPlatform.YouTube;
+    }
+
+    public void Handle(PlaylistDto playlist)
+    {
+        playlist.UrlOnPlatform = Url.ToPlaylistUrl(playlist.IdOnPlatform);
+        if (playlist.Creator != null)
+        {
+            Handle(playlist.Creator);
         }
     }
 

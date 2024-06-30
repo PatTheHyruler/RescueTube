@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Security.Principal;
+using LinqKit;
 using RescueTube.Core.Data.Extensions;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Identity.Services;
@@ -12,7 +13,8 @@ namespace RescueTube.Core.Services;
 
 public class AuthorizationService : BaseService
 {
-    public AuthorizationService(IServiceProvider services, ILogger<AuthorizationService> logger) : base(services, logger)
+    public AuthorizationService(IServiceProvider services, ILogger<AuthorizationService> logger) : base(services,
+        logger)
     {
     }
 
@@ -26,23 +28,27 @@ public class AuthorizationService : BaseService
         });
     }
 
-    public static bool IsAllowedToAccessVideoByRole(IPrincipal? user) {
+    public static bool IsAllowedToAccessAnyContentByRole(IPrincipal? user)
+    {
         if (user == null)
         {
             return false;
         }
+
         return user.IsInRole(RoleNames.Admin) || user.IsInRole(RoleNames.SuperAdmin);
     }
 
     public async Task<bool> IsVideoAccessAllowed(Guid videoId, ClaimsPrincipal? user = null)
     {
-        if (IsAllowedToAccessVideoByRole(user))
+        if (IsAllowedToAccessAnyContentByRole(user))
         {
             return true;
         }
 
-        var videos = DbCtx.Videos.Where(v => v.Id == videoId);
-        videos = DataUow.VideoRepo.WhereUserIsAllowedToAccessVideoOrVideoIsPublic(videos, user?.GetUserIdIfExists());
+        var userId = user?.GetUserIdIfExists();
+        var videos = DbCtx.Videos
+            .Where(v => v.Id == videoId)
+            .AsExpandable().Where(DataUow.Permissions.IsUserAllowedToAccessVideoOrVideoIsPublic(userId, false));
         return await videos.AnyAsync();
     }
 }

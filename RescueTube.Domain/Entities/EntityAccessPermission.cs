@@ -12,4 +12,6 @@ public class EntityAccessPermission : BaseIdDbEntity
     public Video? Video { get; set; }
     public Guid? AuthorId { get; set; }
     public Author? Author { get; set; }
+    public Guid? PlaylistId { get; set; }
+    public Playlist? Playlist { get; set; }
 }

@@ -1,17 +1,23 @@
 ﻿using RescueTube.Core.Data;
-using RescueTube.Core.Data.Repositories;
+using RescueTube.Core.Data.Specifications;
 
 namespace RescueTube.DAL.EF;
 
 public class DataUow : IDataUow
 {
-    public DataUow(AppDbContext ctx, IVideoRepository videoRepo)
+    public DataUow(AppDbContext ctx, IVideoSpecification videos, IPlaylistSpecification playlists,
+        IPermissionSpecification permissions)
     {
         _ctx = ctx;
-        VideoRepo = videoRepo;
+        Videos = videos;
+        Playlists = playlists;
+        Permissions = permissions;
     }
 
-    public IVideoRepository VideoRepo { get; }
+    public IVideoSpecification Videos { get; }
+    public IPlaylistSpecification Playlists { get; }
+    public IPermissionSpecification Permissions { get; }
+
     public IAppDbContext Ctx => _ctx;
     private readonly AppDbContext _ctx;
 

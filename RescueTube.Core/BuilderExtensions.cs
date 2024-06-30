@@ -1,5 +1,6 @@
 using RescueTube.Core.Utils.Validation;
 using Microsoft.Extensions.DependencyInjection;
+using RescueTube.Core.Data.Mappers;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Registration;
 using RescueTube.Core.Services;
@@ -20,10 +21,13 @@ public static class BuilderExtensions
         services.AddScoped<AuthorizationService>();
         services.AddScoped<ImageService>();
         services.AddScoped<VideoPresentationService>();
+        services.AddScoped<PlaylistPresentationService>();
         services.AddScoped<EntityUpdateService>();
         services.AddScoped<AuthorService>();
         services.AddScoped<VideoService>();
         services.AddScoped<CommentService>();
+
+        services.AddScoped<EntityMapper>();
 
         services.AddMediatR(cfg =>
         {
@@ -35,8 +39,6 @@ public static class BuilderExtensions
         services.AddScoped<DownloadImageJob>();
 
         services.AddHostedService<RegisterBllJobsService>();
-
-        services.AddAutoMapper(typeof(DTO.AutoMapperConfig));
 
         return services;
     }

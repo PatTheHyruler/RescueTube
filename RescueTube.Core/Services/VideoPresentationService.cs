@@ -1,12 +1,12 @@
 using System.Security.Claims;
-using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using RescueTube.Core.Identity.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
 using RescueTube.Core.Contracts;
-using RescueTube.Core.Data.Repositories;
+using RescueTube.Core.Data.Mappers;
+using RescueTube.Core.Data.Pagination;
+using RescueTube.Core.Data.Specifications;
 using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.DTO.Enums;
 using RescueTube.Core.Utils.Pagination;
@@ -17,8 +17,8 @@ namespace RescueTube.Core.Services;
 
 public class VideoPresentationService : BaseService
 {
-    private readonly IMapper _mapper;
-    private readonly IEnumerable<IPlatformVideoPresentationHandler> _videoPresentationHandlers;
+    private readonly EntityMapper _mapper;
+    private readonly IEnumerable<IPlatformPresentationHandler> _presentationHandlers;
 
     public async Task<PaginationResponse<List<VideoSimple>>> SearchVideosAsync(
         EPlatform? platformQuery, string? nameQuery,
@@ -28,21 +28,19 @@ public class VideoPresentationService : BaseService
         EVideoSortingOptions sortingOptions, bool descending)
     {
         var userId = user.GetUserIdIfExists();
-        var accessAllowed = AuthorizationService.IsAllowedToAccessVideoByRole(user);
+        var accessAllowed = AuthorizationService.IsAllowedToAccessAnyContentByRole(user);
         paginationQuery = paginationQuery.ToClamped();
-        var videos = await DataUow.VideoRepo.SearchVideos(new IVideoRepository.VideoSearchParams
+        var videos = await DataUow.Videos.SearchVideos(new IVideoSpecification.VideoSearchParams
             {
                 Platform = platformQuery,
                 Name = nameQuery, Author = authorQuery,
                 CategoryIds = categoryIds, UserId = userId,
                 UserAuthorId = userAuthorId,
                 AccessAllowed = accessAllowed,
-                PaginationQuery = paginationQuery,
                 SortingOptions = sortingOptions, Descending = descending,
             })
-            // .Select(VideoMapper.VideoToVideoSimpleExpression)
-            // .ProjectToVideoSimple()
-            .ProjectTo<VideoSimple>(_mapper.ConfigurationProvider)
+            .Paginate(paginationQuery)
+            .Select(_mapper.ToVideoSimple)
             .ToListAsync();
         MakePresentable(videos);
 
@@ -57,8 +55,7 @@ public class VideoPresentationService : BaseService
     {
         var video = await DbCtx.Videos
             .Where(v => v.Id == videoId)
-            .ProjectTo<VideoSimple>(_mapper.ConfigurationProvider)
-            // .ProjectToVideoSimple()
+            .Select(_mapper.ToVideoSimple)
             .FirstOrDefaultAsync();
         MakePresentable(video);
         return video;
@@ -87,7 +84,7 @@ public class VideoPresentationService : BaseService
             return;
         }
 
-        foreach (var presentationHandler in _videoPresentationHandlers)
+        foreach (var presentationHandler in _presentationHandlers)
         {
             if (!presentationHandler.CanHandle(video)) continue;
             presentationHandler.Handle(video);
@@ -96,10 +93,10 @@ public class VideoPresentationService : BaseService
     }
 
     public VideoPresentationService(IServiceProvider services, ILogger<VideoPresentationService> logger,
-        IEnumerable<IPlatformVideoPresentationHandler> videoPresentationHandlers, IMapper mapper) : base(services,
+        IEnumerable<IPlatformPresentationHandler> presentationHandlers, EntityMapper mapper) : base(services,
         logger)
     {
-        _videoPresentationHandlers = videoPresentationHandlers;
+        _presentationHandlers = presentationHandlers;
         _mapper = mapper;
     }
 }
