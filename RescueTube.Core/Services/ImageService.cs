@@ -26,6 +26,7 @@ public class ImageService : BaseService
             .Where(e => e.Id == imageId)
             .Include(e => e.AuthorImages)
             .Include(e => e.VideoImages)
+            .Include(e => e.PlaylistImages)
             .FirstAsync(ct);
         await UpdateImage(image, ct);
     }
@@ -161,6 +162,22 @@ public class ImageService : BaseService
                     ValidSince = currentTime,
                     LastFetched = authorImage.LastFetched,
                     AuthorId = authorImage.AuthorId,
+                    Image = newImage,
+                });
+            }
+        }
+
+        if (image.PlaylistImages != null)
+        {
+            foreach (var playlistImage in image.PlaylistImages)
+            {
+                playlistImage.ValidUntil = currentTime;
+                DbCtx.PlaylistImages.Add(new PlaylistImage
+                {
+                    ImageType = playlistImage.ImageType,
+                    ValidSince = currentTime,
+                    LastFetched = playlistImage.LastFetched,
+                    PlaylistId = playlistImage.PlaylistId,
                     Image = newImage,
                 });
             }

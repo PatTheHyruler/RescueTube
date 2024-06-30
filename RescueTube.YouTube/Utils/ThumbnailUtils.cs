@@ -23,7 +23,7 @@ public static class ThumbnailUtils
             Height = data.Height ?? parsedThumbnailInfo?.Quality?.Height,
         };
     }
-    
+
     public static VideoImage ToVideoImage(this ThumbnailData data)
     {
         Url.IsVideoThumbnailUrl(data.Url, out var parsedThumbnailInfo);
@@ -33,6 +33,7 @@ public static class ThumbnailUtils
         {
             ImageType = EImageType.Thumbnail,
             Preference = data.Preference,
+            LastFetched = DateTimeOffset.UtcNow,
 
             Image = image,
         };
@@ -48,6 +49,8 @@ public static class ThumbnailUtils
         var playlistImage = new PlaylistImage
         {
             ImageType = EImageType.Thumbnail,
+            LastFetched = DateTimeOffset.UtcNow,
+
             Image = image,
         };
 
