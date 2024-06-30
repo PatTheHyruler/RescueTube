@@ -20,12 +20,26 @@ public class AuthorizationService : BaseService
 
     public async Task AuthorizeVideoIfNotAuthorized(Guid userId, Guid videoId, CancellationToken ct = default)
     {
-        if (await DbCtx.EntityAccessPermissions.VideoPermissionExistsAsync(userId, videoId, ct)) return;
-        DbCtx.EntityAccessPermissions.Add(new EntityAccessPermission
+        if (!await DbCtx.EntityAccessPermissions.VideoPermissionExistsAsync(userId, videoId, ct))
         {
-            UserId = userId,
-            VideoId = videoId,
-        });
+            DbCtx.EntityAccessPermissions.Add(new EntityAccessPermission
+            {
+                UserId = userId,
+                VideoId = videoId,
+            });
+        }
+    }
+
+    public async Task AuthorizePlaylistIfNotAuthorized(Guid userId, Guid playlistId, CancellationToken ct = default)
+    {
+        if (!await DbCtx.EntityAccessPermissions.PlaylistPermissionExistsAsync(userId, playlistId, ct))
+        {
+            DbCtx.EntityAccessPermissions.Add(new EntityAccessPermission
+            {
+                UserId = userId,
+                PlaylistId = playlistId,
+            });
+        }
     }
 
     public static bool IsAllowedToAccessAnyContentByRole(IPrincipal? user)

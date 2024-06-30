@@ -1,7 +1,7 @@
 using Hangfire;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using RescueTube.Core.Events.Events;
+using RescueTube.Core.Events;
 using RescueTube.Core.Jobs;
 
 namespace RescueTube.Core.EventHandlers;

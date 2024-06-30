@@ -2,7 +2,7 @@ using System.Text;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using RescueTube.Core.Events.Events;
+using RescueTube.Core.Events;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;

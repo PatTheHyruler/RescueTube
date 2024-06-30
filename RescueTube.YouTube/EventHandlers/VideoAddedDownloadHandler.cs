@@ -1,7 +1,7 @@
 using Hangfire;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
-using RescueTube.Core.Events.Events;
+using RescueTube.Core.Events;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Jobs;
 

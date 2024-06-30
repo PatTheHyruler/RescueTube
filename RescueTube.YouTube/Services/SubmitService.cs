@@ -1,8 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.DTO.Entities;
+using RescueTube.Core.Events;
 using RescueTube.Core.Exceptions;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
@@ -13,8 +15,12 @@ namespace RescueTube.YouTube.Services;
 
 public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 {
-    public SubmitService(IServiceProvider services, ILogger<SubmitService> logger) : base(services, logger)
+    private readonly IMediator _mediator;
+
+    public SubmitService(IServiceProvider services, ILogger<SubmitService> logger, IMediator mediator) : base(services,
+        logger)
     {
+        _mediator = mediator;
     }
 
     public bool IsPlatformUrl(string url, [NotNullWhen(true)] out RecognizedPlatformUrl? recognizedPlatformUrl)
@@ -73,6 +79,16 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         }
 
         submission.CompletedAt = DateTimeOffset.UtcNow;
+
+        DataUow.RegisterSavedChangesCallbackRunOnce(() => _mediator.Publish(
+            new SubmissionHandledEvent
+            {
+                SubmissionId = submissionId,
+                Platform = submission.Platform,
+                EntityType = submission.EntityType,
+            },
+            ct
+        ));
     }
 
     private async Task<Video> SubmitVideoAsync(string videoIdOnPlatform, CancellationToken ct)

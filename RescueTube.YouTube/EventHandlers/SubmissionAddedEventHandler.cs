@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using MediatR;
-using RescueTube.Core.Events.Events;
+using RescueTube.Core.Events;
+using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Jobs;
 
 namespace RescueTube.YouTube.EventHandlers;
@@ -16,7 +17,7 @@ public class SubmissionAddedEventHandler : INotificationHandler<SubmissionAddedE
 
     public Task Handle(SubmissionAddedEvent notification, CancellationToken cancellationToken)
     {
-        if (notification.AutoSubmit)
+        if (notification is { AutoSubmit: true, Platform: EPlatform.YouTube })
         {
             _backgroundJobClient.Enqueue<HandleSubmissionJob>(x => x.RunAsync(notification.SubmissionId, default));
         }

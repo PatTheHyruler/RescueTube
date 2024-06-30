@@ -29,14 +29,12 @@ public static class BuilderExtensions
 
         services.AddScoped<EntityMapper>();
 
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblyContaining<SubmissionService>();
-        });
+        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<SubmissionService>(); });
 
         services.AddScoped<DownloadAuthorImagesJob>();
         services.AddScoped<DownloadVideoImagesJob>();
         services.AddScoped<DownloadImageJob>();
+        services.AddScoped<SubmissionAddEntityAccessPermissionJob>();
 
         services.AddHostedService<RegisterBllJobsService>();
 

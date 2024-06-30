@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using RescueTube.Domain.Enums;
 
-namespace RescueTube.Core.Events.Events;
+namespace RescueTube.Core.Events;
 
 public class SubmissionAddedEvent : INotification
 {
