@@ -35,6 +35,7 @@ public static class BuilderExtensions
         services.AddScoped<DownloadVideoImagesJob>();
         services.AddScoped<DownloadImageJob>();
         services.AddScoped<SubmissionAddEntityAccessPermissionJob>();
+        services.AddScoped<UpdateImagesResolutionJob>();
 
         services.AddHostedService<RegisterBllJobsService>();
 

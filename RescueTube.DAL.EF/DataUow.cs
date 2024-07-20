@@ -6,17 +6,19 @@ namespace RescueTube.DAL.EF;
 public class DataUow : IDataUow
 {
     public DataUow(AppDbContext ctx, IVideoSpecification videos, IPlaylistSpecification playlists,
-        IPermissionSpecification permissions)
+        IPermissionSpecification permissions, IImageSpecification images)
     {
         _ctx = ctx;
         Videos = videos;
         Playlists = playlists;
         Permissions = permissions;
+        Images = images;
     }
 
     public IVideoSpecification Videos { get; }
     public IPlaylistSpecification Playlists { get; }
     public IPermissionSpecification Permissions { get; }
+    public IImageSpecification Images { get; }
 
     public IAppDbContext Ctx => _ctx;
     private readonly AppDbContext _ctx;

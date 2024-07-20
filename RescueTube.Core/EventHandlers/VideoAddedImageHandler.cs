@@ -6,6 +6,7 @@ using RescueTube.Core.Jobs;
 
 namespace RescueTube.Core.EventHandlers;
 
+// ReSharper disable once UnusedType.Global
 public class VideoAddedImageHandler : INotificationHandler<VideoAddedEvent>
 {
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -19,8 +20,10 @@ public class VideoAddedImageHandler : INotificationHandler<VideoAddedEvent>
     {
         using var scope = _serviceScopeFactory.CreateAsyncScope();
         var backgroundJobs = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
-        backgroundJobs.Enqueue<DownloadVideoImagesJob>(x =>
+        var downloadJobId = backgroundJobs.Enqueue<DownloadVideoImagesJob>(x =>
             x.DownloadVideoImages(notification.Id, default));
+        backgroundJobs.ContinueJobWith<UpdateImagesResolutionJob>(downloadJobId,
+            x => x.UpdateVideoImagesResolutionsAsync(notification.Id, default));
         return Task.CompletedTask;
     }
 }

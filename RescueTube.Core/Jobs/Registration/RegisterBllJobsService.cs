@@ -28,6 +28,9 @@ public class RegisterBllJobsService : BackgroundService
         recurringJobManager.AddOrUpdate<DeleteExpiredRefreshTokensJob>("delete-expired-refresh-tokens",
             x => x.DeleteExpiredRefreshTokens(),
             Cron.Daily);
+        recurringJobManager.AddOrUpdate<UpdateImagesResolutionJob>("update-images-resolution-from-file",
+            x => x.EnqueueAsync(default),
+            Cron.Daily);
         return Task.CompletedTask;
     }
 }

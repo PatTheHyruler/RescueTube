@@ -19,8 +19,8 @@ public static class ThumbnailUtils
 
             Url = data.Url,
 
-            Width = data.Width ?? parsedThumbnailInfo?.Quality?.Width,
-            Height = data.Height ?? parsedThumbnailInfo?.Quality?.Height,
+            Width = data.Width,
+            Height = data.Height,
         };
     }
 

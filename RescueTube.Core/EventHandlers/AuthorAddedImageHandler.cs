@@ -20,8 +20,10 @@ public class AuthorAddedImageHandler : INotificationHandler<AuthorAddedEvent>
     {
         using var scope = _serviceScopeFactory.CreateAsyncScope();
         var backgroundJobs = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
-        backgroundJobs.Enqueue<DownloadAuthorImagesJob>(x => 
+        var downloadJobId = backgroundJobs.Enqueue<DownloadAuthorImagesJob>(x => 
             x.DownloadAuthorImages(notification.Id, default));
+        backgroundJobs.ContinueJobWith<UpdateImagesResolutionJob>(downloadJobId,
+            x => x.UpdateAuthorImagesResolutionsAsync(notification.Id, default));
         return Task.CompletedTask;
     }
 }

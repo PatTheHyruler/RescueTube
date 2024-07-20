@@ -20,6 +20,8 @@ public class Image : BaseIdDbEntity
     public int? Width { get; set; }
     public int? Height { get; set; }
 
+    public DateTimeOffset? ResolutionParseAttemptedAt { get; set; }
+
     public ICollection<VideoImage>? VideoImages { get; set; }
     public ICollection<AuthorImage>? AuthorImages { get; set; }
     public ICollection<PlaylistImage>? PlaylistImages { get; set; }

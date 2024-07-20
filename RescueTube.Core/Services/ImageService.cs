@@ -20,6 +20,32 @@ public class ImageService : BaseService
         _appPaths = appPaths;
     }
 
+    public async Task TryUpdateResolutionFromFileAsync(Guid imageId, CancellationToken ct)
+    {
+        var image = await DbCtx.Images
+            .Where(e => e.Id == imageId)
+            .FirstOrDefaultAsync(cancellationToken: ct);
+        if (image == null) return;
+        await TryUpdateResolutionFromFileAsync(image, ct);
+    }
+
+    public async Task TryUpdateResolutionFromFileAsync(Image image, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(image.LocalFilePath)) return;
+        image.ResolutionParseAttemptedAt = DateTimeOffset.UtcNow;
+        try
+        {
+            var absolutePath = _appPaths.GetAbsolutePathFromDownloads(image.LocalFilePath);
+            var imageInfo = await SixLabors.ImageSharp.Image.IdentifyAsync(File.OpenRead(absolutePath), ct);
+            image.Width ??= imageInfo.Width;
+            image.Height ??= imageInfo.Height;
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Failed to update resolution from file for image {ImageId}", image.Id);
+        }
+    }
+
     public async Task UpdateImage(Guid imageId, CancellationToken ct)
     {
         var image = await DbCtx.Images
@@ -61,7 +87,7 @@ public class ImageService : BaseService
         if (isChanged == null
             && image.Hash != null)
         {
-            isChanged = hashString == image.Hash;
+            isChanged = hashString != image.Hash;
         }
 
         Image imageToUpdate;

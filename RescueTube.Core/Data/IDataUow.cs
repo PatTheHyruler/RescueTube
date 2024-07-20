@@ -7,6 +7,7 @@ public interface IDataUow
     public IVideoSpecification Videos { get; }
     public IPlaylistSpecification Playlists { get; }
     public IPermissionSpecification Permissions { get; }
+    public IImageSpecification Images { get; }
 
     public IAppDbContext Ctx { get; }
 
