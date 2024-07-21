@@ -1,11 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Contracts;
-using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.Events;
 using RescueTube.Core.Exceptions;
+using RescueTube.Domain;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
@@ -34,6 +35,15 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         if (Url.IsPlaylistUrl(url, out var playlistId))
         {
             recognizedPlatformUrl = new RecognizedPlatformUrl(url, playlistId, EPlatform.YouTube, EEntityType.Playlist);
+            return true;
+        }
+
+        if (Url.IsAuthorHandleUrl(url, out var authorHandle))
+        {
+            recognizedPlatformUrl = new RecognizedPlatformUrl(url, authorHandle, EPlatform.YouTube, EEntityType.Author)
+            {
+                IdType = Url.IdTypes.Author.Handle,
+            };
             return true;
         }
 
@@ -74,6 +84,10 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
                 var playlist = await SubmitPlaylistAsync(submission.IdOnPlatform, ct);
                 submission.PlaylistId = playlist.Id;
                 break;
+            case EEntityType.Author:
+                var author = await SubmitAuthorAsync(submission.IdOnPlatform, submission.IdType, options: null, ct: ct);
+                submission.AuthorId = author.Id;
+                break;
             default:
                 throw new ApplicationException($"Unsupported entity type {submission.EntityType}");
         }
@@ -89,6 +103,44 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             },
             ct
         ));
+    }
+
+    private async Task<Author> SubmitAuthorAsync(string idOnPlatform, string? idType,
+        AuthorArchivalSettings? options = null,
+        CancellationToken ct = default)
+    {
+        Expression<Func<Author, bool>> existingAuthorFilter = idType switch
+        {
+            Url.IdTypes.Author.Handle => author => author.UserName == idOnPlatform,
+            null => author => author.IdOnPlatform == idOnPlatform,
+            _ => throw new ArgumentException($"Unsupported ID type '{idType}'", nameof(idType)),
+        };
+        var existingAuthor = await DbCtx.Authors
+            .Where(a => a.Platform == EPlatform.YouTube)
+            .Where(existingAuthorFilter)
+            .FirstOrDefaultAsync(ct);
+
+        if (existingAuthor != null)
+        {
+            return existingAuthor;
+        }
+
+        var channel = idType switch
+        {
+            Url.IdTypes.Author.Handle => await YouTubeUow.YouTubeExplodeClient.Channels.GetByHandleAsync(idOnPlatform,
+                ct),
+            _ => await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct),
+        };
+
+        var addedOrExistingAuthor = await YouTubeUow.AuthorService.AddOrGetAuthor(channel, ct);
+        if (addedOrExistingAuthor == null)
+        {
+            throw new ApplicationException("Author not found on platform");
+        }
+
+        addedOrExistingAuthor.ArchivalSettings = options ?? AuthorArchivalSettings.ArchivedDefault();
+
+        return addedOrExistingAuthor;
     }
 
     private async Task<Video> SubmitVideoAsync(string videoIdOnPlatform, CancellationToken ct)

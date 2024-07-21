@@ -23,6 +23,23 @@ public static class ConversionExtensions
         };
     }
 
+    public static Author ToDomainAuthor(this YoutubeExplode.Channels.Channel channel)
+    {
+        return new Author
+        {
+            Platform = EPlatform.YouTube,
+            IdOnPlatform = channel.Id,
+            
+            UserName = Url.IsAuthorHandleUrl(channel.Url, out var handle) ? handle : null,
+            DisplayName = channel.Title,
+            
+            PrivacyStatusOnPlatform = EPrivacyStatus.Public,
+            PrivacyStatus = EPrivacyStatus.Private,
+            
+            AddedToArchiveAt = DateTimeOffset.UtcNow,
+        };
+    }
+
     public static Author ToDomainAuthor(this VideoData videoData)
     {
         return new Author

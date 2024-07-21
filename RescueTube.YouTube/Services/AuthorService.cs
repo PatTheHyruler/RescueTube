@@ -23,6 +23,11 @@ public class AuthorService : BaseYouTubeService
         _mediator = mediator;
     }
 
+    public async Task<Author> AddOrGetAuthor(YoutubeExplode.Channels.Channel channel, CancellationToken ct = default)
+    {
+        return await AddOrGetAuthor(channel.Id, channel.ToDomainAuthor, ct);
+    }
+
     public async Task<Author> AddOrGetAuthor(VideoData videoData, CancellationToken ct = default)
     {
         return await AddOrGetAuthor(videoData.ChannelID, videoData.ToDomainAuthor, ct);
@@ -67,7 +72,7 @@ public class AuthorService : BaseYouTubeService
         var notCachedIds = new List<AuthorFetchArg>();
         foreach (var arg in authorFetchArgs)
         {
-            var author = _cachedAuthors.GetValueOrDefault(arg.AuthorId);
+            var author = _cachedAuthors.GetValueOrDefault(arg.AuthorIdOnPlatform);
             if (author != null)
             {
                 authors.Add(author);
@@ -79,15 +84,15 @@ public class AuthorService : BaseYouTubeService
         }
 
         var fetchedAuthors =
-            await DbCtx.Authors.Filter(EPlatform.YouTube, notCachedIds.Select(e => e.AuthorId))
+            await DbCtx.Authors.Filter(EPlatform.YouTube, notCachedIds.Select(e => e.AuthorIdOnPlatform))
                 .ToListAsync(cancellationToken: ct);
 
         foreach (var arg in notCachedIds)
         {
-            var fetchedAuthor = fetchedAuthors.FirstOrDefault(a => a.IdOnPlatform == arg.AuthorId);
+            var fetchedAuthor = fetchedAuthors.FirstOrDefault(a => a.IdOnPlatform == arg.AuthorIdOnPlatform);
             if (fetchedAuthor != null)
             {
-                _cachedAuthors.TryAdd(arg.AuthorId, fetchedAuthor);
+                _cachedAuthors.TryAdd(arg.AuthorIdOnPlatform, fetchedAuthor);
                 authors.Add(fetchedAuthor);
             }
             else
@@ -99,7 +104,7 @@ public class AuthorService : BaseYouTubeService
                 DataUow.RegisterSavedChangesCallbackRunOnce(() =>
                     _mediator.Publish(new AuthorAddedEvent(
                         author.Id, EPlatform.YouTube, author.IdOnPlatform), ct));
-                _cachedAuthors.TryAdd(arg.AuthorId, author);
+                _cachedAuthors.TryAdd(arg.AuthorIdOnPlatform, author);
                 authors.Add(author);
             }
         }
@@ -134,16 +139,16 @@ public class AuthorService : BaseYouTubeService
                 _lastYtExplodeRateLimitHit = DateTimeOffset.Now;
                 author.FailedExtraDataFetchAttempts++;
                 Logger.LogError(e, "Error occurred fetching extra author data for {Platform} author {IdOnPlatform}",
-                    EPlatform.YouTube, arg.AuthorId);
+                    EPlatform.YouTube, arg.AuthorIdOnPlatform);
             }
         }
         else
         {
             Logger.LogInformation(
                 "Skipped fetching extra data for {Platform} author {IdOnPlatform}, latest rate limit hit was at {LatestRateLimitHit}",
-                EPlatform.YouTube, arg.AuthorId, _lastYtExplodeRateLimitHit);
+                EPlatform.YouTube, arg.AuthorIdOnPlatform, _lastYtExplodeRateLimitHit);
         }
     }
 }
 
-internal record AuthorFetchArg(string AuthorId, Func<Author> NewAuthorFunc);
+internal record AuthorFetchArg(string AuthorIdOnPlatform, Func<Author> NewAuthorFunc);

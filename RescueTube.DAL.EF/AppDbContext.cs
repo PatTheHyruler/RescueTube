@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Options;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.DAL.EF.Converters;
+using RescueTube.Domain;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Identity;
 using RescueTube.Domain.Entities.Localization;
@@ -79,6 +81,16 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
             .HasForeignKey(e => e.UserId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Author>()
+            .HasOne(e => e.ArchivalSettings)
+            .WithOne(e => e.Author)
+            .HasForeignKey<Author>(e => e.ArchivalSettingsId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Entity<Author>()
+            .HasIndex(e => e.ArchivalSettingsId)
+            .IsUnique();
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

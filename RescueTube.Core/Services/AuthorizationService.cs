@@ -42,6 +42,18 @@ public class AuthorizationService : BaseService
         }
     }
 
+    public async Task AuthorizeAuthorIfNotAuthorized(Guid userId, Guid authorId, CancellationToken ct = default)
+    {
+        if (!await DbCtx.EntityAccessPermissions.AuthorPermissionExistsAsync(userId, authorId, ct))
+        {
+            DbCtx.EntityAccessPermissions.Add(new EntityAccessPermission
+            {
+                UserId = userId,
+                AuthorId = authorId,
+            });
+        }
+    }
+
     public static bool IsAllowedToAccessAnyContentByRole(IPrincipal? user)
     {
         if (user == null)

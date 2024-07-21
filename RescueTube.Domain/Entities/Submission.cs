@@ -7,9 +7,12 @@ namespace RescueTube.Domain.Entities;
 
 public class Submission : BaseIdDbEntity
 {
-    public EPlatform Platform { get; set; }
+    public required EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
-    public EEntityType EntityType { get; set; }
+    public string? IdType { get; set; }
+    public required EEntityType EntityType { get; set; }
+
+    public string? Url { get; set; }
 
     public Guid AddedById { get; set; }
     public User? AddedBy { get; set; }
@@ -28,30 +31,30 @@ public class Submission : BaseIdDbEntity
     public Guid? PlaylistId { get; set; }
     public Playlist? Playlist { get; set; }
 
+    public Guid? AuthorId { get; set; }
+    public Author? Author { get; set; }
+
     public Submission()
     {
     }
 
-    [SetsRequiredMembers]
-    public Submission(Video video, Guid submitterId, bool autoSubmit) :
-        this(video.IdOnPlatform, video.Platform, EEntityType.Video, submitterId, autoSubmit)
+    public Submission(Guid submitterId, bool autoSubmit)
     {
-        VideoId = video.Id;
-        CompletedAt = DateTimeOffset.UtcNow;
-    }
-
-    [SetsRequiredMembers]
-    public Submission(string idOnPlatform, EPlatform platform, EEntityType entityType, Guid submitterId,
-        bool autoSubmit)
-    {
-        Platform = platform;
-        IdOnPlatform = idOnPlatform;
-        EntityType = entityType;
-
         AddedById = submitterId;
         AddedAt = DateTimeOffset.UtcNow;
 
         ApprovedById = autoSubmit ? submitterId : null;
         ApprovedAt = autoSubmit ? DateTimeOffset.UtcNow : null;
+    }
+
+    [SetsRequiredMembers]
+    public Submission(RecognizedPlatformUrl recognizedPlatformUrl, Guid submitterId, bool autoSubmit)
+        : this(submitterId: submitterId, autoSubmit: autoSubmit)
+    {
+        IdOnPlatform = recognizedPlatformUrl.IdOnPlatform;
+        Platform = recognizedPlatformUrl.Platform;
+        EntityType = recognizedPlatformUrl.EntityType;
+        Url = recognizedPlatformUrl.Url;
+        IdType = recognizedPlatformUrl.IdType;
     }
 }

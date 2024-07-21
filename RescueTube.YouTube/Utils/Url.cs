@@ -12,7 +12,7 @@ public static class Url
         @"(?:https?://)?(?:www\.)?youtube\.com/(?:(?:playlist\?list=(?<id>(?:(?![&=\?])[\S])+))|(?:watch.*list=(?<id>(?:(?![&=\?])[\S])+)))");
 
     private static readonly Regex AuthorHandleRegex = new(
-        @"(?:https?://)?(?:www\.)youtube\.com/@(?<handle>(?:(?![&=\?/])[\S])+)");
+        @"(?:https?://)?(?:www\.)youtube\.com/(?<handle>@(?:(?![&=\?/])[\S])+)");
 
     private static readonly Regex VideoThumbnailRegex = new(
         @"(?:https?://)?(i\.ytimg\.com/vi(?:_webp)?)/(?<id>(?:(?![&=\?])[\S]){11})/(?<quality>maxres|sd|hq|mq)?(?<tag>default|1|2|3|(?:\w+))\.(?<ext>\w+)");
@@ -40,7 +40,7 @@ public static class Url
     public static bool IsPlaylistUrl(string url, [NotNullWhen(true)] out string? id) =>
         IsRegexUrl(url, PlaylistRegex, "id", out id);
 
-    public static bool IsAuthorHandleUrl(string url, out string? handle) =>
+    public static bool IsAuthorHandleUrl(string url, [NotNullWhen(true)] out string? handle) =>
         IsRegexUrl(url, AuthorHandleRegex, "handle", out handle);
 
     public static bool IsVideoThumbnailUrl(string url, out ParsedThumbnailInfo parsedThumbnailInfo)
@@ -86,5 +86,13 @@ public static class Url
     public static string ToPlaylistUrl(string id)
     {
         return $"https://www.youtube.com/playlist?list={id}";
+    }
+
+    public static class IdTypes
+    {
+        public static class Author
+        {
+            public const string Handle = "handle";
+        }
     }
 }

@@ -48,8 +48,7 @@ public class SubmissionService : BaseService
         {
             if (!submissionHandler.IsPlatformUrl(url, out var recognizedPlatformUrl)) continue;
 
-            var submission = new Submission(recognizedPlatformUrl.IdOnPlatform, recognizedPlatformUrl.Platform,
-                recognizedPlatformUrl.EntityType, submitterId, autoSubmit);
+            var submission = new Submission(recognizedPlatformUrl, submitterId, autoSubmit);
             DbCtx.Submissions.Add(submission);
             DataUow.RegisterSavedChangesCallbackRunOnce(() => _mediator.Publish(new SubmissionAddedEvent
             {
@@ -87,6 +86,11 @@ public class SubmissionService : BaseService
                 await ServiceUow.AuthorizationService.AuthorizePlaylistIfNotAuthorized(
                     submission.AddedById,
                     submission.PlaylistId.AssertNotNull(), ct);
+                break;
+            case EEntityType.Author:
+                await ServiceUow.AuthorizationService.AuthorizeAuthorIfNotAuthorized(
+                    submission.AddedById,
+                    submission.AuthorId.AssertNotNull(), ct);
                 break;
             default:
                 throw new ApplicationException($"Unsupported entity type {submission.EntityType}");

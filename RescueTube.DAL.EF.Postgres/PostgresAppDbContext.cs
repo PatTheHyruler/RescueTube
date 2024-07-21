@@ -18,5 +18,8 @@ public class PostgresAppDbContext : AppDbContext
     {
         base.OnModelCreating(builder);
         builder.Entity<Video>().Property(v => v.InfoJson).HasColumnType("jsonb");
+
+        builder.Entity<AuthorArchivalSettings>()
+            .OwnsMany(e => e.ArchiveVideosFromDateTimeRanges, b => b.ToJson());
     }
 }

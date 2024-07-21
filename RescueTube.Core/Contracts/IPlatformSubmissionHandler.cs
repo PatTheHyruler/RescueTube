@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-using RescueTube.Core.DTO.Entities;
+using RescueTube.Domain;
 
 namespace RescueTube.Core.Contracts;
 
