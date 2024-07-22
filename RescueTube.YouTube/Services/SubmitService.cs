@@ -139,6 +139,12 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         }
 
         addedOrExistingAuthor.ArchivalSettings = options ?? AuthorArchivalSettings.ArchivedDefault();
+        DataUow.RegisterSavedChangesCallbackRunOnce(() =>
+            _mediator.Publish(new AuthorWithArchivalSettingsAddedOrUpdatedEvent
+            {
+                AuthorId = addedOrExistingAuthor.Id,
+                Platform = EPlatform.YouTube,
+            }, ct));
 
         return addedOrExistingAuthor;
     }
