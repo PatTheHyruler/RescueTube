@@ -6,7 +6,7 @@ using RescueTube.Domain.Entities;
 
 namespace RescueTube.DAL.EF.Postgres;
 
-public class PostgresAppDbContext : AppDbContext
+public class PostgresAppDbContext : BaseAppDbContext
 {
     public PostgresAppDbContext(DbContextOptions<PostgresAppDbContext> options,
         IOptions<DbLoggingOptions> dbLoggingOptions, ILoggerFactory? loggerFactory = null) :

@@ -24,7 +24,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\RescueTube.Core\RescueTube.Core.csproj" />
+      <ProjectReference Include="..\..\RescueTube.DAL.EF.Postgres\RescueTube.DAL.EF.Postgres.csproj" />
       <ProjectReference Include="..\..\RescueTube.Domain\RescueTube.Domain.csproj" />
+      <ProjectReference Include="..\RescueTube.Tests.Common\RescueTube.Tests.Common.csproj" />
     </ItemGroup>
 
 </Project>

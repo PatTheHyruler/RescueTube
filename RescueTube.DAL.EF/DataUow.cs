@@ -20,7 +20,7 @@ public class DataUow : IDataUow
     public IPermissionSpecification Permissions { get; }
     public IImageSpecification Images { get; }
 
-    public IAppDbContext Ctx => _ctx;
+    public AppDbContext Ctx => _ctx;
     private readonly AppDbContext _ctx;
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>

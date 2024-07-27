@@ -25,7 +25,6 @@ public static class ServiceCollectionExtensions
                 .WithExpressionExpanding()
         );
         services.AddScoped<AppDbContext>(GetPostgresAppDbContext);
-        services.AddScoped<IAppDbContext>(GetPostgresAppDbContext);
 
         services.AddScoped<VideoSpecification>();
         services.AddScoped<IVideoSpecification>(s => s.GetRequiredService<VideoSpecification>());

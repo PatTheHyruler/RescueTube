@@ -1,7 +1,9 @@
 using System.Text;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.Data;
 using RescueTube.Core.Events;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
@@ -45,10 +47,12 @@ public class VideoService : BaseYouTubeService
     public async Task<Video?> AddVideoAsync(string id, CancellationToken ct = default)
     {
         var videoData = await FetchVideoDataYtdlAsync(id, false, ct);
-        return videoData == null ? null : await AddVideoAsync(videoData, ct);
+        return videoData == null
+            ? null
+            : await AddVideoAsync(videoData, YouTubeConstants.FetchTypes.YtDlp.VideoPage, ct);
     }
 
-    private Video CreateVideoFromVideoData(VideoData videoData)
+    private Video CreateVideoFromVideoData(VideoData videoData, string fetchType)
     {
         var video = new Video
         {
@@ -122,14 +126,23 @@ public class VideoService : BaseYouTubeService
             PrivacyStatusOnPlatform = videoData.Availability.ToPrivacyStatus(),
             PrivacyStatus = EPrivacyStatus.Private,
 
-            LastFetchUnofficial = DateTimeOffset.UtcNow,
-            LastSuccessfulFetchUnofficial = DateTimeOffset.UtcNow,
+            DataFetches =
+            [
+                new()
+                {
+                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                    Type = fetchType,
+                    OccurredAt = DateTimeOffset.UtcNow,
+                    Success = true,
+                    ShouldAffectValidity = true,
+                }
+            ],
             AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
         return video;
     }
 
-    public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, CancellationToken ct = default)
+    public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, CancellationToken ct = default)
     {
         var video = await DbCtx.Videos
             .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoData.ID)
@@ -147,10 +160,10 @@ public class VideoService : BaseYouTubeService
             .FirstOrDefaultAsync(cancellationToken: ct);
         var isNew = video == null;
         video ??= new Video { IdOnPlatform = videoData.ID };
-        var newVideoData = CreateVideoFromVideoData(videoData);
-        await ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew);
+        var newVideoData = CreateVideoFromVideoData(videoData, fetchType);
+        ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew);
 
-        await TryAddAuthorAsync(video, videoData, ct);
+        await TryAddAuthorAsync(video, videoData, fetchType, ct);
 
         if (isNew)
         {
@@ -160,15 +173,34 @@ public class VideoService : BaseYouTubeService
         return video;
     }
 
-    private async Task TryAddAuthorAsync(Video video, VideoData videoData, CancellationToken ct = default)
+    private async Task TryAddAuthorAsync(Video video, VideoData videoData, string fetchType, CancellationToken ct = default)
     {
         try
         {
-            await YouTubeUow.AuthorService.AddAndSetAuthor(video, videoData, ct);
+            await YouTubeUow.AuthorService.AddAndSetAuthor(video, videoData, fetchType, ct);
+            DbCtx.DataFetches.Add(new DataFetch
+            {
+                VideoId = video.Id,
+                Video = video,
+                OccurredAt = DateTimeOffset.UtcNow,
+                Source = YouTubeConstants.FetchTypes.General.Source,
+                Type = YouTubeConstants.FetchTypes.General.VideoAuthor,
+                ShouldAffectValidity = false,
+                Success = true,
+            });
         }
         catch (Exception e)
         {
-            video.FailedAuthorFetches++;
+            DbCtx.DataFetches.Add(new DataFetch
+            {
+                VideoId = video.Id,
+                Video = video,
+                OccurredAt = DateTimeOffset.UtcNow,
+                Source = YouTubeConstants.FetchTypes.General.Source,
+                Type = YouTubeConstants.FetchTypes.General.VideoAuthor,
+                ShouldAffectValidity = false,
+                Success = false,
+            });
             Logger.LogError(e, "Failed to add author for YouTube video {VideoId}, Author ID {AuthorId} ({AuthorName})",
                 videoData.ID, videoData.ChannelID, videoData.Channel);
         }
@@ -183,12 +215,12 @@ public class VideoService : BaseYouTubeService
                 video.Id, EPlatform.YouTube, video.IdOnPlatform), ct));
     }
 
-    public async Task<Video> AddVideoAsync(VideoData videoData, CancellationToken ct = default)
+    public async Task<Video> AddVideoAsync(VideoData videoData, string fetchType, CancellationToken ct = default)
     {
-        var video = CreateVideoFromVideoData(videoData);
-        await TryAddAuthorAsync(video, videoData, ct);
+        var video = CreateVideoFromVideoData(videoData, fetchType);
+        await TryAddAuthorAsync(video, videoData, fetchType, ct);
         AddVideo(video, ct);
-        
+
         // TODO: Comments callback subscribe
         // TODO: Captions downloader callback subscribe
 
@@ -224,16 +256,31 @@ public class VideoService : BaseYouTubeService
                 errorString);
             // Since we throw an exception here, we can't expect the callers of this function to call SaveChanges()
             // Also, executing this update in the DB should avoid potential concurrency issues
-            await DbCtx.Videos
-                .Where(e => e.Id == video.Id)
-                .ExecuteUpdateAsync(e => e.SetProperty(
-                        v => v.FailedDownloadAttempts,
-                        v => v.FailedDownloadAttempts + 1),
-                    cancellationToken: ct);
+            await using var scope = Services.CreateAsyncScope();
+            var dbCtx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            dbCtx.DataFetches.Add(new DataFetch
+            {
+                OccurredAt = DateTimeOffset.UtcNow,
+                Success = false,
+                Type = YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload,
+                Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                ShouldAffectValidity = false,
+                VideoId = video.Id,
+            });
+            await dbCtx.SaveChangesAsync(ct);
             throw new ApplicationException(errorString ?? $"Failed to download video {video.Id}");
         }
 
-        video.FailedDownloadAttempts = 0;
+        DbCtx.DataFetches.Add(new DataFetch
+        {
+            Video = video,
+            VideoId = video.Id,
+            OccurredAt = DateTimeOffset.UtcNow,
+            Success = true,
+            Type = YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload,
+            Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+            ShouldAffectValidity = false,
+        });
         if (video.VideoFiles != null)
         {
             foreach (var videoFile in video.VideoFiles)

@@ -70,6 +70,7 @@ public static class Setup
         services.AddScoped<DownloadVideoJob>();
         services.AddScoped<FetchCommentsJob>();
         services.AddScoped<HandleSubmissionJob>();
+        services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
         services.AddHostedService<RegisterYouTubeJobsService>();
     }
 

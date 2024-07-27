@@ -12,7 +12,7 @@ public abstract class BaseService
     public ServiceUow ServiceUow => _serviceUow ??= Services.GetRequiredService<ServiceUow>();
 
     public IDataUow DataUow => ServiceUow.DataUow;
-    public IAppDbContext DbCtx => DataUow.Ctx;
+    public AppDbContext DbCtx => DataUow.Ctx;
 
     protected readonly ILogger Logger;
 

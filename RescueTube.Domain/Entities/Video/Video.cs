@@ -17,7 +17,7 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
     public string? DefaultAudioLanguage { get; set; }
 
     public TimeSpan? Duration { get; set; }
-    
+
     public List<VideoStatisticSnapshot>? VideoStatisticSnapshots { get; set; }
 
     public List<Caption>? Captions { get; set; }
@@ -27,10 +27,10 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
 
     public List<VideoFile>? VideoFiles { get; set; }
 
-    public int FailedDownloadAttempts { get; set; }
-    public int FailedAuthorFetches { get; set; }
     public string? InfoJsonPath { get; set; }
     public string? InfoJson { get; set; }
+    // TODO: Replace LastCommentsFetch usages with DataFetches queries?
+    // Currently keeping this for the sake of significantly simpler queries.
     public DateTimeOffset? LastCommentsFetch { get; set; }
 
     public bool? IsLiveStreamRecording { get; set; }
@@ -42,18 +42,16 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
     public DateTimeOffset? UpdatedAt { get; set; }
     public DateTimeOffset? PublishedAt { get; set; }
     public DateTimeOffset? RecordedAt { get; set; }
-    
+
     public EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
 
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
     public EPrivacyStatus PrivacyStatus { get; set; }
 
-    public DateTimeOffset? LastFetchUnofficial { get; set; }
-    public DateTimeOffset? LastSuccessfulFetchUnofficial { get; set; }
-    public DateTimeOffset? LastFetchOfficial { get; set; }
-    public DateTimeOffset? LastSuccessfulFetchOfficial { get; set; }
     public DateTimeOffset AddedToArchiveAt { get; set; }
+
+    public ICollection<DataFetch>? DataFetches { get; set; }
 
     public ICollection<VideoAuthor>? VideoAuthors { get; set; }
     public ICollection<VideoCategory>? VideoCategories { get; set; }

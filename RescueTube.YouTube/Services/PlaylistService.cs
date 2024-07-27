@@ -29,10 +29,12 @@ public class PlaylistService : BaseYouTubeService
     public async Task<Playlist?> AddPlaylistAsync(string id, CancellationToken ct = default)
     {
         var playlistData = await FetchPlaylistDataYtdlAsync(id, ct);
-        return playlistData == null ? null : await AddPlaylistAsync(playlistData, ct);
+        return playlistData == null
+            ? null
+            : await AddPlaylistAsync(playlistData, YouTubeConstants.FetchTypes.YtDlp.Playlist, ct);
     }
 
-    private async Task<Playlist> AddPlaylistAsync(VideoData ytDlData, CancellationToken ct = default)
+    private async Task<Playlist> AddPlaylistAsync(VideoData ytDlData, string fetchType, CancellationToken ct = default)
     {
         var playlist = new Playlist
         {
@@ -64,9 +66,18 @@ public class PlaylistService : BaseYouTubeService
             PrivacyStatusOnPlatform = ytDlData.Availability.ToPrivacyStatus(),
             PrivacyStatus = EPrivacyStatus.Private,
 
-            LastFetchUnofficial = DateTimeOffset.UtcNow,
-            LastSuccessfulFetchUnofficial = DateTimeOffset.UtcNow,
             AddedToArchiveAt = DateTimeOffset.UtcNow,
+            DataFetches = new List<DataFetch>
+            {
+                new()
+                {
+                    OccurredAt = DateTimeOffset.UtcNow,
+                    Success = true,
+                    Type = fetchType,
+                    ShouldAffectValidity = true,
+                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                },
+            },
 
             PlaylistItems = new List<PlaylistItem>(),
             PlaylistImages = ytDlData.Thumbnails.Select(e => e.ToPlaylistImage()).ToList(),
@@ -97,7 +108,8 @@ public class PlaylistService : BaseYouTubeService
                 continue;
             }
 
-            var video = await YouTubeUow.VideoService.AddOrUpdateVideoAsync(playlistEntry, ct);
+            var video = await YouTubeUow.VideoService.AddOrUpdateVideoAsync(playlistEntry,
+                YouTubeConstants.FetchTypes.YtDlp.Playlist, ct);
             playlist.PlaylistItems.Add(new PlaylistItem
             {
                 Position = index,
@@ -106,7 +118,7 @@ public class PlaylistService : BaseYouTubeService
             });
         }
 
-        var author = await YouTubeUow.AuthorService.AddOrGetAuthor(ytDlData, ct);
+        var author = await YouTubeUow.AuthorService.AddOrGetAuthor(ytDlData, YouTubeConstants.FetchTypes.YtDlp.Playlist, ct);
         playlist.Creator = author;
         playlist.CreatorId = author.Id;
 

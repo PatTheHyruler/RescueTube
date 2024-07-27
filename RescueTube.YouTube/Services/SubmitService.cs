@@ -42,7 +42,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         {
             recognizedPlatformUrl = new RecognizedPlatformUrl(url, authorHandle, EPlatform.YouTube, EEntityType.Author)
             {
-                IdType = Url.IdTypes.Author.Handle,
+                IdType = YouTubeConstants.IdTypes.Author.Handle,
             };
             return true;
         }
@@ -111,7 +111,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
     {
         Expression<Func<Author, bool>> existingAuthorFilter = idType switch
         {
-            Url.IdTypes.Author.Handle => author => author.UserName == idOnPlatform,
+            YouTubeConstants.IdTypes.Author.Handle => author => author.UserName == idOnPlatform,
             null => author => author.IdOnPlatform == idOnPlatform,
             _ => throw new ArgumentException($"Unsupported ID type '{idType}'", nameof(idType)),
         };
@@ -127,7 +127,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 
         var channel = idType switch
         {
-            Url.IdTypes.Author.Handle => await YouTubeUow.YouTubeExplodeClient.Channels.GetByHandleAsync(idOnPlatform,
+            YouTubeConstants.IdTypes.Author.Handle => await YouTubeUow.YouTubeExplodeClient.Channels.GetByHandleAsync(idOnPlatform,
                 ct),
             _ => await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct),
         };
@@ -140,9 +140,10 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 
         addedOrExistingAuthor.ArchivalSettings = options ?? AuthorArchivalSettings.ArchivedDefault();
         DataUow.RegisterSavedChangesCallbackRunOnce(() =>
-            _mediator.Publish(new AuthorWithArchivalSettingsAddedOrUpdatedEvent
+            _mediator.Publish(new AuthorArchivalSettingsAddedOrUpdatedEvent
             {
                 AuthorId = addedOrExistingAuthor.Id,
+                ArchivalSettingsId = addedOrExistingAuthor.ArchivalSettings.Id,
                 Platform = EPlatform.YouTube,
             }, ct));
 

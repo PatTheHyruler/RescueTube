@@ -8,9 +8,9 @@ namespace RescueTube.YouTube.Jobs;
 public class EnqueueSubmissionsJob
 {
     private readonly IBackgroundJobClient _backgroundJobClient;
-    private readonly IAppDbContext _dbContext;
+    private readonly AppDbContext _dbContext;
 
-    public EnqueueSubmissionsJob(IBackgroundJobClient backgroundJobClient, IAppDbContext dbContext)
+    public EnqueueSubmissionsJob(IBackgroundJobClient backgroundJobClient, AppDbContext dbContext)
     {
         _backgroundJobClient = backgroundJobClient;
         _dbContext = dbContext;

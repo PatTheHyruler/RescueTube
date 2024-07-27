@@ -10,10 +10,8 @@ public class CommentDtoV1
     public required string IdOnPlatform { get; set; }
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
     public EPrivacyStatus PrivacyStatus { get; set; }
-    public DateTimeOffset? LastFetchUnofficial { get; set; }
-    public DateTimeOffset? LastSuccessfulFetchUnofficial { get; set; }
-    public DateTimeOffset? LastFetchOfficial { get; set; }
-    public DateTimeOffset? LastSuccessfulFetchOfficial { get; set; }
+    public required DataFetchDtoV1? LastSuccessfulFetch { get; set; }
+    public required DataFetchDtoV1? LastUnSuccessfulFetch { get; set; }
     public DateTimeOffset AddedToArchiveAt { get; set; }
 
     public required AuthorSimpleDtoV1 Author { get; set; }

@@ -94,10 +94,8 @@ public static class ApiMapper
             IdOnPlatform = src.IdOnPlatform,
             PrivacyStatusOnPlatform = src.PrivacyStatusOnPlatform,
             PrivacyStatus = src.PrivacyStatus,
-            LastFetchUnofficial = src.LastFetchUnofficial,
-            LastSuccessfulFetchUnofficial = src.LastSuccessfulFetchUnofficial,
-            LastFetchOfficial = src.LastFetchOfficial,
-            LastSuccessfulFetchOfficial = src.LastSuccessfulFetchOfficial,
+            LastSuccessfulFetch = src.LastSuccessfulFetch?.MapDataFetchDtoV1(),
+            LastUnSuccessfulFetch = src.LastUnSuccessfulFetch?.MapDataFetchDtoV1(),
             AddedToArchiveAt = src.AddedToArchiveAt,
             Author = src.Author.MapAuthorSimpleDtoV1(baseUrl),
             ConversationReplies = src.ConversationReplies?
@@ -116,6 +114,16 @@ public static class ApiMapper
             VideoId = src.VideoId,
         };
     }
+
+    public static DataFetchDtoV1 MapDataFetchDtoV1(this DataFetch src) => new()
+    {
+        Id = src.Id,
+        OccurredAt = src.OccurredAt,
+        ShouldAffectValidity = src.ShouldAffectValidity,
+        Source = src.Source,
+        Success = src.Success,
+        Type = src.Type,
+    };
 
     public static CommentStatisticSnapshotDtoV1 MapCommentStatisticSnapshotDtoV1(this CommentStatisticSnapshotDto src)
     {

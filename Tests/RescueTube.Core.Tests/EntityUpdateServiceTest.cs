@@ -1,12 +1,35 @@
-﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Services;
+using RescueTube.DAL.EF.Postgres;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
+using RescueTube.Tests.Common.Logging;
+using Xunit.Abstractions;
 
 namespace RescueTube.Core.Tests;
 
 public class EntityUpdateServiceTest
 {
+    private readonly IServiceCollection _serviceCollection;
+
+    private IServiceScope CreateScope() => _serviceCollection.BuildServiceProvider().CreateScope();
+
+    public EntityUpdateServiceTest(ITestOutputHelper output)
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new List<KeyValuePair<string, string?>>
+            {
+                new("RescueTubePostgres", "fakeconnectionstring")
+            })
+            .Build();
+        _serviceCollection = new ServiceCollection();
+        _serviceCollection.AddSingleton<IConfiguration>(config);
+        _serviceCollection.AddXunitLogging(output);
+        _serviceCollection.AddDbPersistenceEfPostgres(config);
+        _serviceCollection.AddBll();
+    }
+
     [Fact]
     public void UpdateTranslations_AddNewTranslation_InvalidatesOriginal()
     {
@@ -43,7 +66,9 @@ public class EntityUpdateServiceTest
             },
         };
 
-        EntityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
+        using var scope = CreateScope();
+        var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
+        entityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
 
         Assert.Equal(originalTranslationKey.Id, video.Title.Id);
         Assert.NotEqual(newTranslationKey.Id, video.Title.Id);
@@ -104,7 +129,9 @@ public class EntityUpdateServiceTest
             },
         };
 
-        EntityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
+        using var scope = CreateScope();
+        var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
+        entityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
 
         Assert.Equal(originalTranslationKey.Id, video.Title.Id);
         Assert.NotEqual(newTranslationKey.Id, video.Title.Id);
@@ -162,7 +189,9 @@ public class EntityUpdateServiceTest
             },
         };
 
-        EntityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
+        using var scope = CreateScope();
+        var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
+        entityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
 
         Assert.Equal(originalTranslationKey.Id, video.Title.Id);
         Assert.NotEqual(newTranslationKey.Id, video.Title.Id);
@@ -199,9 +228,11 @@ public class EntityUpdateServiceTest
                 }
             },
         };
-        
-        EntityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
-        
+
+        using var scope = CreateScope();
+        var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
+        entityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
+
         Assert.NotNull(video.Title);
         Assert.NotNull(video.Title.Translations);
         Assert.Equal(1, video.Title.Translations.Count);

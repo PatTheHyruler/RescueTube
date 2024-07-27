@@ -17,9 +17,9 @@ public class FetchCommentsJob
     }
 
     [DisableConcurrentExecution(timeoutInSeconds: 60 * 10)]
-    public async Task FetchVideoComments(string videoIdOnPlatform, CancellationToken ct)
+    public async Task FetchVideoComments(Guid videoId, CancellationToken ct)
     {
-        await _commentService.UpdateComments(videoIdOnPlatform, ct);
+        await _commentService.UpdateComments(videoId, ct);
         await _commentService.DataUow.SaveChangesAsync(ct);
     }
 
@@ -27,18 +27,18 @@ public class FetchCommentsJob
     {
         var lastCommentsFetchCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
         var addedToArchiveAtCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromHours(1));
-        var videoIdsOnPlatform = _commentService.DbCtx.Videos
+        var videoIds = _commentService.DbCtx.Videos
             .Where(v => (v.LastCommentsFetch < lastCommentsFetchCutoff
                          || v.LastCommentsFetch == null)
                         && v.AddedToArchiveAt < addedToArchiveAtCutoff
                         && v.Platform == EPlatform.YouTube)
-            .Select(v => v.IdOnPlatform)
+            .Select(v => v.Id)
             .AsAsyncEnumerable();
 
-        await foreach (var videoIdOnPlatform in videoIdsOnPlatform)
+        await foreach (var videoId in videoIds)
         {
             _backgroundJobClient.Enqueue<FetchCommentsJob>(x =>
-                x.FetchVideoComments(videoIdOnPlatform, default));
+                x.FetchVideoComments(videoId, default));
         }
     }
 }

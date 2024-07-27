@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.Events;
+using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
@@ -15,7 +16,10 @@ public class AuthorService : BaseYouTubeService
 {
     private readonly Dictionary<string, Author> _cachedAuthors = new();
     private readonly IMediator _mediator;
-    private DateTimeOffset _lastYtExplodeRateLimitHit = DateTimeOffset.MinValue;
+    /// <summary>
+    /// Last YouTubeExplode exception time (probably means we hit rate limit)
+    /// </summary>
+    public DateTimeOffset LastYtExplodeRateLimitHit { get; private set; } = DateTimeOffset.MinValue;
 
     public AuthorService(IServiceProvider services, ILogger<AuthorService> logger, IMediator mediator) : base(services,
         logger)
@@ -28,14 +32,14 @@ public class AuthorService : BaseYouTubeService
         return await AddOrGetAuthor(channel.Id, channel.ToDomainAuthor, ct);
     }
 
-    public async Task<Author> AddOrGetAuthor(VideoData videoData, CancellationToken ct = default)
+    public async Task<Author> AddOrGetAuthor(VideoData videoData, string fetchType, CancellationToken ct = default)
     {
-        return await AddOrGetAuthor(videoData.ChannelID, videoData.ToDomainAuthor, ct);
+        return await AddOrGetAuthor(videoData.ChannelID, () => videoData.ToDomainAuthor(fetchType), ct);
     }
 
-    public async Task AddAndSetAuthor(Video video, VideoData videoData, CancellationToken ct = default)
+    public async Task AddAndSetAuthor(Video video, VideoData videoData, string fetchType, CancellationToken ct = default)
     {
-        var author = await AddOrGetAuthor(videoData, ct);
+        var author = await AddOrGetAuthor(videoData, fetchType, ct);
         bool hasAuthor;
         if (video.VideoAuthors == null)
         {
@@ -98,7 +102,6 @@ public class AuthorService : BaseYouTubeService
             else
             {
                 var author = arg.NewAuthorFunc();
-                await TryFetchExtraAuthorData(author, arg, ct); // TODO: Move this to a background job
 
                 DbCtx.Authors.Add(author);
                 DataUow.RegisterSavedChangesCallbackRunOnce(() =>
@@ -112,42 +115,84 @@ public class AuthorService : BaseYouTubeService
         return authors;
     }
 
-    private async Task TryFetchExtraAuthorData(Author author, AuthorFetchArg arg, CancellationToken ct = default)
+    public async Task TryUpdateWithYouTubeExplodeDataAsync(Guid authorId, CancellationToken ct = default)
     {
-        if (_lastYtExplodeRateLimitHit < DateTimeOffset.Now.Subtract(TimeSpan.FromHours(1)))
+        var author = await DbCtx.Authors
+            .Where(a => a.Id == authorId)
+            .Include(a => a.AuthorImages!)
+            .ThenInclude(ai => ai.Image!)
+            .FirstAsync(cancellationToken: ct);
+        var newAuthorData = await TryFetchExtraYouTubeExplodeAuthorDataAsync(author.IdOnPlatform, ct);
+        ServiceUow.EntityUpdateService.UpdateAuthor(author, newAuthorData, false, new()
         {
-            try
-            {
-                var channel = await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(author.IdOnPlatform, ct);
-                author.AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
-                {
-                    ImageType = EImageType.ProfilePicture,
-                    LastFetched = DateTimeOffset.UtcNow,
+            ImageUpdateOptions = EntityUpdateService.EImageUpdateOptions.OnlyAdd,
+        });
+    }
 
-                    Image = new Image
+    private async Task<Author> TryFetchExtraYouTubeExplodeAuthorDataAsync(string idOnPlatform, CancellationToken ct)
+    {
+        try
+        {
+            return await FetchExtraYouTubeExplodeAuthorDataAsync(idOnPlatform, ct);
+        }
+        catch (Exception e)
+        {
+            LastYtExplodeRateLimitHit = DateTimeOffset.UtcNow;
+            Logger.LogError(e, "YouTubeExplode data fetch failed for {Platform} author {AuthorIdOnPlatform}",
+                EPlatform.YouTube, idOnPlatform);
+            return new Author
+            {
+                IdOnPlatform = idOnPlatform,
+                DataFetches =
+                [
+                    new DataFetch
                     {
-                        Platform = EPlatform.YouTube,
-
-                        Width = e.Resolution.Width,
-                        Height = e.Resolution.Height,
-                        Url = e.Url,
+                        OccurredAt = DateTimeOffset.UtcNow,
+                        ShouldAffectValidity = true,
+                        Source = YouTubeConstants.FetchTypes.YouTubeExplode.Source,
+                        Type = YouTubeConstants.FetchTypes.YouTubeExplode.Channel,
+                        Success = false,
                     },
-                }).ToList();
-            }
-            catch (Exception e)
-            {
-                _lastYtExplodeRateLimitHit = DateTimeOffset.Now;
-                author.FailedExtraDataFetchAttempts++;
-                Logger.LogError(e, "Error occurred fetching extra author data for {Platform} author {IdOnPlatform}",
-                    EPlatform.YouTube, arg.AuthorIdOnPlatform);
-            }
+                ],
+            };
         }
-        else
+    }
+
+    private async Task<Author> FetchExtraYouTubeExplodeAuthorDataAsync(string idOnPlatform,
+        CancellationToken ct = default)
+    {
+        var channel = await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct);
+
+        return new Author
         {
-            Logger.LogInformation(
-                "Skipped fetching extra data for {Platform} author {IdOnPlatform}, latest rate limit hit was at {LatestRateLimitHit}",
-                EPlatform.YouTube, arg.AuthorIdOnPlatform, _lastYtExplodeRateLimitHit);
-        }
+            IdOnPlatform = idOnPlatform,
+            DisplayName = channel.Title,
+            AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
+            {
+                ImageType = EImageType.ProfilePicture,
+                LastFetched = DateTimeOffset.UtcNow,
+
+                Image = new Image
+                {
+                    Platform = EPlatform.YouTube,
+
+                    Width = e.Resolution.Width,
+                    Height = e.Resolution.Height,
+                    Url = e.Url,
+                },
+            }).ToList(),
+            DataFetches =
+            [
+                new DataFetch
+                {
+                    OccurredAt = DateTimeOffset.UtcNow,
+                    ShouldAffectValidity = true,
+                    Source = YouTubeConstants.FetchTypes.YouTubeExplode.Source,
+                    Type = YouTubeConstants.FetchTypes.YouTubeExplode.Channel,
+                    Success = true,
+                }
+            ],
+        };
     }
 }
 

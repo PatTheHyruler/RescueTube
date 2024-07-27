@@ -19,7 +19,7 @@ public class EntityUpdateService : BaseService
         _dataUow = dataUow;
     }
 
-    public async Task UpdateVideo(Video video, Video newVideoData, bool isNew)
+    public void UpdateVideo(Video video, Video newVideoData, bool isNew)
     {
         UpdateTranslations(video, v => v.Title, newVideoData.Title);
         UpdateTranslations(video, v => v.Description, newVideoData.Description);
@@ -39,12 +39,18 @@ public class EntityUpdateService : BaseService
                 videoStatisticSnapshot.Video = video;
                 videoStatisticSnapshot.VideoId = video.Id;
                 video.VideoStatisticSnapshots.Add(videoStatisticSnapshot);
-                DbCtx.VideoStatisticSnapshots.Add(videoStatisticSnapshot);
+                DbCtx.AddIfTracked(videoStatisticSnapshot);
             }
         }
 
-        video.Captions ??= newVideoData.Captions; // TODO: Proper captions update
-        video.VideoImages ??= newVideoData.VideoImages; // TODO: Proper images update
+        if (isNew) // TODO: Properly handle update
+        {
+            video.Captions ??= newVideoData.Captions;
+            video.VideoImages ??= newVideoData.VideoImages;
+
+            video.VideoFiles ??= newVideoData.VideoFiles; // Not needed? At least currently not updated via this method
+            video.VideoAuthors ??= newVideoData.VideoAuthors;
+        }
 
         video.VideoTags ??= [];
         var originalVideoTags = video.VideoTags
@@ -68,14 +74,11 @@ public class EntityUpdateService : BaseService
                 else
                 {
                     video.VideoTags.Add(newVideoTag);
+                    DbCtx.AddIfTracked(newVideoTag);
                 }
             }
         }
 
-        video.VideoFiles ??= newVideoData.VideoFiles;
-
-        video.FailedDownloadAttempts = newVideoData.FailedDownloadAttempts;
-        video.FailedAuthorFetches = newVideoData.FailedAuthorFetches;
         video.InfoJsonPath = newVideoData.InfoJsonPath ?? video.InfoJsonPath;
         video.InfoJson = newVideoData.InfoJson ?? video.InfoJson;
 
@@ -87,17 +90,112 @@ public class EntityUpdateService : BaseService
             DateTimeUtils.GetLatest(video.LiveStreamStartedAt, newVideoData.LiveStreamStartedAt);
         video.LiveStreamEndedAt = DateTimeUtils.GetLatest(video.LiveStreamEndedAt, newVideoData.LiveStreamEndedAt);
 
-        await UpdateBaseEntity(video, newVideoData, isNew);
+        UpdateBaseEntity(video, newVideoData, isNew);
         video.PublishedAt = DateTimeUtils.GetLatest(video.PublishedAt, newVideoData.PublishedAt);
         video.RecordedAt = DateTimeUtils.GetLatest(video.RecordedAt, newVideoData.RecordedAt);
-
-        video.VideoAuthors ??= newVideoData.VideoAuthors;
 
         // TODO: VideoCategories
         // TODO: StatusChangeEvents?
     }
 
-    public static void UpdateTranslations<TEntity>(TEntity entity,
+    public enum EImageUpdateOptions
+    {
+        NoUpdate,
+        ExpireNonMatching,
+        OnlyAdd,
+    }
+
+    public record UpdateAuthorOptions
+    {
+        public EImageUpdateOptions ImageUpdateOptions { get; set; } = EImageUpdateOptions.NoUpdate;
+    }
+
+    public void UpdateAuthor(Author author, Author newAuthorData, bool isNew, UpdateAuthorOptions options)
+    {
+        var changed = false;
+        var history = author.ToHistory(newAuthorData);
+
+        author.UserName = UpdateValueIgnoreNull(author.UserName, newAuthorData.UserName, ref changed);
+        author.DisplayName = UpdateValueIgnoreNull(author.DisplayName, newAuthorData.DisplayName, ref changed);
+
+        author.AuthorStatisticSnapshots ??= [];
+        if (newAuthorData.AuthorStatisticSnapshots != null)
+        {
+            foreach (var authorStatisticSnapshot in newAuthorData.AuthorStatisticSnapshots.Where(s =>
+                         s.FollowerCount != null || s.PaidFollowerCount != null
+                     ))
+            {
+                authorStatisticSnapshot.Author = author;
+                authorStatisticSnapshot.AuthorId = author.Id;
+                author.AuthorStatisticSnapshots.Add(authorStatisticSnapshot);
+                DbCtx.AddIfTracked(authorStatisticSnapshot);
+            }
+        }
+
+        UpdateTranslations(author, a => a.Bio, newAuthorData.Bio);
+        UpdateAuthorImages(author, newAuthorData, isNew, options);
+
+        // Skipping VideoAuthors, TODO???
+
+        author.ArchivalSettings = newAuthorData.ArchivalSettings ?? author.ArchivalSettings;
+
+        UpdateBaseEntity(author, newAuthorData, isNew);
+
+        if (changed)
+        {
+            _dataUow.Ctx.AuthorHistories.Add(history);
+        }
+    }
+
+    private void UpdateAuthorImages(Author author, Author newAuthorData, bool isNew, UpdateAuthorOptions options)
+    {
+        if (newAuthorData.AuthorImages is { Count: > 0 } && options.ImageUpdateOptions != EImageUpdateOptions.NoUpdate)
+        {
+            if (isNew)
+            {
+                author.AuthorImages ??= new List<AuthorImage>();
+            }
+
+            if (author.AuthorImages == null)
+            {
+                throw new Exception(
+                    $"Can't update {nameof(author.AuthorImages)} for author {author.Id} ({author.IdOnPlatform}) from {newAuthorData.Id}, navigation not loaded");
+            }
+
+            var currentTime = DateTimeOffset.UtcNow;
+            var validAuthorImages = new List<AuthorImage>();
+            foreach (var newAuthorImage in newAuthorData.AuthorImages)
+            {
+                var existingAuthorImage = author.AuthorImages.FirstOrDefault(ai =>
+                    ai.ValidUntil == null &&
+                    ai.Image.AssertNotNull(ai.Id.ToString()).Url == newAuthorImage.Image!.Url.AssertNotNull());
+                if (existingAuthorImage != null)
+                {
+                    existingAuthorImage.LastFetched = DateTimeOffset.UtcNow;
+                    validAuthorImages.Add(existingAuthorImage);
+                }
+                else
+                {
+                    newAuthorImage.ValidSince ??= currentTime;
+                    validAuthorImages.Add(newAuthorImage);
+                    author.AuthorImages.Add(newAuthorImage);
+                    DbCtx.AddIfTracked(newAuthorImage);
+                }
+            }
+
+            if (options.ImageUpdateOptions == EImageUpdateOptions.ExpireNonMatching)
+            {
+                foreach (var authorImage in author.AuthorImages.Where(ai =>
+                             ai.ValidUntil == null
+                             && !validAuthorImages.Contains(ai)))
+                {
+                    authorImage.ValidUntil = currentTime;
+                }
+            }
+        }
+    }
+
+    public void UpdateTranslations<TEntity>(TEntity entity,
         Expression<Func<TEntity, TextTranslationKey?>> translationsPropertyExpression,
         TextTranslationKey? newTranslationKey)
     {
@@ -135,6 +233,7 @@ public class EntityUpdateService : BaseService
             }
 
             existingTranslationKey.Translations.Add(newTranslation);
+            DbCtx.AddIfTracked(newTranslation);
             if (existingTranslation != null)
             {
                 var validityChangeTime = newTranslation.ValidSince ?? DateTimeOffset.UtcNow;
@@ -144,7 +243,7 @@ public class EntityUpdateService : BaseService
         }
     }
 
-    public async Task UpdateComment(Comment comment, Comment newCommentData, bool isNew)
+    public void UpdateComment(Comment comment, Comment newCommentData, bool isNew)
     {
         var changed = false;
         var commentHistory = comment.ToHistory(newCommentData);
@@ -168,7 +267,7 @@ public class EntityUpdateService : BaseService
             newStats.CommentId = comment.Id;
 
             comment.CommentStatisticSnapshots.Add(newStats);
-            DataUow.Ctx.CommentStatisticSnapshots.Add(newStats);
+            DbCtx.AddIfTracked(newStats);
         }
 
         comment.AuthorIsCreator ??= newCommentData.AuthorIsCreator;
@@ -177,7 +276,7 @@ public class EntityUpdateService : BaseService
 
         comment.OrderIndex = newCommentData.OrderIndex;
 
-        await UpdateBaseEntity(comment, newCommentData, isNew);
+        UpdateBaseEntity(comment, newCommentData, isNew);
 
         if (changed)
         {
@@ -185,7 +284,7 @@ public class EntityUpdateService : BaseService
         }
     }
 
-    private async Task UpdateBaseEntity<TEntity>(TEntity entity, TEntity newEntityData, bool isNew)
+    private void UpdateBaseEntity<TEntity>(TEntity entity, TEntity newEntityData, bool isNew)
         where TEntity : IMainArchiveEntity
     {
         entity.CreatedAt = DateTimeUtils.GetLatest(entity.CreatedAt, newEntityData.CreatedAt);
@@ -207,13 +306,14 @@ public class EntityUpdateService : BaseService
 
             if (statusChangeEvent != null)
             {
-                await ServiceUow.StatusChangeService.Push(statusChangeEvent);
+                ServiceUow.StatusChangeService.Push(statusChangeEvent);
             }
         }
 
         if (isNew)
         {
             entity.Platform = newEntityData.Platform;
+            entity.IdOnPlatform = newEntityData.IdOnPlatform;
         }
 
         entity.PrivacyStatusOnPlatform ??= newEntityData.PrivacyStatusOnPlatform;
@@ -221,13 +321,25 @@ public class EntityUpdateService : BaseService
             newEntityData
                 .PrivacyStatus; // TODO: actually when updating from a fetch, this should be left at original. Handle outside update function?
 
-        entity.LastFetchOfficial = DateTimeUtils.GetLatest(entity.LastFetchOfficial, newEntityData.LastFetchOfficial);
-        entity.LastSuccessfulFetchOfficial =
-            DateTimeUtils.GetLatest(entity.LastSuccessfulFetchOfficial, newEntityData.LastSuccessfulFetchOfficial);
-        entity.LastFetchUnofficial =
-            DateTimeUtils.GetLatest(entity.LastFetchUnofficial, newEntityData.LastFetchUnofficial);
-        entity.LastSuccessfulFetchUnofficial =
-            DateTimeUtils.GetLatest(entity.LastSuccessfulFetchUnofficial, newEntityData.LastSuccessfulFetchUnofficial);
+        if (newEntityData.DataFetches != null)
+        {
+            if (entity.DataFetches == null)
+            {
+                entity.DataFetches = newEntityData.DataFetches;
+                foreach (var dataFetch in newEntityData.DataFetches)
+                {
+                    DbCtx.AddIfTracked(dataFetch);
+                }
+            }
+            else
+            {
+                foreach (var dataFetch in newEntityData.DataFetches)
+                {
+                    entity.DataFetches.Add(dataFetch);
+                    DbCtx.AddIfTracked(dataFetch);
+                }
+            }
+        }
 
         entity.AddedToArchiveAt = entity.AddedToArchiveAt == default
             ? newEntityData.AddedToArchiveAt

@@ -18,6 +18,19 @@ public static class DomainHistoryExtensions
         return history;
     }
 
+    public static AuthorHistory ToHistory(this Author author, Author newAuthor)
+    {
+        var history = author.ToHistoryBase<Author, AuthorHistory>(newAuthor);
+        history.LastOfficialValidAt = GetMaxDateTimeOffset(author.UpdatedAt, author.CreatedAt);
+
+        history.UserName = author.UserName;
+        history.DisplayName = author.DisplayName;
+        history.CreatedAt = author.CreatedAt;
+        history.UpdatedAt = author.UpdatedAt;
+
+        return history;
+    }
+
     private static THistoryEntity ToHistoryBase<TEntity, THistoryEntity>(this TEntity entity,
         TEntity newEntity)
         where THistoryEntity : IHistoryEntity<TEntity>, new()
@@ -27,19 +40,17 @@ public static class DomainHistoryExtensions
         {
             CurrentId = entity.Id,
             Current = entity,
-            FirstNotValidAt = GetMaxDateTimeOffset(
-                newEntity.LastFetchOfficial, newEntity.LastFetchUnofficial
-                ) ?? DateTimeOffset.UtcNow,
-            LastValidAt = GetMaxDateTimeOffset(entity.LastSuccessfulFetchUnofficial, entity.LastSuccessfulFetchOfficial)
-                ?? DateTimeOffset.UtcNow,
+            FirstNotValidAt = newEntity.DataFetches?
+                .Where(x => x is { ShouldAffectValidity: true, Success: true })
+                .Select(x => x.OccurredAt)
+                .Min() ?? DateTimeOffset.UtcNow,
+            LastValidAt = entity.DataFetches?
+                .Where(x => x is { ShouldAffectValidity: true, Success: true })
+                .Select(x => x.OccurredAt)
+                .Max() ?? DateTimeOffset.UtcNow,
         };
 
         return history;
-    }
-
-    private static DateTimeOffset? GetMaxDateTimeOffset(params DateTimeOffset?[] values)
-    {
-        return values.Aggregate<DateTimeOffset?, DateTimeOffset?>(null, GetMaxDateTimeOffset);
     }
 
     private static DateTimeOffset? GetMaxDateTimeOffset(DateTimeOffset? existing, DateTimeOffset? replacement)

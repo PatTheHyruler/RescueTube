@@ -1,26 +1,22 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Contracts;
-using RescueTube.Core.Data;
-using RescueTube.DAL.EF.Converters;
-using RescueTube.Domain;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Identity;
 using RescueTube.Domain.Entities.Localization;
-using RescueTube.Domain.Enums;
 
-namespace RescueTube.DAL.EF;
+namespace RescueTube.Core.Data;
 
 public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserClaim, UserRole,
-    UserLogin, RoleClaim, UserToken>, IAppDbContext
+    UserLogin, RoleClaim, UserToken>
 {
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     public DbSet<Author> Authors => Set<Author>();
+    public DbSet<AuthorHistory> AuthorHistories => Set<AuthorHistory>();
     public DbSet<AuthorStatisticSnapshot> AuthorStatisticSnapshots => Set<AuthorStatisticSnapshot>();
     public DbSet<AuthorImage> AuthorImages => Set<AuthorImage>();
 
@@ -52,6 +48,8 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     public DbSet<PlaylistItem> PlaylistItems => Set<PlaylistItem>();
     public DbSet<PlaylistItemPositionHistory> PlaylistItemPositionHistories => Set<PlaylistItemPositionHistory>();
     public DbSet<PlaylistImage> PlaylistImages => Set<PlaylistImage>();
+
+    public DbSet<DataFetch> DataFetches => Set<DataFetch>();
 
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
@@ -93,30 +91,6 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
             .IsUnique();
     }
 
-    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
-    {
-        base.ConfigureConventions(configurationBuilder);
-
-        configurationBuilder
-            .Properties<EPlatform>()
-            .HaveConversion<EnumToStringConverter<EPlatform>>();
-        configurationBuilder
-            .Properties<EImageType>()
-            .HaveConversion<EnumToStringConverter<EImageType>>();
-        configurationBuilder
-            .Properties<EPrivacyStatus>()
-            .HaveConversion<EnumToStringConverter<EPrivacyStatus>>();
-        configurationBuilder
-            .Properties<EAuthorRole>()
-            .HaveConversion<EnumToStringConverter<EAuthorRole>>();
-        configurationBuilder
-            .Properties<EEntityType>()
-            .HaveConversion<EnumToStringConverter<EEntityType>>();
-
-        configurationBuilder.Properties<DateTimeOffset>()
-            .HaveConversion<DateTimeOffsetToUtcConverter>();
-    }
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         base.OnConfiguring(optionsBuilder);
@@ -127,9 +101,15 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
         }
     }
 
-    public Task MigrateAsync()
+    public EntityEntry<TEntity> AddIfTracked<TEntity>(TEntity entity) where TEntity : class
     {
-        return Database.MigrateAsync();
+        var entry = Entry(entity);
+        if (entry.State != EntityState.Detached)
+        {
+            entry.State = EntityState.Added;
+        }
+
+        return entry;
     }
 }
 

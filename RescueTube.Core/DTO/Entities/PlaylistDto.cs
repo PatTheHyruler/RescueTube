@@ -1,5 +1,4 @@
-﻿using RescueTube.Domain.Contracts;
-using RescueTube.Domain.Entities;
+﻿using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
 using RescueTube.Domain.Enums;
 
@@ -10,7 +9,7 @@ public class PlaylistWithVideosDto<TVideo> : PlaylistDto
     public required List<PlaylistItemDto<TVideo>> Items { get; set; }
 }
 
-public class PlaylistDto : IMainArchiveEntity
+public class PlaylistDto
 {
     public required ICollection<TextTranslation> Title { get; set; }
     public required ICollection<TextTranslation> Description { get; set; }
@@ -28,11 +27,9 @@ public class PlaylistDto : IMainArchiveEntity
     public required Guid Id { get; set; }
     public required EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
-    public required DateTimeOffset? LastFetchUnofficial { get; set; }
-    public required DateTimeOffset? LastSuccessfulFetchUnofficial { get; set; }
-    public required DateTimeOffset? LastFetchOfficial { get; set; }
-    public required DateTimeOffset? LastSuccessfulFetchOfficial { get; set; }
     public required DateTimeOffset AddedToArchiveAt { get; set; }
+    public DataFetch? LastSuccessfulFetch { get; set; }
+    public DataFetch? LastUnSuccessfulFetch { get; set; }
     public required DateTimeOffset? CreatedAt { get; set; }
     public required DateTimeOffset? UpdatedAt { get; set; }
 }

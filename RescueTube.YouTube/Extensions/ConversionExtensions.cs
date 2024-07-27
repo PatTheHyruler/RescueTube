@@ -29,18 +29,30 @@ public static class ConversionExtensions
         {
             Platform = EPlatform.YouTube,
             IdOnPlatform = channel.Id,
-            
+
             UserName = Url.IsAuthorHandleUrl(channel.Url, out var handle) ? handle : null,
             DisplayName = channel.Title,
-            
+
             PrivacyStatusOnPlatform = EPrivacyStatus.Public,
             PrivacyStatus = EPrivacyStatus.Private,
-            
+
             AddedToArchiveAt = DateTimeOffset.UtcNow,
+
+            DataFetches = new List<DataFetch>
+            {
+                new()
+                {
+                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                    Type = YouTubeConstants.FetchTypes.YouTubeExplode.Channel,
+                    OccurredAt = DateTimeOffset.UtcNow,
+                    ShouldAffectValidity = true,
+                    Success = true,
+                },
+            },
         };
     }
 
-    public static Author ToDomainAuthor(this VideoData videoData)
+    public static Author ToDomainAuthor(this VideoData videoData, string fetchType)
     {
         return new Author
         {
@@ -60,14 +72,39 @@ public static class ConversionExtensions
                 }
             },
 
+            AuthorImages = videoData.Thumbnails?.Select(t => new AuthorImage
+            {
+                ImageType = EImageType.Thumbnail,
+                LastFetched = DateTimeOffset.UtcNow,
+                Image = new Image
+                {
+                    Width = t.Width,
+                    Height = t.Height,
+                    IdOnPlatform = t.ID,
+                    Url = t.Url,
+                }
+            }).ToList(),
+
+            DataFetches = new List<DataFetch>
+            {
+                new()
+                {
+                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                    Type = fetchType,
+                    OccurredAt = DateTimeOffset.UtcNow,
+                    ShouldAffectValidity = true,
+                    Success = true,
+                },
+            },
+
             PrivacyStatusOnPlatform = EPrivacyStatus.Public,
             PrivacyStatus = EPrivacyStatus.Private,
 
             AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
     }
-    
-    public static Author ToDomainAuthor(this CommentData commentData)
+
+    public static Author ToDomainAuthor(this CommentData commentData, string fetchType)
     {
         var domainAuthor = new Author
         {
@@ -76,8 +113,9 @@ public static class ConversionExtensions
 
             UserName = commentData.Author,
 
+            PrivacyStatusOnPlatform = EPrivacyStatus.Public,
             PrivacyStatus = EPrivacyStatus.Private,
-            
+
             AuthorImages = new List<AuthorImage>
             {
                 new()
@@ -92,15 +130,24 @@ public static class ConversionExtensions
                 }
             },
 
-            LastFetchUnofficial = DateTimeOffset.UtcNow,
-            LastSuccessfulFetchUnofficial = DateTimeOffset.UtcNow,
+            DataFetches = new List<DataFetch>
+            {
+                new()
+                {
+                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                    Type = fetchType,
+                    OccurredAt = DateTimeOffset.UtcNow,
+                    ShouldAffectValidity = true,
+                    Success = true,
+                }
+            },
             AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
 
         return domainAuthor;
     }
-    
-    public static Comment ToDomainComment(this CommentData commentData)
+
+    public static Comment ToDomainComment(this CommentData commentData, string fetchType)
     {
         return new Comment
         {
@@ -108,7 +155,7 @@ public static class ConversionExtensions
             IdOnPlatform = commentData.ID,
 
             Content = commentData.Text,
-            
+
             CommentStatisticSnapshots = new List<CommentStatisticSnapshot>
             {
                 new()
@@ -125,8 +172,17 @@ public static class ConversionExtensions
 
             PrivacyStatus = EPrivacyStatus.Private,
 
-            LastFetchUnofficial = DateTimeOffset.UtcNow,
-            LastSuccessfulFetchUnofficial = DateTimeOffset.UtcNow,
+            DataFetches = new List<DataFetch>
+            {
+                new()
+                {
+                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                    Type = fetchType,
+                    OccurredAt = DateTimeOffset.UtcNow,
+                    ShouldAffectValidity = true,
+                    Success = true,
+                }
+            },
             AddedToArchiveAt = DateTimeOffset.UtcNow
         };
     }

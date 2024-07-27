@@ -17,7 +17,7 @@ public sealed class IdentityUow
 
     private IDataUow? _dataUow;
     public IDataUow DataUow => _dataUow ??= _services.GetRequiredService<IDataUow>();
-    public IAppDbContext DbCtx => DataUow.Ctx;
+    public AppDbContext DbCtx => DataUow.Ctx;
 
     private UserManager<User>? _userManager;
     public UserManager<User> UserManager => _userManager ??= _services.GetRequiredService<UserManager<User>>();

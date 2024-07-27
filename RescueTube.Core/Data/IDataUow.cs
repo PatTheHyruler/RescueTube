@@ -9,7 +9,7 @@ public interface IDataUow
     public IPermissionSpecification Permissions { get; }
     public IImageSpecification Images { get; }
 
-    public IAppDbContext Ctx { get; }
+    public AppDbContext Ctx { get; }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 

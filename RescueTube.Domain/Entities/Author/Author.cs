@@ -29,17 +29,14 @@ public class Author : BaseIdDbEntity, IMainArchiveEntity
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
     public EPrivacyStatus PrivacyStatus { get; set; }
 
-    public int FailedExtraDataFetchAttempts { get; set; }
-    public DateTimeOffset? LastFetchUnofficial { get; set; }
-    public DateTimeOffset? LastSuccessfulFetchUnofficial { get; set; }
-    public DateTimeOffset? LastFetchOfficial { get; set; }
-    public DateTimeOffset? LastSuccessfulFetchOfficial { get; set; }
     public DateTimeOffset AddedToArchiveAt { get; set; }
 
     public ICollection<VideoAuthor>? VideoAuthors { get; set; }
 
     public Guid? ArchivalSettingsId { get; set; }
     public AuthorArchivalSettings? ArchivalSettings { get; set; }
+
+    public ICollection<DataFetch>? DataFetches { get; set; }
 
     [InverseProperty(nameof(Category.Creator))]
     public ICollection<Category>? CreatedCategories { get; set; }
@@ -48,4 +45,6 @@ public class Author : BaseIdDbEntity, IMainArchiveEntity
 
     public ICollection<StatusChangeEvent>? StatusChangeEvents { get; set; }
     public ICollection<EntityAccessPermission>? EntityAccessPermissions { get; set; }
+
+    public ICollection<AuthorHistory>? AuthorHistories { get; set; }
 }

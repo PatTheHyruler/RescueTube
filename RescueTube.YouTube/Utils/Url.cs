@@ -87,12 +87,4 @@ public static class Url
     {
         return $"https://www.youtube.com/playlist?list={id}";
     }
-
-    public static class IdTypes
-    {
-        public static class Author
-        {
-            public const string Handle = "handle";
-        }
-    }
 }

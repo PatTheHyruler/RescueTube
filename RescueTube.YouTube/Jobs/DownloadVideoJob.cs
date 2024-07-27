@@ -28,9 +28,17 @@ public class DownloadVideoJob
     {
         var addedToArchiveAtCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
         var videoIds = _videoService.DbCtx.Videos
-            .Where(v => v.VideoFiles!.Count == 0
-                        && v.FailedDownloadAttempts < 3
-                        && v.AddedToArchiveAt < addedToArchiveAtCutoff)
+            .Where(v =>
+                v.VideoFiles!.Count == 0
+                && v.AddedToArchiveAt < addedToArchiveAtCutoff
+                && v.DataFetches!
+                    .Where(d =>
+                        d.Source == YouTubeConstants.FetchTypes.YtDlp.Source
+                        && d.Type == YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload)
+                    .OrderByDescending(x => x.OccurredAt)
+                    .Take(3)
+                    .Count(x => !x.Success) < 3 // TODO: Make sure this compiles to SQL
+            )
             .Select(v => v.Id)
             .AsAsyncEnumerable();
 
@@ -40,6 +48,7 @@ public class DownloadVideoJob
             {
                 break;
             }
+
             _backgroundJobClient.Enqueue<DownloadVideoJob>(x =>
                 x.DownloadVideoAsync(videoId, default));
         }

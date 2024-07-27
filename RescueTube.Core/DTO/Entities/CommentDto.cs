@@ -1,4 +1,5 @@
 ﻿using RescueTube.Domain.Contracts;
+using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.DTO.Entities;
@@ -11,11 +12,11 @@ public class CommentDto : IFetchable
     public required string IdOnPlatform { get; set; }
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
     public EPrivacyStatus PrivacyStatus { get; set; }
-    public DateTimeOffset? LastFetchUnofficial { get; set; }
-    public DateTimeOffset? LastSuccessfulFetchUnofficial { get; set; }
-    public DateTimeOffset? LastFetchOfficial { get; set; }
-    public DateTimeOffset? LastSuccessfulFetchOfficial { get; set; }
+    public DataFetch? LastSuccessfulFetch { get; set; }
+    public DataFetch? LastUnSuccessfulFetch { get; set; }
     public DateTimeOffset AddedToArchiveAt { get; set; }
+
+    public ICollection<DataFetch>? DataFetches { get; set; }
 
     public required AuthorSimple Author { get; set; }
 

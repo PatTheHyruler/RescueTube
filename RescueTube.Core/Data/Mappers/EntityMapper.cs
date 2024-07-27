@@ -106,10 +106,12 @@ public class EntityMapper
         Platform = pl.Platform,
         IdOnPlatform = pl.IdOnPlatform,
 
-        LastFetchUnofficial = pl.LastFetchUnofficial,
-        LastSuccessfulFetchUnofficial = pl.LastSuccessfulFetchUnofficial,
-        LastFetchOfficial = pl.LastFetchOfficial,
-        LastSuccessfulFetchOfficial = pl.LastSuccessfulFetchOfficial,
+        LastSuccessfulFetch = pl.DataFetches!
+            .OrderByDescending(x => x.OccurredAt)
+            .FirstOrDefault(x => x.Success && x.ShouldAffectValidity), // TODO: Make sure these actually compile to SQL
+        LastUnSuccessfulFetch = pl.DataFetches!
+            .OrderByDescending(x => x.OccurredAt)
+            .FirstOrDefault(x => !x.Success && x.ShouldAffectValidity), // TODO: Make sure these actually compile to SQL
 
         AddedToArchiveAt = pl.AddedToArchiveAt,
         CreatedAt = pl.CreatedAt,
@@ -123,10 +125,12 @@ public class EntityMapper
         IdOnPlatform = comment.IdOnPlatform,
         PrivacyStatusOnPlatform = comment.PrivacyStatusOnPlatform,
         PrivacyStatus = comment.PrivacyStatus,
-        LastFetchUnofficial = comment.LastFetchUnofficial,
-        LastSuccessfulFetchUnofficial = comment.LastSuccessfulFetchUnofficial,
-        LastFetchOfficial = comment.LastFetchOfficial,
-        LastSuccessfulFetchOfficial = comment.LastSuccessfulFetchOfficial,
+        LastSuccessfulFetch = comment.DataFetches!
+            .OrderByDescending(x => x.OccurredAt)
+            .FirstOrDefault(x => x.Success && x.ShouldAffectValidity), // TODO: Make sure these actually compile to SQL
+        LastUnSuccessfulFetch = comment.DataFetches!
+            .OrderByDescending(x => x.OccurredAt)
+            .FirstOrDefault(x => !x.Success && x.ShouldAffectValidity), // TODO: Make sure these actually compile to SQL
         AddedToArchiveAt = comment.AddedToArchiveAt,
         Author = ToAuthorSimple.Invoke(comment.Author!),
         ConversationReplies = depth < 1

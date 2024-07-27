@@ -5,10 +5,10 @@ namespace RescueTube.YouTube.Jobs;
 
 public class HandleSubmissionJob
 {
-    private readonly IAppDbContext _dbContext;
+    private readonly AppDbContext _dbContext;
     private readonly YouTubeUow _youTubeUow;
 
-    public HandleSubmissionJob(IAppDbContext dbContext, YouTubeUow youTubeUow)
+    public HandleSubmissionJob(AppDbContext dbContext, YouTubeUow youTubeUow)
     {
         _dbContext = dbContext;
         _youTubeUow = youTubeUow;
