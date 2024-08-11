@@ -21,6 +21,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using WebApp.ApiModels;
 using WebApp.Auth;
 using WebApp.Utils;
+using WebApp.Utils.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration, new ConfigurationReaderOptions { SectionName = "Logging:Serilog" })
+    .Enrich.With<ScopePathEnricher>()
     .CreateLogger();
 builder.Logging.AddSerilog();
 builder.Services.AddSingleton(Log.Logger);
