@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+using LinqKit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -30,8 +32,30 @@ public class AuthorService : BaseYouTubeService
         _mediator = mediator;
     }
 
+    private static DateTimeOffset GetLatestAllowedVideosFetchTime() => DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(10));
+
+    public static Expression<Func<Author, bool>> AuthorHasNoTooRecentVideoFetches(
+        DateTimeOffset? latestAllowedVideosFetchTime = null)
+    {
+        latestAllowedVideosFetchTime ??= GetLatestAllowedVideosFetchTime();
+
+        return a =>
+            !a.DataFetches!.Any(df =>
+                df.Source == YouTubeConstants.FetchTypes.YtDlp.Source
+                && df.Type == YouTubeConstants.FetchTypes.YtDlp.ChannelVideos
+                && df.OccurredAt > latestAllowedVideosFetchTime);
+    }
+
+    public static Expression<Func<Author, bool>> AuthorIsActiveAndConfiguredForVideoArchival => a =>
+        a.ArchivalSettingsId != null
+        && a.ArchivalSettings!.Active
+        && a.ArchivalSettings!.ArchiveVideos;
+
     public async Task TryFetchAuthorVideosAsync(Guid authorId, bool force, CancellationToken ct = default)
     {
+        using var logScope = Logger.BeginScope(
+            nameof(TryFetchAuthorVideosAsync) + " AuthorId: {AuthorId}, Force: {Force}",
+            authorId, force);
         const string fetchType = YouTubeConstants.FetchTypes.YtDlp.ChannelVideos;
 
         var author = await DbCtx.Authors
@@ -44,16 +68,27 @@ public class AuthorService : BaseYouTubeService
             .ThenInclude(ai => ai.Image)
             .FirstAsync(ct);
 
-        if (!force && !ShouldFetchAuthorVideos(author))
+        switch (force)
         {
-            return;
+            case false when !ShouldFetchAuthorVideos(author):
+                return;
+            case true when !AuthorHasNoTooRecentVideoFetches(
+                    DateTimeOffset.UtcNow.Subtract(TimeSpan.FromMinutes(10)))
+                .Invoke(author):
+                Logger.LogInformation("Author {AuthorId} latest VideoFetch occurred too recently, skipping", authorId);
+                return;
         }
 
-        var authorResult = await YouTubeUow.YoutubeDl.RunVideoDataFetch(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
+        Logger.LogInformation("Fetching videos for author {AuthorId}", authorId);
+
+        var authorResult =
+            await YouTubeUow.YoutubeDl.RunVideoDataFetch(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
+
+        Logger.LogInformation("Fetched videos for author {AuthorId}", authorId);
 
         if (authorResult is not { Success: true, Data.Entries: not null, Data.Entries.Length: > 0 })
         {
-            Logger.LogInformation("Failed to fetch videos for author {AuthorId}", authorId);
+            Logger.LogError("Failed to fetch videos for author {AuthorId}", authorId);
             await _mediator.Send(new AddFailedDataFetchRequest
             {
                 Type = fetchType,
@@ -88,9 +123,12 @@ public class AuthorService : BaseYouTubeService
             case { ArchivalSettings.Active: false }:
                 Logger.LogWarning("Author {AuthorId} not enabled for archival", author.Id);
                 return false;
+            case { ArchivalSettings.ArchiveVideos: false }:
+                Logger.LogWarning("Author {AuthorId} not enabled for video archival", author.Id);
+                return false;
         }
 
-        var latestAllowedVideosFetchTime = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
+        var latestAllowedVideosFetchTime = GetLatestAllowedVideosFetchTime();
         var latestDataFetch = author.DataFetches
             .AssertNotNull($"{nameof(author.DataFetches)} not loaded for author {author.Id}")
             .MaxBy(d => d.OccurredAt);

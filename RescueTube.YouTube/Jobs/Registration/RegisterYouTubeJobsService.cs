@@ -36,6 +36,10 @@ public class RegisterYouTubeJobsService : BackgroundService
             "yt-update-ytdlp-binary",
             x => x.UpdateYouTubeDlAsync(),
             Cron.Daily);
+        recurringJobManager.AddOrUpdate<FetchAuthorVideosJob>(
+            "yt-fetch-author-videos-recurring",
+            x => x.EnqueueAuthorVideoFetchesRecurring(default),
+            "*/20 * * * *"); // Every 20th minute
 
         return Task.CompletedTask;
     }

@@ -43,10 +43,12 @@ public static class DomainHistoryExtensions
             FirstNotValidAt = newEntity.DataFetches?
                 .Where(x => x is { ShouldAffectValidity: true, Success: true })
                 .Select(x => x.OccurredAt)
+                .DefaultIfEmpty()
                 .Min() ?? DateTimeOffset.UtcNow,
             LastValidAt = entity.DataFetches?
                 .Where(x => x is { ShouldAffectValidity: true, Success: true })
                 .Select(x => x.OccurredAt)
+                .DefaultIfEmpty()
                 .Max() ?? DateTimeOffset.UtcNow,
         };
 

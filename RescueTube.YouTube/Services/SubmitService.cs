@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Events;
 using RescueTube.Core.Exceptions;
+using RescueTube.Core.Utils;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
@@ -118,27 +119,40 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         var existingAuthor = await DbCtx.Authors
             .Where(a => a.Platform == EPlatform.YouTube)
             .Where(existingAuthorFilter)
+            .Include(a => a.ArchivalSettings)
             .FirstOrDefaultAsync(ct);
 
-        if (existingAuthor != null)
-        {
-            return existingAuthor;
-        }
-
-        var channel = idType switch
-        {
-            YouTubeConstants.IdTypes.Author.Handle => await YouTubeUow.YouTubeExplodeClient.Channels.GetByHandleAsync(idOnPlatform,
-                ct),
-            _ => await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct),
-        };
-
-        var addedOrExistingAuthor = await YouTubeUow.AuthorService.AddOrGetAuthor(channel, ct);
+        var addedOrExistingAuthor = existingAuthor;
         if (addedOrExistingAuthor == null)
         {
-            throw new ApplicationException("Author not found on platform");
+            var channel = idType switch
+            {
+                YouTubeConstants.IdTypes.Author.Handle => await YouTubeUow.YouTubeExplodeClient.Channels
+                    .GetByHandleAsync(idOnPlatform,
+                        ct),
+                _ => await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct),
+            };
+
+            if (channel == null)
+            {
+                throw new ApplicationException("Author not found on platform");
+            }
+
+            addedOrExistingAuthor = await YouTubeUow.AuthorService.AddOrGetAuthor(channel, ct);
         }
 
-        addedOrExistingAuthor.ArchivalSettings = options ?? AuthorArchivalSettings.ArchivedDefault(); // TODO: Better logic for this
+        if (addedOrExistingAuthor.ArchivalSettings == null)
+        {
+            await DbCtx.Entry(addedOrExistingAuthor).Reference(a => a.ArchivalSettings).LoadAsync(ct);
+        }
+
+        if (addedOrExistingAuthor.ArchivalSettings != null)
+        {
+            DbCtx.Remove(addedOrExistingAuthor.ArchivalSettings);
+        }
+        addedOrExistingAuthor.ArchivalSettings =
+            options ?? AuthorArchivalSettings.ArchivedDefault(); // TODO: Better logic for this
+        DbCtx.Add(addedOrExistingAuthor.ArchivalSettings);
         DataUow.RegisterSavedChangesCallbackRunOnce(() =>
             _mediator.Publish(new AuthorArchivalEnabledEvent
             {

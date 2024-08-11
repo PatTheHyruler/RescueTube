@@ -40,7 +40,7 @@ public class EntityUpdateService : BaseService
                 videoStatisticSnapshot.Video = video;
                 videoStatisticSnapshot.VideoId = video.Id;
                 video.VideoStatisticSnapshots.Add(videoStatisticSnapshot);
-                DbCtx.AddIfTracked(videoStatisticSnapshot);
+                DbCtx.Add(videoStatisticSnapshot);
             }
         }
 
@@ -75,7 +75,7 @@ public class EntityUpdateService : BaseService
                 else
                 {
                     video.VideoTags.Add(newVideoTag);
-                    DbCtx.AddIfTracked(newVideoTag);
+                    DbCtx.Add(newVideoTag);
                 }
             }
         }
@@ -129,7 +129,7 @@ public class EntityUpdateService : BaseService
                 authorStatisticSnapshot.Author = author;
                 authorStatisticSnapshot.AuthorId = author.Id;
                 author.AuthorStatisticSnapshots.Add(authorStatisticSnapshot);
-                DbCtx.AddIfTracked(authorStatisticSnapshot);
+                DbCtx.Add(authorStatisticSnapshot);
             }
         }
 
@@ -180,7 +180,7 @@ public class EntityUpdateService : BaseService
                     newAuthorImage.ValidSince ??= currentTime;
                     validAuthorImages.Add(newAuthorImage);
                     author.AuthorImages.Add(newAuthorImage);
-                    DbCtx.AddIfTracked(newAuthorImage);
+                    DbCtx.Add(newAuthorImage);
                 }
             }
 
@@ -218,6 +218,7 @@ public class EntityUpdateService : BaseService
                 .Lambda<Action<TEntity, TextTranslationKey>>(assign, thisParameter, valueParameter)
                 .Compile();
             setter(entity, existingTranslationKey);
+            DbCtx.Add(existingTranslationKey);
         }
 
         existingTranslationKey.Translations ??= new List<TextTranslation>();
@@ -234,7 +235,7 @@ public class EntityUpdateService : BaseService
             }
 
             existingTranslationKey.Translations.Add(newTranslation);
-            DbCtx.AddIfTracked(newTranslation);
+            DbCtx.Add(newTranslation);
             if (existingTranslation != null)
             {
                 var validityChangeTime = newTranslation.ValidSince ?? DateTimeOffset.UtcNow;
@@ -268,7 +269,7 @@ public class EntityUpdateService : BaseService
             newStats.CommentId = comment.Id;
 
             comment.CommentStatisticSnapshots.Add(newStats);
-            DbCtx.AddIfTracked(newStats);
+            DbCtx.Add(newStats);
         }
 
         comment.AuthorIsCreator ??= newCommentData.AuthorIsCreator;
@@ -329,7 +330,7 @@ public class EntityUpdateService : BaseService
                 entity.DataFetches = newEntityData.DataFetches;
                 foreach (var dataFetch in newEntityData.DataFetches)
                 {
-                    DbCtx.AddIfTracked(dataFetch);
+                    DbCtx.Add(dataFetch);
                 }
             }
             else
@@ -337,7 +338,7 @@ public class EntityUpdateService : BaseService
                 foreach (var dataFetch in newEntityData.DataFetches)
                 {
                     entity.DataFetches.Add(dataFetch);
-                    DbCtx.AddIfTracked(dataFetch);
+                    DbCtx.Add(dataFetch);
                 }
             }
         }

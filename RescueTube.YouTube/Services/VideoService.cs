@@ -109,24 +109,41 @@ public class VideoService : BaseYouTubeService
     public async Task AddOrUpdateVideosFromAuthorVideosFetchAsync(VideoData authorData, Author author,
         string fetchType, CancellationToken ct)
     {
-        var fakePlaylists = authorData.Entries;
-        foreach (var fakePlaylist in fakePlaylists)
+        foreach (var fakePlaylistOrVideoData in authorData.Entries)
+        {
+            await HandleVideoDataFromAuthorVideosFetchAsync(fakePlaylistOrVideoData, author, fetchType, ct);
+        }
+    }
+
+    private async Task HandleVideoDataFromAuthorVideosFetchAsync(VideoData fakePlaylistOrVideoData, Author author,
+        string fetchType,
+        CancellationToken ct = default, EVideoType? parentVideoType = null, uint depth = 0)
+    {
+        if (depth > 1)
+        {
+            Logger.LogCritical("Unexpectedly large recursion depth, skipping. Title: {VideoDataTitle}", fakePlaylistOrVideoData.Title);
+            return;
+        }
+
+        if (fakePlaylistOrVideoData.Entries is not null)
         {
             EVideoType? videoType = null;
-            if (fakePlaylist.Title?.EndsWith(" - Shorts") ?? false)
+            if (fakePlaylistOrVideoData.Title?.EndsWith(" - Shorts") ?? false)
             {
                 videoType = EVideoType.Short;
             }
 
-            foreach (var basicVideoData in fakePlaylist.Entries)
+            foreach (var data in fakePlaylistOrVideoData.Entries)
             {
-                var video = basicVideoData.ToDomainVideo(fetchType);
-                if (videoType != null)
-                {
-                    video.Type ??= videoType;
-                }
-
-                await AddOrUpdateVideoAsync(basicVideoData, fetchType, author, ct);
+                await HandleVideoDataFromAuthorVideosFetchAsync(data, author, fetchType, ct, videoType, depth + 1);
+            }
+        }
+        else
+        {
+            var video = await AddOrUpdateVideoAsync(fakePlaylistOrVideoData, fetchType, author, ct);
+            if (parentVideoType != null)
+            {
+                video.Type ??= parentVideoType;
             }
         }
     }
