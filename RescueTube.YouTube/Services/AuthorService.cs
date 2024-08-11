@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.Events;
+using RescueTube.Core.Mediator;
 using RescueTube.Core.Services;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
-using RescueTube.YouTube.Extensions;
+using RescueTube.YouTube.Utils;
 using YoutubeDLSharp.Metadata;
 
 namespace RescueTube.YouTube.Services;
@@ -16,6 +18,7 @@ public class AuthorService : BaseYouTubeService
 {
     private readonly Dictionary<string, Author> _cachedAuthors = new();
     private readonly IMediator _mediator;
+
     /// <summary>
     /// Last YouTubeExplode exception time (probably means we hit rate limit)
     /// </summary>
@@ -27,6 +30,81 @@ public class AuthorService : BaseYouTubeService
         _mediator = mediator;
     }
 
+    public async Task TryFetchAuthorVideosAsync(Guid authorId, bool force, CancellationToken ct = default)
+    {
+        const string fetchType = YouTubeConstants.FetchTypes.YtDlp.ChannelVideos;
+
+        var author = await DbCtx.Authors
+            .Where(a => a.Id == authorId)
+            .Include(a => a.ArchivalSettings)
+            .Include(a => a.DataFetches!.Where(df =>
+                df.Source == YouTubeConstants.FetchTypes.YtDlp.Source
+                && df.Type == fetchType))
+            .Include(a => a.AuthorImages!)
+            .ThenInclude(ai => ai.Image)
+            .FirstAsync(ct);
+
+        if (!force && !ShouldFetchAuthorVideos(author))
+        {
+            return;
+        }
+
+        var authorResult = await YouTubeUow.YoutubeDl.RunVideoDataFetch(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
+
+        if (authorResult is not { Success: true, Data.Entries: not null, Data.Entries.Length: > 0 })
+        {
+            Logger.LogInformation("Failed to fetch videos for author {AuthorId}", authorId);
+            await _mediator.Send(new AddFailedDataFetchRequest
+            {
+                Type = fetchType,
+                Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                ShouldAffectValidity = false,
+                AuthorId = authorId,
+            }, ct);
+            return;
+        }
+
+        var domainAuthorData = authorResult.Data.ToDomainAuthorFromChannel(fetchType);
+        ServiceUow.EntityUpdateService.UpdateAuthor(author, domainAuthorData, false,
+            new EntityUpdateService.UpdateAuthorOptions
+            {
+                ImageUpdateOptions = EntityUpdateService.EImageUpdateOptions.OnlyAdd,
+            });
+
+        await YouTubeUow.VideoService.AddOrUpdateVideosFromAuthorVideosFetchAsync(
+            authorResult.Data, author, fetchType, ct);
+    }
+
+    private bool ShouldFetchAuthorVideos(Author author)
+    {
+        switch (author)
+        {
+            case { ArchivalSettingsId: null }:
+                Logger.LogWarning("Author {AuthorId} has no ArchivalSettings", author.Id);
+                return false;
+            case { ArchivalSettings: null }:
+                Logger.LogWarning("ArchivalSettings not loaded for author {AuthorId}", author.Id);
+                return false;
+            case { ArchivalSettings.Active: false }:
+                Logger.LogWarning("Author {AuthorId} not enabled for archival", author.Id);
+                return false;
+        }
+
+        var latestAllowedVideosFetchTime = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
+        var latestDataFetch = author.DataFetches
+            .AssertNotNull($"{nameof(author.DataFetches)} not loaded for author {author.Id}")
+            .MaxBy(d => d.OccurredAt);
+        if (latestDataFetch != null && latestDataFetch.OccurredAt > latestAllowedVideosFetchTime)
+        {
+            Logger.LogInformation("Skipping videos fetch for author {AuthorId}, latest data fetch: {LatestDataFetch}",
+                author.Id,
+                new { latestDataFetch.OccurredAt, latestDataFetch.Id, latestDataFetch.Source, latestDataFetch.Type });
+            return false;
+        }
+
+        return true;
+    }
+
     public async Task<Author> AddOrGetAuthor(YoutubeExplode.Channels.Channel channel, CancellationToken ct = default)
     {
         return await AddOrGetAuthor(channel.Id, channel.ToDomainAuthor, ct);
@@ -34,12 +112,18 @@ public class AuthorService : BaseYouTubeService
 
     public async Task<Author> AddOrGetAuthor(VideoData videoData, string fetchType, CancellationToken ct = default)
     {
-        return await AddOrGetAuthor(videoData.ChannelID, () => videoData.ToDomainAuthor(fetchType), ct);
+        return await AddOrGetAuthor(videoData.ChannelID, () => videoData.ToDomainAuthorFromVideo(fetchType), ct);
     }
 
-    public async Task AddAndSetAuthor(Video video, VideoData videoData, string fetchType, CancellationToken ct = default)
+    public async Task AddAndSetAuthor(Video video, VideoData videoData, string fetchType,
+        CancellationToken ct = default)
     {
         var author = await AddOrGetAuthor(videoData, fetchType, ct);
+        await AddAndSetAuthor(video, author, ct);
+    }
+
+    public async Task AddAndSetAuthor(Video video, Author author, CancellationToken ct = default)
+    {
         bool hasAuthor;
         if (video.VideoAuthors == null)
         {

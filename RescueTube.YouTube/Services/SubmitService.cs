@@ -138,13 +138,13 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             throw new ApplicationException("Author not found on platform");
         }
 
-        addedOrExistingAuthor.ArchivalSettings = options ?? AuthorArchivalSettings.ArchivedDefault();
+        addedOrExistingAuthor.ArchivalSettings = options ?? AuthorArchivalSettings.ArchivedDefault(); // TODO: Better logic for this
         DataUow.RegisterSavedChangesCallbackRunOnce(() =>
-            _mediator.Publish(new AuthorArchivalSettingsAddedOrUpdatedEvent
+            _mediator.Publish(new AuthorArchivalEnabledEvent
             {
                 AuthorId = addedOrExistingAuthor.Id,
-                ArchivalSettingsId = addedOrExistingAuthor.ArchivalSettings.Id,
                 Platform = EPlatform.YouTube,
+                AuthorArchivalSettings = addedOrExistingAuthor.ArchivalSettings,
             }, ct));
 
         return addedOrExistingAuthor;
@@ -160,7 +160,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             return existingVideo;
         }
 
-        var addedVideo = await YouTubeUow.VideoService.AddVideoAsync(videoIdOnPlatform, ct);
+        var addedVideo = await YouTubeUow.VideoService.AddOrUpdateVideoAsync(videoIdOnPlatform, ct);
         return addedVideo ?? throw new VideoNotFoundOnPlatformException();
     }
 

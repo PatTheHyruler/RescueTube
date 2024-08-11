@@ -35,6 +35,11 @@ public abstract class BaseAppDbContext : AppDbContext
         configurationBuilder
             .Properties<EEntityType>()
             .HaveConversion<EnumToStringConverter<EEntityType>>();
+        configurationBuilder.Properties<EVideoType>()
+            .HaveConversion<EnumToStringConverter<EVideoType>>();
+        configurationBuilder
+            .Properties<ELiveStatus>()
+            .HaveConversion<EnumToStringConverter<ELiveStatus>>();
 
         configurationBuilder.Properties<DateTimeOffset>()
             .HaveConversion<DateTimeOffsetToUtcConverter>();

@@ -3,7 +3,6 @@ using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
-using RescueTube.YouTube.Extensions;
 using RescueTube.YouTube.Utils;
 using YoutubeDLSharp.Metadata;
 

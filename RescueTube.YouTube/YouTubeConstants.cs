@@ -16,7 +16,7 @@ public static class YouTubeConstants
         {
             public const string Source = "yt-dlp";
 
-            public const string ChannelPage = "channelpage";
+            public const string ChannelVideos = "channelvideos";
             public const string VideoPage = "videopage";
             public const string Playlist = "playlist";
             public const string Comments = "comments";

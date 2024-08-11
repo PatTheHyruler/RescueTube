@@ -4,13 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
+using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.Events;
+using RescueTube.Core.Mediator;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
-using RescueTube.YouTube.Extensions;
 using RescueTube.YouTube.Utils;
 using YoutubeDLSharp.Metadata;
 
@@ -44,105 +45,19 @@ public class VideoService : BaseYouTubeService
         return videoResult.Data;
     }
 
-    public async Task<Video?> AddVideoAsync(string id, CancellationToken ct = default)
+    public async Task<Video?> AddOrUpdateVideoAsync(string id, CancellationToken ct = default)
     {
         var videoData = await FetchVideoDataYtdlAsync(id, false, ct);
         return videoData == null
             ? null
-            : await AddVideoAsync(videoData, YouTubeConstants.FetchTypes.YtDlp.VideoPage, ct);
+            : await AddOrUpdateVideoAsync(videoData, YouTubeConstants.FetchTypes.YtDlp.VideoPage, ct);
     }
 
-    private Video CreateVideoFromVideoData(VideoData videoData, string fetchType)
-    {
-        var video = new Video
-        {
-            Platform = EPlatform.YouTube,
-            IdOnPlatform = videoData.ID,
+    public Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, CancellationToken ct = default) =>
+        AddOrUpdateVideoAsync(videoData: videoData, fetchType: fetchType, author: null, ct: ct);
 
-            Title = new TextTranslationKey
-            {
-                Translations = new List<TextTranslation>
-                {
-                    new()
-                    {
-                        Content = videoData.Title,
-                    }
-                }
-            },
-            Description = new TextTranslationKey
-            {
-                Translations = new List<TextTranslation>
-                {
-                    new()
-                    {
-                        Content = videoData.Description,
-                    }
-                }
-            },
-
-            Duration = videoData.Duration != null ? TimeSpan.FromSeconds(videoData.Duration.Value) : null,
-
-            VideoStatisticSnapshots = new List<VideoStatisticSnapshot>
-            {
-                new()
-                {
-                    ViewCount = videoData.ViewCount,
-                    LikeCount = videoData.LikeCount,
-                    DislikeCount = videoData.DislikeCount,
-                    CommentCount = videoData.CommentCount,
-
-                    ValidAt = DateTimeOffset.UtcNow,
-                }
-            },
-
-            Captions = videoData.Subtitles?
-                .SelectMany(kvp => kvp.Value.Select(subtitleData => new Caption
-                {
-                    Culture = kvp.Key,
-                    Ext = subtitleData.Ext,
-                    LastFetched = DateTimeOffset.UtcNow,
-                    Name = subtitleData.Name,
-                    Platform = EPlatform.YouTube,
-                    Url = subtitleData.Url,
-                })).ToList(),
-            VideoImages = videoData.Thumbnails?.Select(e => e.ToVideoImage()).ToList(),
-            VideoTags = videoData.Tags?.Select(e => new VideoTag
-            {
-                Tag = e,
-                NormalizedTag = e
-                    .ToUpper()
-                    .Where(c => !char.IsPunctuation(c))
-                    .Aggregate("", (current, c) => current + c)
-                    .Normalize(NormalizationForm.FormKD),
-            }).ToList(),
-
-            IsLiveStreamRecording = videoData.WasLive ?? videoData.IsLive,
-            LiveStreamStartedAt = (videoData.WasLive ?? videoData.IsLive ?? false) ? videoData.ReleaseTimestamp : null,
-
-            CreatedAt = videoData.UploadDate,
-            UpdatedAt = videoData.ModifiedTimestamp,
-            PublishedAt = videoData.ReleaseTimestamp,
-
-            PrivacyStatusOnPlatform = videoData.Availability.ToPrivacyStatus(),
-            PrivacyStatus = EPrivacyStatus.Private,
-
-            DataFetches =
-            [
-                new()
-                {
-                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
-                    Type = fetchType,
-                    OccurredAt = DateTimeOffset.UtcNow,
-                    Success = true,
-                    ShouldAffectValidity = true,
-                }
-            ],
-            AddedToArchiveAt = DateTimeOffset.UtcNow,
-        };
-        return video;
-    }
-
-    public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, CancellationToken ct = default)
+    public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, Author? author,
+        CancellationToken ct = default)
     {
         var video = await DbCtx.Videos
             .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoData.ID)
@@ -160,20 +75,64 @@ public class VideoService : BaseYouTubeService
             .FirstOrDefaultAsync(cancellationToken: ct);
         var isNew = video == null;
         video ??= new Video { IdOnPlatform = videoData.ID };
-        var newVideoData = CreateVideoFromVideoData(videoData, fetchType);
+        var newVideoData = videoData.ToDomainVideo(fetchType);
         ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew);
 
-        await TryAddAuthorAsync(video, videoData, fetchType, ct);
+        if (author == null)
+        {
+            await TryAddAuthorAsync(video, videoData, fetchType, ct);
+        }
+        else
+        {
+            if (isNew)
+            {
+                DbCtx.VideoAuthors.SetVideoAuthor(video.Id, author.Id);
+            }
+            else
+            {
+                await YouTubeUow.AuthorService.AddAndSetAuthor(video, author, ct);
+            }
+        }
 
         if (isNew)
         {
-            AddVideo(video, ct);
+            DbCtx.Videos.Add(video);
+
+            DataUow.RegisterSavedChangesCallbackRunOnce(() =>
+                _mediator.Publish(new VideoAddedEvent(
+                    video.Id, EPlatform.YouTube, video.IdOnPlatform), ct));
         }
 
         return video;
     }
 
-    private async Task TryAddAuthorAsync(Video video, VideoData videoData, string fetchType, CancellationToken ct = default)
+    public async Task AddOrUpdateVideosFromAuthorVideosFetchAsync(VideoData authorData, Author author,
+        string fetchType, CancellationToken ct)
+    {
+        var fakePlaylists = authorData.Entries;
+        foreach (var fakePlaylist in fakePlaylists)
+        {
+            EVideoType? videoType = null;
+            if (fakePlaylist.Title?.EndsWith(" - Shorts") ?? false)
+            {
+                videoType = EVideoType.Short;
+            }
+
+            foreach (var basicVideoData in fakePlaylist.Entries)
+            {
+                var video = basicVideoData.ToDomainVideo(fetchType);
+                if (videoType != null)
+                {
+                    video.Type ??= videoType;
+                }
+
+                await AddOrUpdateVideoAsync(basicVideoData, fetchType, author, ct);
+            }
+        }
+    }
+
+    private async Task TryAddAuthorAsync(Video video, VideoData videoData, string fetchType,
+        CancellationToken ct = default)
     {
         try
         {
@@ -206,29 +165,6 @@ public class VideoService : BaseYouTubeService
         }
     }
 
-    private void AddVideo(Video video, CancellationToken ct)
-    {
-        DbCtx.Videos.Add(video);
-
-        DataUow.RegisterSavedChangesCallbackRunOnce(() =>
-            _mediator.Publish(new VideoAddedEvent(
-                video.Id, EPlatform.YouTube, video.IdOnPlatform), ct));
-    }
-
-    public async Task<Video> AddVideoAsync(VideoData videoData, string fetchType, CancellationToken ct = default)
-    {
-        var video = CreateVideoFromVideoData(videoData, fetchType);
-        await TryAddAuthorAsync(video, videoData, fetchType, ct);
-        AddVideo(video, ct);
-
-        // TODO: Comments callback subscribe
-        // TODO: Captions downloader callback subscribe
-
-        // TODO: Categories, Games
-
-        return video;
-    }
-
     public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
         var query = DbCtx.Videos
@@ -256,18 +192,13 @@ public class VideoService : BaseYouTubeService
                 errorString);
             // Since we throw an exception here, we can't expect the callers of this function to call SaveChanges()
             // Also, executing this update in the DB should avoid potential concurrency issues
-            await using var scope = Services.CreateAsyncScope();
-            var dbCtx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            dbCtx.DataFetches.Add(new DataFetch
+            await _mediator.Send(new AddFailedDataFetchRequest
             {
-                OccurredAt = DateTimeOffset.UtcNow,
-                Success = false,
                 Type = YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload,
                 Source = YouTubeConstants.FetchTypes.YtDlp.Source,
                 ShouldAffectValidity = false,
                 VideoId = video.Id,
-            });
-            await dbCtx.SaveChangesAsync(ct);
+            }, ct);
             throw new ApplicationException(errorString ?? $"Failed to download video {video.Id}");
         }
 

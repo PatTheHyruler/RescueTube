@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.YouTube.Base;
-using RescueTube.YouTube.Extensions;
+using RescueTube.YouTube.Utils;
 using YoutubeDLSharp.Metadata;
 using Video = RescueTube.Domain.Entities.Video;
 

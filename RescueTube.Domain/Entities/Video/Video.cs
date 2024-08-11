@@ -12,6 +12,7 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
 
     public Guid? DescriptionId { get; set; }
     public TextTranslationKey? Description { get; set; }
+    public EVideoType? Type { get; set; }
 
     public string? DefaultLanguage { get; set; }
     public string? DefaultAudioLanguage { get; set; }
@@ -33,7 +34,7 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
     // Currently keeping this for the sake of significantly simpler queries.
     public DateTimeOffset? LastCommentsFetch { get; set; }
 
-    public bool? IsLiveStreamRecording { get; set; }
+    public ELiveStatus LiveStatus { get; set; } = ELiveStatus.None;
     public string? StreamId { get; set; }
     public DateTimeOffset? LiveStreamStartedAt { get; set; }
     public DateTimeOffset? LiveStreamEndedAt { get; set; }

@@ -6,6 +6,7 @@ using RescueTube.Core.Data;
 using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Services;
 
@@ -49,7 +50,7 @@ public class EntityUpdateService : BaseService
             video.VideoImages ??= newVideoData.VideoImages;
 
             video.VideoFiles ??= newVideoData.VideoFiles; // Not needed? At least currently not updated via this method
-            video.VideoAuthors ??= newVideoData.VideoAuthors;
+            // video.VideoAuthors ??= newVideoData.VideoAuthors;
         }
 
         video.VideoTags ??= [];
@@ -84,7 +85,7 @@ public class EntityUpdateService : BaseService
 
         video.LastCommentsFetch = DateTimeUtils.GetLatest(video.LastCommentsFetch, newVideoData.LastCommentsFetch);
 
-        video.IsLiveStreamRecording = newVideoData.IsLiveStreamRecording ?? video.IsLiveStreamRecording;
+        video.LiveStatus = newVideoData.LiveStatus != ELiveStatus.None ? newVideoData.LiveStatus : video.LiveStatus;
         video.StreamId = newVideoData.StreamId ?? video.StreamId;
         video.LiveStreamStartedAt =
             DateTimeUtils.GetLatest(video.LiveStreamStartedAt, newVideoData.LiveStreamStartedAt);
