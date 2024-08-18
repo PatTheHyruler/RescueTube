@@ -125,15 +125,9 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         var addedOrExistingAuthor = existingAuthor;
         if (addedOrExistingAuthor == null)
         {
-            var channel = idType switch
-            {
-                YouTubeConstants.IdTypes.Author.Handle => await YouTubeUow.YouTubeExplodeClient.Channels
-                    .GetByHandleAsync(idOnPlatform,
-                        ct),
-                _ => await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct),
-            };
+            var channel = await YouTubeUow.AuthorService.FetchYouTubeExplodeChannelAsync(idOnPlatform, idType, ct);
 
-            if (channel == null)
+            if (channel is null)
             {
                 throw new ApplicationException("Author not found on platform");
             }

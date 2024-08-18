@@ -238,6 +238,19 @@ public class AuthorService : BaseYouTubeService
         return authors;
     }
 
+    public async Task<YoutubeExplode.Channels.Channel?> FetchYouTubeExplodeChannelAsync(
+        string idOnPlatform, string? idType, CancellationToken ct = default)
+    {
+        var channel = idType switch
+        {
+            YouTubeConstants.IdTypes.Author.Handle => await YouTubeUow.YouTubeExplodeClient.Channels
+                .GetByHandleAsync(Url.AuthorHandleRemovePrefix(idOnPlatform), ct),
+            _ => await YouTubeUow.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct),
+        };
+
+        return channel;
+    }
+
     public async Task TryUpdateWithYouTubeExplodeDataAsync(Guid authorId, CancellationToken ct = default)
     {
         var author = await DbCtx.Authors

@@ -87,4 +87,9 @@ public static class Url
     {
         return $"https://www.youtube.com/playlist?list={id}";
     }
+
+    public static string AuthorHandleRemovePrefix(string handle)
+    {
+        return handle.StartsWith('@') ? handle[1..] : handle;
+    }
 }
