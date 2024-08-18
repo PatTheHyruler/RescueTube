@@ -72,7 +72,7 @@ public class PermissionSpecification : BaseDbService, IPermissionSpecification
             expression = expression.Or(v => Ctx.PlaylistItems.Any(pv =>
                 pv.VideoId == v.Id &&
                 IsUserAllowedToAccessPlaylistOrPlaylistIsPublic(userId, true)
-                    .Invoke(pv.Playlist)
+                    .Invoke(pv.Playlist!)
             ));
         }
 
