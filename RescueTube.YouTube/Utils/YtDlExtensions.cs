@@ -92,20 +92,21 @@ public static class YtDlExtensions
         if (channelData.Thumbnails is { Length: > 0 })
         {
             author.AuthorImages = channelData.Thumbnails.Select(t => new AuthorImage
-            {
-                ImageType = EImageType.ProfilePicture,
-                LastFetched = DateTimeOffset.UtcNow,
-
-                Image = new Image
                 {
-                    Platform = EPlatform.YouTube,
-                    IdOnPlatform = t.ID,
-                    
-                    Url = t.Url,
-                    Width = t.Width,
-                    Height = t.Height,
-                },
-            }).ToList();
+                    LastFetched = DateTimeOffset.UtcNow,
+
+                    Image = new Image
+                    {
+                        Platform = EPlatform.YouTube,
+                        IdOnPlatform = t.ID,
+
+                        Url = t.Url,
+                        Width = t.Width,
+                        Height = t.Height,
+                    },
+                })
+                .Select(ImageUtils.TrySetImageType)
+                .ToList();
         }
 
         // TODO: Tags!

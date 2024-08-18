@@ -32,7 +32,8 @@ public class AuthorService : BaseYouTubeService
         _mediator = mediator;
     }
 
-    private static DateTimeOffset GetLatestAllowedVideosFetchTime() => DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(10));
+    private static DateTimeOffset GetLatestAllowedVideosFetchTime() =>
+        DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(10));
 
     public static Expression<Func<Author, bool>> AuthorHasNoTooRecentVideoFetches(
         DateTimeOffset? latestAllowedVideosFetchTime = null)
@@ -290,19 +291,20 @@ public class AuthorService : BaseYouTubeService
             IdOnPlatform = idOnPlatform,
             DisplayName = channel.Title,
             AuthorImages = channel.Thumbnails.Select(e => new AuthorImage
-            {
-                ImageType = EImageType.ProfilePicture,
-                LastFetched = DateTimeOffset.UtcNow,
-
-                Image = new Image
                 {
-                    Platform = EPlatform.YouTube,
+                    LastFetched = DateTimeOffset.UtcNow,
 
-                    Width = e.Resolution.Width,
-                    Height = e.Resolution.Height,
-                    Url = e.Url,
-                },
-            }).ToList(),
+                    Image = new Image
+                    {
+                        Platform = EPlatform.YouTube,
+
+                        Width = e.Resolution.Width,
+                        Height = e.Resolution.Height,
+                        Url = e.Url,
+                    },
+                })
+                .Select(ImageUtils.TrySetImageType)
+                .ToList(),
             DataFetches =
             [
                 new DataFetch

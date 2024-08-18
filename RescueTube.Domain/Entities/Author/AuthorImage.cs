@@ -5,7 +5,8 @@ namespace RescueTube.Domain.Entities;
 
 public class AuthorImage : BaseIdDbEntity
 {
-    public EImageType ImageType { get; set; }
+    public EImageType? ImageType { get; set; }
+    public short ImageTypeDetectionAttempts { get; set; }
 
     public DateTimeOffset? ValidSince { get; set; }
     public DateTimeOffset? ValidUntil { get; set; }
