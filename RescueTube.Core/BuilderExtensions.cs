@@ -26,6 +26,7 @@ public static class BuilderExtensions
         services.AddScoped<AuthorService>();
         services.AddScoped<VideoService>();
         services.AddScoped<CommentService>();
+        services.AddScoped<StatusChangeService>();
 
         services.AddScoped<EntityMapper>();
 

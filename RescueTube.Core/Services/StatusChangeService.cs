@@ -6,7 +6,7 @@ namespace RescueTube.Core.Services;
 
 public class StatusChangeService : BaseService
 {
-    public StatusChangeService(IServiceProvider services, ILogger logger) : base(services, logger)
+    public StatusChangeService(IServiceProvider services, ILogger<StatusChangeService> logger) : base(services, logger)
     {
     }
 
