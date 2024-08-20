@@ -34,7 +34,7 @@ public class UpdateImagesResolutionJob
         }
     }
 
-    [DisableConcurrentSameArgExecution(60)]
+    [SkipConcurrentSameArgExecution]
     public async Task UpdateAuthorImagesResolutionsAsync(Guid authorId, CancellationToken ct)
     {
         var images = _dataUow.Ctx.Images
@@ -49,7 +49,7 @@ public class UpdateImagesResolutionJob
         await _dataUow.SaveChangesAsync(ct);
     }
 
-    [DisableConcurrentSameArgExecution(60)]
+    [SkipConcurrentSameArgExecution]
     public async Task UpdateVideoImagesResolutionsAsync(Guid videoId, CancellationToken ct)
     {
         var images = _dataUow.Ctx.Images
@@ -64,7 +64,7 @@ public class UpdateImagesResolutionJob
         await _dataUow.SaveChangesAsync(ct);
     }
 
-    [DisableConcurrentSameArgExecution(60)]
+    [SkipConcurrentSameArgExecution]
     public async Task UpdateResolutionAsync(Guid imageId, CancellationToken ct)
     {
         await _imageService.TryUpdateResolutionFromFileAsync(imageId, ct);

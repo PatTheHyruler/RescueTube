@@ -40,7 +40,7 @@ public class FetchVideoDataJob
         }
     }
 
-    [DisableConcurrentSameArgExecution(5 * 60)]
+    [SkipConcurrentSameArgExecution]
     public async Task FetchVideoData(Guid videoId, CancellationToken ct)
     {
         await _youTubeUow.VideoService.AddOrUpdateVideoAsync(videoId, ct);

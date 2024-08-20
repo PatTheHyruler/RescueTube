@@ -40,7 +40,7 @@ public class FetchPlaylistDataJob
         }
     }
 
-    [DisableConcurrentSameArgExecution(5 * 10)]
+    [SkipConcurrentSameArgExecution]
     public async Task FetchPlaylistData(Guid playlistId, CancellationToken ct)
     {
         await _youTubeUow.PlaylistService.AddOrUpdatePlaylistAsync(playlistId, ct);

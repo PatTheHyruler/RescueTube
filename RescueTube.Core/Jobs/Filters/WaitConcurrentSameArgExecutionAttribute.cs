@@ -5,11 +5,14 @@ using Hangfire.Server;
 
 namespace RescueTube.Core.Jobs.Filters;
 
-public class DisableConcurrentSameArgExecutionAttribute : JobFilterAttribute, IServerFilter
+/// <summary>
+/// If the same job with the same arguments is already running, wait for that job to complete before running the new job
+/// </summary>
+public class WaitConcurrentSameArgExecutionAttribute : JobFilterAttribute, IServerFilter
 {
     private readonly int _timeoutSeconds;
 
-    public DisableConcurrentSameArgExecutionAttribute(int timeoutSeconds)
+    public WaitConcurrentSameArgExecutionAttribute(int timeoutSeconds)
     {
         if (timeoutSeconds <= 0)
         {
@@ -20,7 +23,7 @@ public class DisableConcurrentSameArgExecutionAttribute : JobFilterAttribute, IS
         _timeoutSeconds = timeoutSeconds;
     }
 
-    private const string JobLockKey = "SameArgJobLock";
+    private const string JobLockKey = "SameArgJobWaitLock";
 
     public void OnPerforming(PerformingContext context)
     {

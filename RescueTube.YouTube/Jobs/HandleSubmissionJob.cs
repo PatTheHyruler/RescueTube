@@ -14,7 +14,7 @@ public class HandleSubmissionJob
         _youTubeUow = youTubeUow;
     }
 
-    [DisableConcurrentSameArgExecution(60)]
+    [SkipConcurrentSameArgExecution]
     public async Task RunAsync(Guid submissionId, CancellationToken ct = default)
     {
         await _youTubeUow.SubmitService.HandleSubmissionAsync(submissionId, ct);

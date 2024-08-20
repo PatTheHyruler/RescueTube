@@ -48,7 +48,7 @@ public class FetchYouTubeExplodeAuthorDataJob
     }
 
     [AutomaticRetry(Attempts = 3, DelaysInSeconds = [1 * 3600, 2 * 3600, 4 * 3600])]
-    [DisableConcurrentSameArgExecution(60)]
+    [SkipConcurrentSameArgExecution]
     public async Task FetchYouTubeExplodeAuthorData(Guid authorId, CancellationToken ct)
     {
         if (_youTubeUow.AuthorService.LastYtExplodeRateLimitHit > DateTimeOffset.Now.Subtract(TimeSpan.FromHours(1)))
