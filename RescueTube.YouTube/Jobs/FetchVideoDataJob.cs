@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
@@ -23,13 +24,14 @@ public class FetchVideoDataJob
     public async Task EnqueueVideoDataFetchesRecurring(CancellationToken ct)
     {
         var videoIds = _dataUow.Ctx.Videos
+            .AsExpandable()
             .Where(v => v.Platform == EPlatform.YouTube
-                        && !v.DataFetches!.Any(d =>
-                            d.Source == YouTubeConstants.FetchTypes.YtDlp.Source
-                            && d.Type == YouTubeConstants.FetchTypes.YtDlp.VideoPage
-                            && ((d.Success && d.OccurredAt > DateTimeOffset.UtcNow.AddDays(-10))
-                                || (!d.Success && d.OccurredAt > DateTimeOffset.UtcNow.AddHours(-12)))
-                        ))
+                        && !v.DataFetches!.Any(d => _dataUow.DataFetches.IsTooRecent(
+                            YouTubeConstants.FetchTypes.YtDlp.Source,
+                            YouTubeConstants.FetchTypes.YtDlp.VideoPage,
+                            DateTimeOffset.UtcNow.AddDays(-10),
+                            DateTimeOffset.UtcNow.AddHours(-12)
+                        ).Invoke(d)))
             .Select(v => v.Id);
         await foreach (var videoId in videoIds.AsAsyncEnumerable().WithCancellation(ct))
         {

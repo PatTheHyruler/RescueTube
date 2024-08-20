@@ -8,6 +8,7 @@ public interface IDataUow
     public IPlaylistSpecification Playlists { get; }
     public IPermissionSpecification Permissions { get; }
     public IImageSpecification Images { get; }
+    public IDataFetchSpecification DataFetches { get; }
 
     public AppDbContext Ctx { get; }
 

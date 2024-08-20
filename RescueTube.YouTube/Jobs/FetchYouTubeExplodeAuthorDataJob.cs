@@ -1,4 +1,5 @@
 using Hangfire;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
@@ -26,23 +27,25 @@ public class FetchYouTubeExplodeAuthorDataJob
     [DisableConcurrentExecution(5 * 60)]
     public async Task EnqueueYouTubeExplodeAuthorDataFetchesRecurring(CancellationToken ct)
     {
-        var query = _dataUow.Ctx.Authors.Where(
-            a => a.Platform == EPlatform.YouTube
-                 && !a.DataFetches!.Any(d =>
-                     d.Source == YouTubeConstants.FetchTypes.YouTubeExplode.Source
-                     && d.Type == YouTubeConstants.FetchTypes.YouTubeExplode.Channel
-                     && ((d.Success && d.OccurredAt > DateTimeOffset.UtcNow.AddDays(-10))
-                         || (!d.Success && d.OccurredAt > DateTimeOffset.UtcNow.AddDays(-1)))
-                 )
-        ).Select(a => a.Id);
+        var query = _dataUow.Ctx.Authors
+            .AsExpandable()
+            .Where(
+                a => a.Platform == EPlatform.YouTube
+                     && !a.DataFetches!.Any(d =>
+                         _dataUow.DataFetches.IsTooRecent(
+                             YouTubeConstants.FetchTypes.YouTubeExplode.Source,
+                             YouTubeConstants.FetchTypes.YouTubeExplode.Channel,
+                             DateTimeOffset.UtcNow.AddDays(-10),
+                             DateTimeOffset.UtcNow.AddDays(-1)
+                         ).Invoke(d)
+                     )
+            ).Select(a => a.Id);
         await foreach (var authorId in query.AsAsyncEnumerable().WithCancellation(ct))
         {
             _backgroundJobClient.Enqueue<FetchYouTubeExplodeAuthorDataJob>(x =>
                 x.FetchYouTubeExplodeAuthorData(authorId, default));
         }
     }
-
-    // TODO: Recurring job for re-fetching this data regularly?
 
     [AutomaticRetry(Attempts = 3, DelaysInSeconds = [1 * 3600, 2 * 3600, 4 * 3600])]
     [DisableConcurrentSameArgExecution(60)]

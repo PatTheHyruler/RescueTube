@@ -34,6 +34,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPermissionSpecification>(s => s.GetRequiredService<PermissionSpecification>());
         services.AddScoped<ImageSpecification>();
         services.AddScoped<IImageSpecification>(s => s.GetRequiredService<ImageSpecification>());
+        services.AddScoped<DataFetchSpecification>();
+        services.AddScoped<IDataFetchSpecification>(s => s.GetRequiredService<DataFetchSpecification>());
 
         services.AddScoped<DataUow>();
         services.AddScoped<IDataUow>(s => s.GetRequiredService<DataUow>());
