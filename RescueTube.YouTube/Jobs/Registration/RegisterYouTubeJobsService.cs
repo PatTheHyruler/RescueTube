@@ -48,6 +48,10 @@ public class RegisterYouTubeJobsService : BackgroundService
             "yt-fetch-videos-data-recurring",
             x => x.EnqueueVideoDataFetchesRecurring(default),
             "*/10 * * * *"); // Every 10th minute
+        recurringJobManager.AddOrUpdate<FetchPlaylistDataJob>(
+            "yt-fetch-playlists-data-recurring",
+            x => x.EnqueuePlaylistDataFetches(default),
+            "*/10 * * * *"); // Every 10th minute
 
         return Task.CompletedTask;
     }

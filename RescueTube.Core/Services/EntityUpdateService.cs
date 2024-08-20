@@ -99,6 +99,36 @@ public class EntityUpdateService : BaseService
         // TODO: StatusChangeEvents?
     }
 
+    public void UpdatePlaylist(Playlist playlist, Playlist newPlaylistData, bool isNew)
+    {
+        UpdateTranslations(playlist, p => p.Title, newPlaylistData.Title);
+        UpdateTranslations(playlist, p => p.Description, newPlaylistData.Description);
+
+        playlist.PlaylistStatisticSnapshots ??= [];
+        if (newPlaylistData.PlaylistStatisticSnapshots != null)
+        {
+            foreach (var playlistStatisticSnapshot in newPlaylistData.PlaylistStatisticSnapshots.Where(s =>
+                         s.ViewCount != null || s.CommentCount != null || s.LikeCount != null ||
+                         s.DislikeCount != null))
+            {
+                playlistStatisticSnapshot.Playlist = playlist;
+                playlistStatisticSnapshot.PlaylistId = playlist.Id;
+                playlist.PlaylistStatisticSnapshots.Add(playlistStatisticSnapshot);
+                DbCtx.Add(playlistStatisticSnapshot);
+            }
+        }
+
+        if (isNew) // TODO: Properly handle update
+        {
+            playlist.PlaylistImages = newPlaylistData.PlaylistImages;
+        }
+
+        UpdateBaseEntity(playlist, newPlaylistData, isNew);
+
+        // Not updating Author or PlaylistItems, they should be updated externally
+        // TODO: StatusChangeEvents?
+    }
+
     public enum EImageUpdateOptions
     {
         NoUpdate,
@@ -316,6 +346,7 @@ public class EntityUpdateService : BaseService
         {
             entity.Platform = newEntityData.Platform;
             entity.IdOnPlatform = newEntityData.IdOnPlatform;
+            entity.AddedToArchiveAt = newEntityData.AddedToArchiveAt;
         }
 
         entity.PrivacyStatusOnPlatform ??= newEntityData.PrivacyStatusOnPlatform;
@@ -345,10 +376,6 @@ public class EntityUpdateService : BaseService
                 }
             }
         }
-
-        entity.AddedToArchiveAt = entity.AddedToArchiveAt == default
-            ? newEntityData.AddedToArchiveAt
-            : entity.AddedToArchiveAt;
     }
 
     private static void UpdateChanged(ref bool changed, bool addition)

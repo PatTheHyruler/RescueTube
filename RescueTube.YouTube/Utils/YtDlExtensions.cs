@@ -298,6 +298,74 @@ public static class YtDlExtensions
         return video;
     }
 
+    public static Playlist ToDomainPlaylist(this VideoData playlistData, string fetchType)
+    {
+        var playlist = new Playlist
+        {
+            Platform = EPlatform.YouTube,
+            IdOnPlatform = playlistData.ID,
+
+            Title = new TextTranslationKey
+            {
+                Translations = new List<TextTranslation>
+                {
+                    new()
+                    {
+                        Content = playlistData.Title,
+                    }
+                }
+            },
+            Description = new TextTranslationKey
+            {
+                Translations = new List<TextTranslation>
+                {
+                    new()
+                    {
+                        Content = playlistData.Description,
+                    }
+                }
+            },
+
+            UpdatedAt = playlistData.ModifiedTimestamp?.ToUniversalTime() ?? playlistData.ModifiedDate?.ToUniversalTime(),
+            PrivacyStatusOnPlatform = playlistData.Availability.ToPrivacyStatus(),
+            PrivacyStatus = EPrivacyStatus.Private,
+
+            AddedToArchiveAt = DateTimeOffset.UtcNow,
+            DataFetches = new List<DataFetch>
+            {
+                new()
+                {
+                    OccurredAt = DateTimeOffset.UtcNow,
+                    Success = true,
+                    Type = fetchType,
+                    ShouldAffectValidity = true,
+                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                },
+            },
+
+            PlaylistItems = new List<PlaylistItem>(),
+            PlaylistImages = playlistData.Thumbnails.Select(e => e.ToPlaylistImage()).ToList(),
+        };
+        if (playlistData.ViewCount == null && playlistData.LikeCount == null && playlistData.DislikeCount == null &&
+            playlistData.CommentCount == null)
+        {
+            playlist.PlaylistStatisticSnapshots = new List<PlaylistStatisticSnapshot>
+            {
+                new()
+                {
+                    ViewCount = playlistData.ViewCount,
+                    LikeCount = playlistData.LikeCount,
+                    DislikeCount = playlistData.DislikeCount,
+                    CommentCount = playlistData.CommentCount,
+
+                    ValidAt = DateTimeOffset.UtcNow,
+                },
+            };
+        }
+
+        return playlist;
+    }
+
     private static ELiveStatus GetLiveStatus(this VideoData videoData) =>
         videoData.LiveStatus switch
         {

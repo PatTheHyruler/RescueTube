@@ -182,7 +182,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             return existingPlaylist;
         }
 
-        var addedPlaylist = await YouTubeUow.PlaylistService.AddPlaylistAsync(playlistIdOnPlatform, ct);
+        var addedPlaylist = await YouTubeUow.PlaylistService.AddOrUpdatePlaylistAsync(playlistIdOnPlatform, ct);
         return addedPlaylist ?? throw new ApplicationException("Playlist not found on platform");
     }
 }
