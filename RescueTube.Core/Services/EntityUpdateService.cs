@@ -319,9 +319,12 @@ public class EntityUpdateService : BaseService
         }
 
         entity.PrivacyStatusOnPlatform ??= newEntityData.PrivacyStatusOnPlatform;
-        entity.PrivacyStatus =
-            newEntityData
-                .PrivacyStatus; // TODO: actually when updating from a fetch, this should be left at original. Handle outside update function?
+        if (isNew)
+        {
+            entity.PrivacyStatus =
+                newEntityData
+                    .PrivacyStatus; // TODO: Add way for updating this. Archive-specific property, will only be updated manually, not via datafetches, so shouldn't be updated here.
+        }
 
         if (newEntityData.DataFetches != null)
         {
