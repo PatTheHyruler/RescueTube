@@ -3,6 +3,7 @@ using RescueTube.Core.Utils;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
 using RescueTube.Core.Data;
+using RescueTube.Core.Utils.ExpressionUtils;
 using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
@@ -20,7 +21,7 @@ public class EntityUpdateService : BaseService
         _dataUow = dataUow;
     }
 
-    public void UpdateVideo(Video video, Video newVideoData, bool isNew)
+    public void UpdateVideo(Video video, Video newVideoData, bool isNew, EImageUpdateOptions imageUpdateOptions)
     {
         UpdateTranslations(video, v => v.Title, newVideoData.Title);
         UpdateTranslations(video, v => v.Description, newVideoData.Description);
@@ -44,10 +45,11 @@ public class EntityUpdateService : BaseService
             }
         }
 
+        UpdateEntityImages(video, v => v.VideoImages, newVideoData.VideoImages, isNew, imageUpdateOptions);
+
         if (isNew) // TODO: Properly handle update
         {
             video.Captions ??= newVideoData.Captions;
-            video.VideoImages ??= newVideoData.VideoImages;
 
             video.VideoFiles ??= newVideoData.VideoFiles; // Not needed? At least currently not updated via this method
             // video.VideoAuthors ??= newVideoData.VideoAuthors;
@@ -99,7 +101,8 @@ public class EntityUpdateService : BaseService
         // TODO: StatusChangeEvents?
     }
 
-    public void UpdatePlaylist(Playlist playlist, Playlist newPlaylistData, bool isNew)
+    public void UpdatePlaylist(Playlist playlist, Playlist newPlaylistData, bool isNew,
+        EImageUpdateOptions imageUpdateOptions)
     {
         UpdateTranslations(playlist, p => p.Title, newPlaylistData.Title);
         UpdateTranslations(playlist, p => p.Description, newPlaylistData.Description);
@@ -118,10 +121,7 @@ public class EntityUpdateService : BaseService
             }
         }
 
-        if (isNew) // TODO: Properly handle update
-        {
-            playlist.PlaylistImages = newPlaylistData.PlaylistImages;
-        }
+        UpdateEntityImages(playlist, p => p.PlaylistImages, newPlaylistData.PlaylistImages, isNew, imageUpdateOptions);
 
         UpdateBaseEntity(playlist, newPlaylistData, isNew);
 
@@ -134,6 +134,7 @@ public class EntityUpdateService : BaseService
         NoUpdate,
         ExpireNonMatching,
         OnlyAdd,
+        OnlyAddSkipIfNotLoaded,
     }
 
     public record UpdateAuthorOptions
@@ -164,7 +165,7 @@ public class EntityUpdateService : BaseService
         }
 
         UpdateTranslations(author, a => a.Bio, newAuthorData.Bio);
-        UpdateAuthorImages(author, newAuthorData, isNew, options);
+        UpdateEntityImages(author, a => a.AuthorImages, newAuthorData.AuthorImages, isNew, options.ImageUpdateOptions);
 
         // Skipping VideoAuthors, TODO???
 
@@ -178,51 +179,101 @@ public class EntityUpdateService : BaseService
         }
     }
 
-    private void UpdateAuthorImages(Author author, Author newAuthorData, bool isNew, UpdateAuthorOptions options)
+    private void UpdateEntityImages<TEntity, TEntityImage>(
+        TEntity entity,
+        Expression<Func<TEntity, ICollection<TEntityImage>?>> entityImagesAccessor,
+        ICollection<TEntityImage>? newEntityImages,
+        bool isNew,
+        EImageUpdateOptions imageUpdateOptions
+    )
+        where TEntityImage : class, IEntityImage
+        where TEntity : class
     {
-        if (newAuthorData.AuthorImages is { Count: > 0 } && options.ImageUpdateOptions != EImageUpdateOptions.NoUpdate)
+        if (newEntityImages is not { Count: > 0 } || imageUpdateOptions == EImageUpdateOptions.NoUpdate)
         {
-            if (isNew)
-            {
-                author.AuthorImages ??= new List<AuthorImage>();
-            }
+            return;
+        }
 
-            if (author.AuthorImages == null)
-            {
-                throw new Exception(
-                    $"Can't update {nameof(author.AuthorImages)} for author {author.Id} ({author.IdOnPlatform}) from {newAuthorData.Id}, navigation not loaded");
-            }
+        var (getter, setter, memberName) = entityImagesAccessor.GetGetterAndSetter();
 
-            var currentTime = DateTimeOffset.UtcNow;
-            var validAuthorImages = new List<AuthorImage>();
-            foreach (var newAuthorImage in newAuthorData.AuthorImages)
+        if (isNew)
+        {
+            if (getter(entity) == null)
             {
-                var existingAuthorImage = author.AuthorImages.FirstOrDefault(ai =>
-                    ai.ValidUntil == null &&
-                    ai.Image.AssertNotNull(ai.Id.ToString()).Url == newAuthorImage.Image!.Url.AssertNotNull());
-                if (existingAuthorImage != null)
-                {
-                    existingAuthorImage.LastFetched = DateTimeOffset.UtcNow;
-                    validAuthorImages.Add(existingAuthorImage);
-                }
-                else
-                {
-                    newAuthorImage.ValidSince ??= currentTime;
-                    validAuthorImages.Add(newAuthorImage);
-                    author.AuthorImages.Add(newAuthorImage);
-                    DbCtx.Add(newAuthorImage);
-                }
+                setter(entity, new List<TEntityImage>());
             }
+        }
 
-            if (options.ImageUpdateOptions == EImageUpdateOptions.ExpireNonMatching)
+        var entityImages = getter(entity);
+
+        if (entityImages == null)
+        {
+            HandleEntityImagesMissing(entity, imageUpdateOptions, memberName);
+            return;
+        }
+
+        var currentTime = DateTimeOffset.UtcNow;
+        var validEntityImages = new List<TEntityImage>();
+        foreach (var newEntityImage in newEntityImages)
+        {
+            var existingEntityImage = entityImages.FirstOrDefault(ei =>
+                ei.ValidUntil == null &&
+                ei.Image.AssertNotNull($"Image {ei.ImageId} not loaded for {ei.GetType().FullName} with ID {ei.Id}")
+                    .Url == newEntityImage.Image!.Url.AssertNotNull("URL missing for new Image"));
+            if (existingEntityImage != null)
             {
-                foreach (var authorImage in author.AuthorImages.Where(ai =>
-                             ai.ValidUntil == null
-                             && !validAuthorImages.Contains(ai)))
-                {
-                    authorImage.ValidUntil = currentTime;
-                }
+                existingEntityImage.LastFetched = DateTimeOffset.UtcNow;
+                validEntityImages.Add(existingEntityImage);
             }
+            else
+            {
+                newEntityImage.ValidSince ??= currentTime;
+                validEntityImages.Add(newEntityImage);
+                entityImages.Add(newEntityImage);
+                DbCtx.Add(newEntityImage);
+            }
+        }
+
+        if (imageUpdateOptions == EImageUpdateOptions.ExpireNonMatching)
+        {
+            foreach (var authorImage in entityImages.Where(ai =>
+                         ai.ValidUntil == null
+                         && !validEntityImages.Contains(ai)))
+            {
+                authorImage.ValidUntil = currentTime;
+            }
+        }
+    }
+
+    private void HandleEntityImagesMissing<TEntity>(TEntity entity, EImageUpdateOptions imageUpdateOptions,
+        string memberName) where TEntity : class
+    {
+        switch (imageUpdateOptions)
+        {
+            case EImageUpdateOptions.OnlyAddSkipIfNotLoaded:
+                switch (entity)
+                {
+                    case IIdDatabaseEntity dbEntity:
+                        Logger.LogInformation(
+                            "Skipping images ({ImagesProperty}) update for {EntityType} with ID {EntityId}, navigation not loaded",
+                            memberName, dbEntity.GetType().FullName, dbEntity.Id
+                        );
+                        return;
+                    default:
+                        Logger.LogInformation(
+                            "Skipping images ({ImagesProperty}) update for {EntityType}, navigation not loaded",
+                            memberName, entity.GetType().FullName
+                        );
+                        return;
+                }
+            default:
+                throw entity switch
+                {
+                    IIdDatabaseEntity dbEntity => new Exception(
+                        $"Can't update images ({memberName}) for {dbEntity.GetType().FullName} with ID {dbEntity.Id}, navigation not loaded"),
+                    _ => new Exception(
+                        $"Can't update images ({memberName}) for {entity.GetType().FullName}, navigation not loaded")
+                };
         }
     }
 
@@ -230,23 +281,11 @@ public class EntityUpdateService : BaseService
         Expression<Func<TEntity, TextTranslationKey?>> translationsPropertyExpression,
         TextTranslationKey? newTranslationKey)
     {
-        if (translationsPropertyExpression.Body is not MemberExpression memberExpression)
-        {
-            throw new ArgumentException("Invalid expression type", nameof(translationsPropertyExpression));
-        }
-
-        var getter = translationsPropertyExpression.Compile();
+        var (getter, setter, _) = translationsPropertyExpression.GetGetterAndSetter();
         var existingTranslationKey = getter(entity);
         if (existingTranslationKey == null)
         {
             existingTranslationKey = new TextTranslationKey();
-            var thisParameter = Expression.Parameter(typeof(TEntity), "$this");
-            var valueParameter = Expression.Parameter(typeof(TextTranslationKey), "value");
-            var assign = Expression.Assign(Expression.MakeMemberAccess(thisParameter, memberExpression.Member),
-                valueParameter);
-            var setter = Expression
-                .Lambda<Action<TEntity, TextTranslationKey>>(assign, thisParameter, valueParameter)
-                .Compile();
             setter(entity, existingTranslationKey);
             DbCtx.Add(existingTranslationKey);
         }

@@ -39,4 +39,24 @@ public static class ExpressionUtils
 
         return Expression.Lambda<Func<TEntity, TResult>>(caseExpression, parameter);
     }
+
+    public static (Func<TSource, TProperty> Getter, Action<TSource, TProperty> Setter, string Name)
+        GetGetterAndSetter<TSource, TProperty>(this Expression<Func<TSource, TProperty>> expression)
+    {
+        if (expression.Body is not MemberExpression memberExpression)
+        {
+            throw new ArgumentException("Invalid expression type", nameof(expression));
+        }
+
+        var getter = expression.Compile();
+        
+        var thisParameter = Expression.Parameter(typeof(TSource), "$this");
+        var valueParameter = Expression.Parameter(typeof(TProperty), "value");
+        var assign = Expression.Assign(Expression.MakeMemberAccess(thisParameter, memberExpression.Member),
+            valueParameter);
+        var setter = Expression
+            .Lambda<Action<TSource, TProperty>>(assign, thisParameter, valueParameter)
+            .Compile();
+        return (getter, setter, memberExpression.Member.Name);
+    }
 }

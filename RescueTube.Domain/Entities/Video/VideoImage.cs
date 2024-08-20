@@ -1,9 +1,10 @@
 using RescueTube.Domain.Base;
+using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.Domain.Entities;
 
-public class VideoImage : BaseIdDbEntity
+public class VideoImage : BaseIdDbEntity, IEntityImage
 {
     public EImageType ImageType { get; set; }
 

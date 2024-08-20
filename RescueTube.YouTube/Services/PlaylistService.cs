@@ -2,6 +2,7 @@
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
@@ -70,7 +71,8 @@ public class PlaylistService : BaseYouTubeService
         playlist ??= new Playlist { IdOnPlatform = playlistData.ID };
 
         var newPlaylistData = playlistData.ToDomainPlaylist(fetchType);
-        ServiceUow.EntityUpdateService.UpdatePlaylist(playlist, newPlaylistData, isNew);
+        ServiceUow.EntityUpdateService.UpdatePlaylist(playlist, newPlaylistData, isNew,
+            EntityUpdateService.EImageUpdateOptions.OnlyAdd);
 
         var fetchTime = newPlaylistData.DataFetches?.Where(df =>
                 df.Source == YouTubeConstants.FetchTypes.YtDlp.Source

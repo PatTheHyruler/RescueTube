@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.Events;
 using RescueTube.Core.Mediator;
+using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
@@ -80,7 +81,7 @@ public class VideoService : BaseYouTubeService
         var isNew = video == null;
         video ??= new Video { IdOnPlatform = videoData.ID };
         var newVideoData = videoData.ToDomainVideo(fetchType);
-        ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew);
+        ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew, EntityUpdateService.EImageUpdateOptions.OnlyAdd);
 
         if (author == null)
         {

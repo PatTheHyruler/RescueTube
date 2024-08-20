@@ -1,9 +1,10 @@
 using RescueTube.Domain.Base;
+using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.Domain.Entities;
 
-public class AuthorImage : BaseIdDbEntity
+public class AuthorImage : BaseIdDbEntity, IEntityImage
 {
     public EImageType? ImageType { get; set; }
     public short ImageTypeDetectionAttempts { get; set; }
