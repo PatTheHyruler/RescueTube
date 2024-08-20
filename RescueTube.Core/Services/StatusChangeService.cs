@@ -12,7 +12,7 @@ public class StatusChangeService : BaseService
 
     public void Push(StatusChangeEvent statusChangeEvent)
     {
-        // TODO: Replace with Mediator
+        // TODO: Notifications
         DbCtx.StatusChangeEvents.Add(statusChangeEvent);
     }
 }

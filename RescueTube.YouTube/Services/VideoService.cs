@@ -1,15 +1,11 @@
-using System.Text;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RescueTube.Core.Data;
 using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.Events;
 using RescueTube.Core.Mediator;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
-using RescueTube.Domain.Entities.Localization;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
 using RescueTube.YouTube.Utils;
@@ -45,9 +41,17 @@ public class VideoService : BaseYouTubeService
         return videoResult.Data;
     }
 
-    public async Task<Video?> AddOrUpdateVideoAsync(string id, CancellationToken ct = default)
+    public async Task<Video?> AddOrUpdateVideoAsync(Guid videoId, CancellationToken ct = default)
     {
-        var videoData = await FetchVideoDataYtdlAsync(id, false, ct);
+        var idOnPlatform = await DbCtx.Videos
+            .Where(v => v.Id == videoId && v.Platform == EPlatform.YouTube)
+            .Select(v => v.IdOnPlatform).FirstAsync(ct);
+        return await AddOrUpdateVideoAsync(idOnPlatform, ct);
+    }
+
+    public async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, CancellationToken ct = default)
+    {
+        var videoData = await FetchVideoDataYtdlAsync(idOnPlatform, false, ct);
         return videoData == null
             ? null
             : await AddOrUpdateVideoAsync(videoData, YouTubeConstants.FetchTypes.YtDlp.VideoPage, ct);

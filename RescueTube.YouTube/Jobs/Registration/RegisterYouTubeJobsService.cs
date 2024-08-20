@@ -44,6 +44,10 @@ public class RegisterYouTubeJobsService : BackgroundService
             "yt-fetch-ytexplode-author-data-recurring",
             x => x.EnqueueYouTubeExplodeAuthorDataFetchesRecurring(default),
             Cron.Daily);
+        recurringJobManager.AddOrUpdate<FetchVideoDataJob>(
+            "yt-fetch-videos-data-recurring",
+            x => x.EnqueueVideoDataFetchesRecurring(default),
+            "*/10 * * * *"); // Every 10th minute
 
         return Task.CompletedTask;
     }
