@@ -1,7 +1,9 @@
 using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.YouTube.Jobs;
 
@@ -19,6 +21,25 @@ public class FetchYouTubeExplodeAuthorDataJob
         _dataUow = dataUow;
         _backgroundJobClient = backgroundJobClient;
         _logger = logger;
+    }
+
+    [DisableConcurrentExecution(5 * 60)]
+    public async Task EnqueueYouTubeExplodeAuthorDataFetchesRecurring(CancellationToken ct)
+    {
+        var query = _dataUow.Ctx.Authors.Where(
+            a => a.Platform == EPlatform.YouTube
+                 && !a.DataFetches!.Any(d =>
+                     d.Source == YouTubeConstants.FetchTypes.YouTubeExplode.Source
+                     && d.Type == YouTubeConstants.FetchTypes.YouTubeExplode.Channel
+                     && ((d.Success && d.OccurredAt > DateTimeOffset.UtcNow.AddDays(-10))
+                         || (!d.Success && d.OccurredAt > DateTimeOffset.UtcNow.AddDays(-1)))
+                 )
+        ).Select(a => a.Id);
+        await foreach (var authorId in query.AsAsyncEnumerable().WithCancellation(ct))
+        {
+            _backgroundJobClient.Enqueue<FetchYouTubeExplodeAuthorDataJob>(x =>
+                x.FetchYouTubeExplodeAuthorData(authorId, default));
+        }
     }
 
     // TODO: Recurring job for re-fetching this data regularly?
