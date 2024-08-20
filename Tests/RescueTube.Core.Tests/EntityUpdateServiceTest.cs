@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RescueTube.Core.Data;
 using RescueTube.Core.Services;
 using RescueTube.DAL.EF.Postgres;
 using RescueTube.Domain.Entities;
@@ -237,5 +239,96 @@ public class EntityUpdateServiceTest
         Assert.NotNull(video.Title.Translations);
         Assert.Equal(1, video.Title.Translations.Count);
         Assert.Equal(translationContent, video.Title.Translations.Single().Content);
+    }
+
+    [Fact]
+    public void UpdateEntityImages_ExpireNonMatching_LeavesEntityImagesInCorrectState()
+    {
+        // Arrange
+        VideoImage CreateFakeVideoImage(string? url = null)
+        {
+            return new VideoImage
+            {
+                Image = new Image
+                {
+                    Url = url ?? Guid.NewGuid().ToString(),
+                }
+            };
+        }
+
+        var video = new Video
+        {
+            IdOnPlatform = string.Empty,
+        };
+
+        var existingVideoImageFound = CreateFakeVideoImage();
+        var existingVideoImageRemoved = CreateFakeVideoImage();
+
+        var addedVideoImageUrl = Guid.NewGuid().ToString();
+
+        video.VideoImages = [existingVideoImageFound, existingVideoImageRemoved];
+
+        using var scope = CreateScope();
+        var dbCtx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        dbCtx.Entry(video).State = EntityState.Unchanged;
+        dbCtx.Entry(existingVideoImageFound).State = EntityState.Unchanged;
+        dbCtx.Entry(existingVideoImageFound.Image!).State = EntityState.Unchanged;
+        dbCtx.Entry(existingVideoImageRemoved).State = EntityState.Unchanged;
+        dbCtx.Entry(existingVideoImageRemoved.Image!).State = EntityState.Unchanged;
+
+        var startTime = DateTimeOffset.UtcNow;
+
+        var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
+
+        // Act
+        entityUpdateService.UpdateEntityImages(video, v => v.VideoImages, [
+                CreateFakeVideoImage(existingVideoImageFound.Image!.Url),
+                CreateFakeVideoImage(addedVideoImageUrl),
+            ], false,
+            EntityUpdateService.EImageUpdateOptions.ExpireNonMatching);
+
+        // Assert
+        var entries = dbCtx.ChangeTracker.Entries<VideoImage>().ToList();
+        Assert.Equal(3, entries.Count);
+
+        var addedEntry = entries.Find(e => e.Entity.Image!.Url == addedVideoImageUrl);
+        Assert.NotNull(addedEntry);
+        Assert.Equal(EntityState.Added, addedEntry.State);
+        Assert.NotNull(addedEntry.Entity.Image);
+        var addedImageEntry = dbCtx.Entry(addedEntry.Entity.Image);
+        Assert.NotNull(addedImageEntry);
+        Assert.Equal(EntityState.Added, addedImageEntry.State);
+
+        var existingEntry = entries.Find(e => e.Entity.Image!.Url == existingVideoImageFound.Image!.Url);
+        Assert.NotNull(existingEntry);
+        Assert.Equal(EntityState.Modified, existingEntry.State);
+        Assert.NotNull(existingEntry.Entity.Image);
+        var existingImageEntry = dbCtx.Entry(existingEntry.Entity.Image);
+        Assert.NotNull(existingImageEntry);
+        Assert.Equal(EntityState.Unchanged, existingImageEntry.State);
+
+        var removedEntry = entries.Find(e => e.Entity.Image!.Url == existingVideoImageRemoved.Image!.Url);
+        Assert.NotNull(removedEntry);
+        Assert.Equal(EntityState.Modified, removedEntry.State);
+        Assert.NotNull(removedEntry.Entity.Image);
+        var removedImageEntry = dbCtx.Entry(removedEntry.Entity.Image);
+        Assert.NotNull(removedImageEntry);
+        Assert.Equal(EntityState.Unchanged, removedImageEntry.State);
+
+        Assert.Null(existingEntry.Entity.ValidUntil);
+        Assert.Null(addedEntry.Entity.ValidUntil);
+        Assert.NotNull(removedEntry.Entity.ValidUntil);
+        Assert.True(IsBetweenStartTimeAndCurrent(removedEntry.Entity.ValidUntil.Value, startTime));
+
+        Assert.Equal(3, video.VideoImages.Count);
+        Assert.Contains(existingEntry.Entity, video.VideoImages);
+        Assert.Contains(addedEntry.Entity, video.VideoImages);
+        Assert.Contains(removedEntry.Entity, video.VideoImages);
+    }
+
+    private static bool IsBetweenStartTimeAndCurrent(DateTimeOffset value, DateTimeOffset startTime)
+    {
+        return value >= startTime && value <= DateTimeOffset.UtcNow;
     }
 }

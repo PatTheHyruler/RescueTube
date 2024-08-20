@@ -179,15 +179,16 @@ public class EntityUpdateService : BaseService
         }
     }
 
-    private void UpdateEntityImages<TEntity, TEntityImage>(
+    public void UpdateEntityImages<TEntity, TEntityImage, TCollection>(
         TEntity entity,
-        Expression<Func<TEntity, ICollection<TEntityImage>?>> entityImagesAccessor,
+        Expression<Func<TEntity, TCollection?>> entityImagesAccessor,
         ICollection<TEntityImage>? newEntityImages,
         bool isNew,
         EImageUpdateOptions imageUpdateOptions
     )
         where TEntityImage : class, IEntityImage
-        where TEntity : class
+        where TEntity : class, IIdDatabaseEntity
+        where TCollection : ICollection<TEntityImage>
     {
         if (newEntityImages is not { Count: > 0 } || imageUpdateOptions == EImageUpdateOptions.NoUpdate)
         {
@@ -200,7 +201,22 @@ public class EntityUpdateService : BaseService
         {
             if (getter(entity) == null)
             {
-                setter(entity, new List<TEntityImage>());
+                TCollection newCollection;
+                if (typeof(TCollection).IsAssignableFrom(typeof(List<TEntityImage>)))
+                {
+                    newCollection = (TCollection)(object)new List<TEntityImage>();
+                }
+                else if (typeof(TCollection).GetConstructor(Type.EmptyTypes) != null)
+                {
+                    newCollection = Activator.CreateInstance<TCollection>();
+                }
+                else
+                {
+                    throw new Exception(
+                        $"Failed to construct default collection for member {memberName} for entity {entity.GetType().FullName} with ID {entity.Id}");
+                }
+
+                setter(entity, newCollection);
             }
         }
 
@@ -246,34 +262,19 @@ public class EntityUpdateService : BaseService
     }
 
     private void HandleEntityImagesMissing<TEntity>(TEntity entity, EImageUpdateOptions imageUpdateOptions,
-        string memberName) where TEntity : class
+        string memberName) where TEntity : class, IIdDatabaseEntity
     {
         switch (imageUpdateOptions)
         {
             case EImageUpdateOptions.OnlyAddSkipIfNotLoaded:
-                switch (entity)
-                {
-                    case IIdDatabaseEntity dbEntity:
-                        Logger.LogInformation(
-                            "Skipping images ({ImagesProperty}) update for {EntityType} with ID {EntityId}, navigation not loaded",
-                            memberName, dbEntity.GetType().FullName, dbEntity.Id
-                        );
-                        return;
-                    default:
-                        Logger.LogInformation(
-                            "Skipping images ({ImagesProperty}) update for {EntityType}, navigation not loaded",
-                            memberName, entity.GetType().FullName
-                        );
-                        return;
-                }
+                Logger.LogInformation(
+                    "Skipping images ({ImagesProperty}) update for {EntityType} with ID {EntityId}, navigation not loaded",
+                    memberName, entity.GetType().FullName, entity.Id
+                );
+                return;
             default:
-                throw entity switch
-                {
-                    IIdDatabaseEntity dbEntity => new Exception(
-                        $"Can't update images ({memberName}) for {dbEntity.GetType().FullName} with ID {dbEntity.Id}, navigation not loaded"),
-                    _ => new Exception(
-                        $"Can't update images ({memberName}) for {entity.GetType().FullName}, navigation not loaded")
-                };
+                throw new Exception(
+                    $"Can't update images ({memberName}) for {entity.GetType().FullName} with ID {entity.Id}, navigation not loaded");
         }
     }
 
