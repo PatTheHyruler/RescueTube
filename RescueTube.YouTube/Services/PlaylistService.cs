@@ -68,7 +68,7 @@ public class PlaylistService : BaseYouTubeService
                 .Take(1))
             .FirstOrDefaultAsync(ct);
         var isNew = playlist == null;
-        playlist ??= new Playlist { IdOnPlatform = playlistData.ID };
+        playlist ??= new Playlist { IdOnPlatform = playlistData.ID, PlaylistItems = new List<PlaylistItem>() };
 
         var newPlaylistData = playlistData.ToDomainPlaylist(fetchType);
         ServiceUow.EntityUpdateService.UpdatePlaylist(playlist, newPlaylistData, isNew,
@@ -90,10 +90,10 @@ public class PlaylistService : BaseYouTubeService
 
         if (isNew)
         {
-            DbCtx.Playlists.Add(newPlaylistData);
+            DbCtx.Playlists.Add(playlist);
         }
 
-        return newPlaylistData;
+        return playlist;
     }
 
     private async Task UpdatePlaylistItems(Playlist playlist, VideoData playlistData,
@@ -133,6 +133,8 @@ public class PlaylistService : BaseYouTubeService
                 VideoId = video.Id,
                 Video = video,
                 AddedAt = fetchTime,
+                Playlist = playlist,
+                PlaylistId = playlist.Id,
             };
             if (existingPlaylistItem != null)
             {

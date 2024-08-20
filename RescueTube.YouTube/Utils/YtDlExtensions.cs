@@ -77,16 +77,7 @@ public static class YtDlExtensions
         var author = channelData.ToAuthorBase(fetchType);
         if (!string.IsNullOrWhiteSpace(channelData.Description))
         {
-            author.Bio = new TextTranslationKey
-            {
-                Translations = new List<TextTranslation>
-                {
-                    new()
-                    {
-                        Content = channelData.Description,
-                    },
-                },
-            };
+            author.Bio = GetValueAsTextTranslationKey(channelData.Description);
         }
 
         if (channelData.Thumbnails is { Length: > 0 })
@@ -210,26 +201,8 @@ public static class YtDlExtensions
             Platform = EPlatform.YouTube,
             IdOnPlatform = videoData.ID,
 
-            Title = new TextTranslationKey
-            {
-                Translations = new List<TextTranslation>
-                {
-                    new()
-                    {
-                        Content = videoData.Title,
-                    }
-                }
-            },
-            Description = new TextTranslationKey
-            {
-                Translations = new List<TextTranslation>
-                {
-                    new()
-                    {
-                        Content = videoData.Description,
-                    }
-                }
-            },
+            Title = GetValueAsTextTranslationKey(videoData.Title),
+            Description = GetValueAsTextTranslationKey(videoData.Description),
 
             Duration = videoData.Duration != null ? TimeSpan.FromSeconds(videoData.Duration.Value) : null,
 
@@ -305,26 +278,8 @@ public static class YtDlExtensions
             Platform = EPlatform.YouTube,
             IdOnPlatform = playlistData.ID,
 
-            Title = new TextTranslationKey
-            {
-                Translations = new List<TextTranslation>
-                {
-                    new()
-                    {
-                        Content = playlistData.Title,
-                    }
-                }
-            },
-            Description = new TextTranslationKey
-            {
-                Translations = new List<TextTranslation>
-                {
-                    new()
-                    {
-                        Content = playlistData.Description,
-                    }
-                }
-            },
+            Title = GetValueAsTextTranslationKey(playlistData.Title),
+            Description = GetValueAsTextTranslationKey(playlistData.Description),
 
             UpdatedAt = playlistData.ModifiedTimestamp?.ToUniversalTime() ?? playlistData.ModifiedDate?.ToUniversalTime(),
             PrivacyStatusOnPlatform = playlistData.Availability.ToPrivacyStatus(),
@@ -394,5 +349,23 @@ public static class YtDlExtensions
         }
 
         return null;
+    }
+
+    private static TextTranslationKey GetValueAsTextTranslationKey(string? value)
+    {
+        var textTranslationKey = new TextTranslationKey();
+
+        if (value != null)
+        {
+            textTranslationKey.Translations = new List<TextTranslation>
+            {
+                new()
+                {
+                    Content = value,
+                }
+            };
+        }
+
+        return textTranslationKey;
     }
 }

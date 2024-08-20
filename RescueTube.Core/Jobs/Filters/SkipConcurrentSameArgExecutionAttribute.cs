@@ -24,11 +24,23 @@ public class SkipConcurrentSameArgExecutionAttribute : JobFilterAttribute, IServ
         try
         {
             var jobLock = context.Storage.GetReadOnlyConnection()
-                .AcquireDistributedLock(resource, TimeSpan.FromSeconds(0));
+                .AcquireDistributedLock(resource, TimeSpan.FromSeconds(1));
             context.Items[JobLockKey] = jobLock;
         }
         catch (DistributedLockTimeoutException)
         {
+            context.Canceled = true;
+        }
+        catch (Exception e)
+        {
+            // Some exceptions, such as Hangfire.PostgreSql.PostgreSqlDistributedLockException
+            // don't inherit from DistributedLockTimeoutException.
+            var exceptionName = e.GetType().FullName;
+            // But they should probably still contain "lock"?
+            if (!(exceptionName?.Contains("Lock", StringComparison.OrdinalIgnoreCase) ?? false))
+            {
+                throw;
+            }
             context.Canceled = true;
         }
     }

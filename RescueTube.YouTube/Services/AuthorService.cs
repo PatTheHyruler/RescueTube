@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using LinqKit;
 using MediatR;
@@ -169,6 +170,7 @@ public class AuthorService : BaseYouTubeService
             hasAuthor = await DbCtx.VideoAuthors
                 .Where(va => va.Author!.Platform == EPlatform.YouTube
                              && va.Author!.IdOnPlatform == author.IdOnPlatform
+                             && va.VideoId == video.Id
                              && va.Role == EAuthorRole.Publisher)
                 .AnyAsync(cancellationToken: ct);
         }
