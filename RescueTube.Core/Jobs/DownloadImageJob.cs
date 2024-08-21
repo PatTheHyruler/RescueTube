@@ -1,3 +1,4 @@
+using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Services;
 
 namespace RescueTube.Core.Jobs;
@@ -11,6 +12,7 @@ public class DownloadImageJob
         _imageService = imageService;
     }
 
+    [SkipConcurrentSameArgExecution]
     public async Task DownloadImage(Guid imageId, CancellationToken ct)
     {
         await _imageService.UpdateImage(imageId, ct);

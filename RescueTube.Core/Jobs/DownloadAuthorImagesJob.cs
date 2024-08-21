@@ -22,6 +22,7 @@ public class DownloadAuthorImagesJob
         await _authorService.DataUow.SaveChangesAsync(CancellationToken.None);
     }
 
+    [DisableConcurrentExecution(10 * 60)]
     public async Task DownloadAllNotDownloadedAuthorImages(CancellationToken ct)
     {
         var imageIds = _authorService.DbCtx.AuthorImages

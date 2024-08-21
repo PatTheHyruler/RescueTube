@@ -25,6 +25,7 @@ public class DownloadVideoImagesJob
         await _videoService.DataUow.SaveChangesAsync(CancellationToken.None);
     }
 
+    [DisableConcurrentExecution(10 * 60)]
     public async Task DownloadAllNotDownloadedVideoImages(CancellationToken ct)
     {
         var imageIds = _dataUow.Ctx.VideoImages
