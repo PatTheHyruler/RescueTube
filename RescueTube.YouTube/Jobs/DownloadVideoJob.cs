@@ -17,7 +17,8 @@ public class DownloadVideoJob
     }
 
     [AutomaticRetry(Attempts = 0)]
-    [SkipConcurrentSameArgExecution]
+    [SkipConcurrentSameArgExecution(Order = 0)]
+    [DisableConcurrentExecution(60 * 60, Order = 1)]
     public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
         await _videoService.DownloadVideoAsync(videoId, ct);
