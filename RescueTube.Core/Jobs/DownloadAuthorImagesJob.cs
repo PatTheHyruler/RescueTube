@@ -1,44 +1,50 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
-using RescueTube.Core.Services;
+using RescueTube.Core.Data;
+using RescueTube.Core.Jobs.Filters;
 
 namespace RescueTube.Core.Jobs;
 
 public class DownloadAuthorImagesJob
 {
-    private readonly AuthorService _authorService;
+    private readonly IDataUow _dataUow;
     private readonly IBackgroundJobClient _backgroundJobs;
 
-    public DownloadAuthorImagesJob(AuthorService authorService,
-        IBackgroundJobClient backgroundJobs)
+    public DownloadAuthorImagesJob(IBackgroundJobClient backgroundJobs, IDataUow dataUow)
     {
-        _authorService = authorService;
         _backgroundJobs = backgroundJobs;
+        _dataUow = dataUow;
     }
 
+    [SkipConcurrentSameArgExecution]
     public async Task DownloadAuthorImages(Guid authorId, CancellationToken ct)
     {
-        await _authorService.DownloadAuthorImages(authorId, ct);
-        await _authorService.DataUow.SaveChangesAsync(CancellationToken.None);
+        var imageIds = _dataUow.Ctx.Images
+            .Where(i => i.FailedFetchAttempts < 3 &&
+                        i.AuthorImages!.Any(ai =>
+                            ai.AuthorId == authorId && ai.ValidUntil == null))
+            .Include(e => e.AuthorImages)
+            .Select(x => x.Id)
+            .AsAsyncEnumerable().WithCancellation(ct);
+
+        await foreach (var imageId in imageIds)
+        {
+            _backgroundJobs.Enqueue<DownloadImageJob>(x => x.DownloadImage(imageId, default));
+        }
     }
 
     [DisableConcurrentExecution(10 * 60)]
     public async Task DownloadAllNotDownloadedAuthorImages(CancellationToken ct)
     {
-        var imageIds = _authorService.DbCtx.AuthorImages
+        var imageIds = _dataUow.Ctx.AuthorImages
             .Where(e => e.Image!.LocalFilePath == null &&
                         e.Image.FailedFetchAttempts < 3 &&
                         e.Image.Url != null)
             .Select(e => e.ImageId)
-            .AsAsyncEnumerable();
+            .AsAsyncEnumerable().WithCancellation(ct);
 
         await foreach (var imageId in imageIds)
         {
-            if (ct.IsCancellationRequested)
-            {
-                break;
-            }
-
             _backgroundJobs.Enqueue<DownloadImageJob>(x =>
                 x.DownloadImage(imageId, default));
         }

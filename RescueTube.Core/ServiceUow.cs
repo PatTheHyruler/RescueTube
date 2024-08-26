@@ -22,8 +22,6 @@ public class ServiceUow
     public ImageService ImageService => _services.GetRequiredService<ImageService>();
     public StatusChangeService StatusChangeService => _services.GetRequiredService<StatusChangeService>();
 
-    public AuthorService AuthorService => _services.GetRequiredService<AuthorService>();
-    public VideoService VideoService => _services.GetRequiredService<VideoService>();
     public CommentService CommentService => _services.GetRequiredService<CommentService>();
 
     public EntityUpdateService EntityUpdateService => _services.GetRequiredService<EntityUpdateService>();

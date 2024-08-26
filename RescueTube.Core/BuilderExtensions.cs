@@ -23,8 +23,6 @@ public static class BuilderExtensions
         services.AddScoped<VideoPresentationService>();
         services.AddScoped<PlaylistPresentationService>();
         services.AddScoped<EntityUpdateService>();
-        services.AddScoped<AuthorService>();
-        services.AddScoped<VideoService>();
         services.AddScoped<CommentService>();
         services.AddScoped<StatusChangeService>();
 

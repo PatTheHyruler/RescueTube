@@ -1,28 +1,35 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
-using RescueTube.Core.Services;
+using RescueTube.Core.Jobs.Filters;
 
 namespace RescueTube.Core.Jobs;
 
 public class DownloadVideoImagesJob
 {
-    private readonly VideoService _videoService;
     private readonly IDataUow _dataUow;
     private readonly IBackgroundJobClient _backgroundJobs;
 
-    public DownloadVideoImagesJob(VideoService videoService, IDataUow dataUow,
+    public DownloadVideoImagesJob(IDataUow dataUow,
         IBackgroundJobClient backgroundJobs)
     {
-        _videoService = videoService;
         _dataUow = dataUow;
         _backgroundJobs = backgroundJobs;
     }
 
+    [SkipConcurrentSameArgExecution]
     public async Task DownloadVideoImages(Guid videoId, CancellationToken ct)
     {
-        await _videoService.DownloadVideoImages(videoId, ct);
-        await _videoService.DataUow.SaveChangesAsync(CancellationToken.None);
+        var imageIds = _dataUow.Ctx.Images
+            .Where(e => e.FailedFetchAttempts < 3 &&
+                        e.VideoImages!.Any(vi =>
+                            vi.VideoId == videoId && vi.ValidUntil == null))
+            .Select(i => i.Id)
+            .AsAsyncEnumerable().WithCancellation(ct);
+        await foreach (var imageId in imageIds)
+        {
+            _backgroundJobs.Enqueue<DownloadImageJob>(x => x.DownloadImage(imageId, default));
+        }
     }
 
     [DisableConcurrentExecution(10 * 60)]
@@ -33,15 +40,10 @@ public class DownloadVideoImagesJob
                         e.Image.FailedFetchAttempts < 3 &&
                         e.Image.Url != null)
             .Select(e => e.ImageId)
-            .AsAsyncEnumerable();
+            .AsAsyncEnumerable().WithCancellation(ct);
 
         await foreach (var imageId in imageIds)
         {
-            if (ct.IsCancellationRequested)
-            {
-                break;
-            }
-
             _backgroundJobs.Enqueue<DownloadImageJob>(x =>
                 x.DownloadImage(imageId, default));
         }
