@@ -33,6 +33,7 @@ public class DownloadVideoImagesJob
     }
 
     [DisableConcurrentExecution(10 * 60)]
+    [Queue(JobQueues.LowerPriority)]
     public async Task DownloadAllNotDownloadedVideoImages(CancellationToken ct)
     {
         var imageIds = _dataUow.Ctx.VideoImages
@@ -44,7 +45,7 @@ public class DownloadVideoImagesJob
 
         await foreach (var imageId in imageIds)
         {
-            _backgroundJobs.Enqueue<DownloadImageJob>(x =>
+            _backgroundJobs.Enqueue<DownloadImageJob>(JobQueues.LowerPriority, x =>
                 x.DownloadImage(imageId, default));
         }
     }

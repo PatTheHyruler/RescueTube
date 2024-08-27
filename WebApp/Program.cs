@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Data;
+using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils;
 using RescueTube.DAL.EF.MigrationUtils;
 using RescueTube.DAL.EF.Postgres;
@@ -58,7 +59,10 @@ builder.Services.AddHangfire(configuration => configuration
     .UseSerilogLogProvider()
     .UseConsole()
 );
-builder.Services.AddHangfireServer();
+builder.Services.AddHangfireServer(options =>
+{
+    options.Queues = JobQueues.Queues;
+});
 builder.Services.AddHangfireConsoleExtensions();
 builder.Services.AddSingleton<IDashboardAsyncAuthorizationFilter, HangfireDashboardAuthorizationFilter>();
 
