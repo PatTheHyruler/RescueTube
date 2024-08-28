@@ -8,6 +8,10 @@ Started as a university homework project, the code for which can be found here:
 Currently WIP copying and rewriting the original project.
 
 ## DB
+NB!  
+Postgres' max_prepared_transactions option must be set to higher than the default 0.  
+Preferably at least one per connection?
+
 Start local dev DB:
 `docker compose up db -d`
 

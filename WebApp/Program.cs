@@ -54,7 +54,7 @@ builder.Services.AddHangfire(configuration => configuration
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
     .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(
-        builder.Configuration.GetConnectionString("HangfirePostgres"))
+        GetHangfireConnectionString(builder))
     )
     .UseSerilogLogProvider()
     .UseConsole()
@@ -209,3 +209,25 @@ app.UseHangfireDashboard(options: new DashboardOptions
 app.MapControllers();
 
 app.Run();
+return;
+
+string GetHangfireConnectionString(WebApplicationBuilder webApplicationBuilder)
+{
+    var s = webApplicationBuilder.Configuration.GetConnectionString("HangfirePostgres");
+    if (string.IsNullOrWhiteSpace(s))
+    {
+        throw new ApplicationException("HangfirePostgres connection string is required");
+    }
+
+    if (!s.Contains("Enlist=true"))
+    {
+        if (!s.EndsWith(';'))
+        {
+            s += ';';
+        }
+
+        s += "Enlist=true";
+    }
+
+    return s;
+}
