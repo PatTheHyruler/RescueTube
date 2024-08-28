@@ -1,4 +1,5 @@
 ﻿using RescueTube.Core.Services;
+using RescueTube.Core.Utils;
 
 namespace RescueTube.Core.Jobs;
 
@@ -13,7 +14,9 @@ public class SubmissionAddEntityAccessPermissionJob
 
     public async Task RunAsync(Guid submissionId, CancellationToken ct = default)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         await _submissionService.SubmissionAddEntityAccessPermissionAsync(submissionId, ct);
         await _submissionService.ServiceUow.SaveChangesAsync(ct);
+        transaction.Complete();
     }
 }

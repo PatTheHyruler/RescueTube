@@ -1,5 +1,6 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Services;
 
@@ -19,12 +20,15 @@ public class FetchCommentsJob
     [DisableConcurrentExecution(timeoutInSeconds: 60 * 10)]
     public async Task FetchVideoComments(Guid videoId, CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         await _commentService.UpdateComments(videoId, ct);
         await _commentService.DataUow.SaveChangesAsync(ct);
+        transaction.Complete();
     }
 
     public async Task QueueVideosForCommentFetch(CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         var lastCommentsFetchCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
         var addedToArchiveAtCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromHours(1));
         var videoIds = _commentService.DbCtx.Videos
@@ -33,12 +37,13 @@ public class FetchCommentsJob
                         && v.AddedToArchiveAt < addedToArchiveAtCutoff
                         && v.Platform == EPlatform.YouTube)
             .Select(v => v.Id)
-            .AsAsyncEnumerable();
+            .AsAsyncEnumerable().WithCancellation(ct);
 
         await foreach (var videoId in videoIds)
         {
             _backgroundJobClient.Enqueue<FetchCommentsJob>(x =>
                 x.FetchVideoComments(videoId, default));
         }
+        transaction.Complete();
     }
 }

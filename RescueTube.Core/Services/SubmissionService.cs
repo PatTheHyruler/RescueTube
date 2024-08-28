@@ -35,14 +35,14 @@ public class SubmissionService : BaseService
     }
 
     /// <exception cref="UnrecognizedUrlException">URL was not recognized and can't be archived.</exception>
-    public Submission SubmitGenericLink(
-        string url, ClaimsPrincipal user)
+    public async Task<Submission> SubmitGenericLink(
+        string url, ClaimsPrincipal user, CancellationToken ct = default)
     {
-        return SubmitGenericLink(url, user.GetUserId(), IsAllowedToAutoSubmit(user));
+        return await SubmitGenericLink(url, user.GetUserId(), IsAllowedToAutoSubmit(user), ct);
     }
 
-    private Submission SubmitGenericLink(
-        string url, Guid submitterId, bool autoSubmit)
+    private async Task<Submission> SubmitGenericLink(
+        string url, Guid submitterId, bool autoSubmit, CancellationToken ct = default)
     {
         foreach (var submissionHandler in SubmissionHandlers)
         {
@@ -50,13 +50,13 @@ public class SubmissionService : BaseService
 
             var submission = new Submission(recognizedPlatformUrl, submitterId, autoSubmit);
             DbCtx.Submissions.Add(submission);
-            DataUow.RegisterSavedChangesCallbackRunOnce(() => _mediator.Publish(new SubmissionAddedEvent
+            await _mediator.Publish(new SubmissionAddedEvent
             {
                 EntityType = submission.EntityType,
                 Platform = submission.Platform,
                 SubmissionId = submission.Id,
                 AutoSubmit = autoSubmit,
-            }));
+            }, ct);
             return submission;
         }
 

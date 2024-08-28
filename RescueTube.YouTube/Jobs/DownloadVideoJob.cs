@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Jobs.Filters;
+using RescueTube.Core.Utils;
 using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs;
@@ -21,12 +22,15 @@ public class DownloadVideoJob
     [DisableConcurrentExecution(60 * 60, Order = 1)]
     public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         await _videoService.DownloadVideoAsync(videoId, ct);
         await _videoService.DataUow.SaveChangesAsync(CancellationToken.None);
+        transaction.Complete();
     }
 
     public async Task DownloadNotDownloadedVideosAsync(CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         var addedToArchiveAtCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
         var videoIds = _videoService.DbCtx.Videos
             .Where(v =>
@@ -41,17 +45,13 @@ public class DownloadVideoJob
                     .Count(x => !x.Success) < 3 // TODO: Make sure this compiles to SQL
             )
             .Select(v => v.Id)
-            .AsAsyncEnumerable();
+            .AsAsyncEnumerable().WithCancellation(ct);
 
         await foreach (var videoId in videoIds)
         {
-            if (ct.IsCancellationRequested)
-            {
-                break;
-            }
-
             _backgroundJobClient.Enqueue<DownloadVideoJob>(x =>
                 x.DownloadVideoAsync(videoId, default));
         }
+        transaction.Complete();
     }
 }

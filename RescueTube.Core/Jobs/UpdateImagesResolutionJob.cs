@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Services;
+using RescueTube.Core.Utils;
 
 namespace RescueTube.Core.Jobs;
 
@@ -23,6 +24,7 @@ public class UpdateImagesResolutionJob
     [DisableConcurrentExecution(10 * 60)]
     public async Task EnqueueAsync(CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         var imageIds = _dataUow.Ctx.Images
             .Where(_dataUow.Images.ShouldAttemptResolutionUpdate)
             .Select(i => i.Id)
@@ -32,11 +34,13 @@ public class UpdateImagesResolutionJob
             _backgroundJobClient.Enqueue<UpdateImagesResolutionJob>(
                 x => x.UpdateResolutionAsync(imageId, default));
         }
+        transaction.Complete();
     }
 
     [SkipConcurrentSameArgExecution]
     public async Task UpdateAuthorImagesResolutionsAsync(Guid authorId, CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         var images = _dataUow.Ctx.Images
             .Where(_dataUow.Images.ShouldAttemptResolutionUpdate)
             .Where(i => i.AuthorImages!.Any(ai => ai.AuthorId == authorId))
@@ -47,11 +51,13 @@ public class UpdateImagesResolutionJob
         }
 
         await _dataUow.SaveChangesAsync(ct);
+        transaction.Complete();
     }
 
     [SkipConcurrentSameArgExecution]
     public async Task UpdateVideoImagesResolutionsAsync(Guid videoId, CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         var images = _dataUow.Ctx.Images
             .Where(_dataUow.Images.ShouldAttemptResolutionUpdate)
             .Where(i => i.VideoImages!.Any(vi => vi.VideoId == videoId))
@@ -62,12 +68,15 @@ public class UpdateImagesResolutionJob
         }
 
         await _dataUow.SaveChangesAsync(ct);
+        transaction.Complete();
     }
 
     [SkipConcurrentSameArgExecution]
     public async Task UpdateResolutionAsync(Guid imageId, CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         await _imageService.TryUpdateResolutionFromFileAsync(imageId, ct);
         await _dataUow.SaveChangesAsync(ct);
+        transaction.Complete();
     }
 }

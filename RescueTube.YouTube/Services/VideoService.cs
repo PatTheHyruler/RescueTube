@@ -81,7 +81,8 @@ public class VideoService : BaseYouTubeService
         var isNew = video == null;
         video ??= new Video { IdOnPlatform = videoData.ID };
         var newVideoData = videoData.ToDomainVideo(fetchType);
-        ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew, EntityUpdateService.EImageUpdateOptions.OnlyAdd);
+        ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew,
+            EntityUpdateService.EImageUpdateOptions.OnlyAdd);
 
         if (author == null)
         {
@@ -102,10 +103,7 @@ public class VideoService : BaseYouTubeService
         if (isNew)
         {
             DbCtx.Videos.Add(video);
-
-            DataUow.RegisterSavedChangesCallbackRunOnce(() =>
-                _mediator.Publish(new VideoAddedEvent(
-                    video.Id, EPlatform.YouTube, video.IdOnPlatform), ct));
+            await _mediator.Publish(new VideoAddedEvent(video.Id, EPlatform.YouTube, video.IdOnPlatform), ct);
         }
 
         return video;
@@ -126,7 +124,8 @@ public class VideoService : BaseYouTubeService
     {
         if (depth > 1)
         {
-            Logger.LogCritical("Unexpectedly large recursion depth, skipping. Title: {VideoDataTitle}", fakePlaylistOrVideoData.Title);
+            Logger.LogCritical("Unexpectedly large recursion depth, skipping. Title: {VideoDataTitle}",
+                fakePlaylistOrVideoData.Title);
             return;
         }
 
@@ -212,8 +211,6 @@ public class VideoService : BaseYouTubeService
             Logger.LogError("Failed to download {Platform} video with ID {IdOnPlatform}.\nErrors: [{Errors}]",
                 EPlatform.YouTube, video.IdOnPlatform,
                 errorString);
-            // Since we throw an exception here, we can't expect the callers of this function to call SaveChanges()
-            // Also, executing this update in the DB should avoid potential concurrency issues
             await _mediator.Send(new AddFailedDataFetchRequest
             {
                 Type = YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload,

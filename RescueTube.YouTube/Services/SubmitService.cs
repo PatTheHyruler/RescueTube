@@ -95,15 +95,12 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 
         submission.CompletedAt = DateTimeOffset.UtcNow;
 
-        DataUow.RegisterSavedChangesCallbackRunOnce(() => _mediator.Publish(
-            new SubmissionHandledEvent
-            {
-                SubmissionId = submissionId,
-                Platform = submission.Platform,
-                EntityType = submission.EntityType,
-            },
-            ct
-        ));
+        await _mediator.Publish(new SubmissionHandledEvent
+        {
+            SubmissionId = submissionId,
+            Platform = submission.Platform,
+            EntityType = submission.EntityType,
+        }, ct);
     }
 
     private async Task<Author> SubmitAuthorAsync(string idOnPlatform, string? idType,
@@ -144,16 +141,16 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         {
             DbCtx.Remove(addedOrExistingAuthor.ArchivalSettings);
         }
+
         addedOrExistingAuthor.ArchivalSettings =
             options ?? AuthorArchivalSettings.ArchivedDefault(); // TODO: Better logic for this
         DbCtx.Add(addedOrExistingAuthor.ArchivalSettings);
-        DataUow.RegisterSavedChangesCallbackRunOnce(() =>
-            _mediator.Publish(new AuthorArchivalEnabledEvent
-            {
-                AuthorId = addedOrExistingAuthor.Id,
-                Platform = EPlatform.YouTube,
-                AuthorArchivalSettings = addedOrExistingAuthor.ArchivalSettings,
-            }, ct));
+        await _mediator.Publish(new AuthorArchivalEnabledEvent
+        {
+            AuthorId = addedOrExistingAuthor.Id,
+            Platform = EPlatform.YouTube,
+            AuthorArchivalSettings = addedOrExistingAuthor.ArchivalSettings,
+        }, ct);
 
         return addedOrExistingAuthor;
     }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core;
 using RescueTube.Core.Exceptions;
+using RescueTube.Core.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 using WebApp.ApiModels;
 
@@ -35,8 +36,10 @@ public class SubmissionController : ControllerBase
     {
         try
         {
-            var submission = _serviceUow.SubmissionService.SubmitGenericLink(input.Url, User);
+            using var transaction = TransactionUtils.NewTransactionScope();
+            var submission = await _serviceUow.SubmissionService.SubmitGenericLink(input.Url, User, ct);
             await _serviceUow.SaveChangesAsync(ct);
+            transaction.Complete();
             return new LinkSubmissionResponseDtoV1
             {
                 SubmissionId = submission.Id,

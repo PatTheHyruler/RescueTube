@@ -5,6 +5,7 @@ using RescueTube.Core.Identity.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RescueTube.Core.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 using WebApp.ApiModels;
 using WebApp.ApiModels.Auth;
@@ -44,21 +45,29 @@ public class AccountController : ControllerBase
     {
         try
         {
-            await _identityUow.UserService.RegisterUserAsync(
-                registrationData.Username,
-                registrationData.Password);
-            await _identityUow.SaveChangesAsync();
-
-            var jwtResult =
-                await _identityUow.UserService.SignInJwtAsync(registrationData.Username, registrationData.Password);
-            await _identityUow.SaveChangesAsync();
-
-            return new JwtResponseDtoV1
+            using (var transaction = TransactionUtils.NewTransactionScope())
             {
-                Jwt = jwtResult.Jwt,
-                RefreshToken = jwtResult.RefreshToken.Token,
-                RefreshTokenExpiresAt = jwtResult.RefreshToken.ExpiresAt,
-            };
+                await _identityUow.UserService.RegisterUserAsync(
+                    registrationData.Username,
+                    registrationData.Password);
+                await _identityUow.SaveChangesAsync();
+                transaction.Complete();
+            }
+
+            using (var transaction = TransactionUtils.NewTransactionScope())
+            {
+                var jwtResult =
+                    await _identityUow.UserService.SignInJwtAsync(registrationData.Username, registrationData.Password);
+                await _identityUow.SaveChangesAsync();
+                transaction.Complete();
+
+                return new JwtResponseDtoV1
+                {
+                    Jwt = jwtResult.Jwt,
+                    RefreshToken = jwtResult.RefreshToken.Token,
+                    RefreshTokenExpiresAt = jwtResult.RefreshToken.ExpiresAt,
+                };
+            }
         }
         catch (IdentityOperationFailedException e)
         {
@@ -100,8 +109,10 @@ public class AccountController : ControllerBase
     {
         try
         {
+            using var transaction = TransactionUtils.NewTransactionScope();
             var jwtResult = await _identityUow.UserService.SignInJwtAsync(loginData.Username, loginData.Password);
             await _identityUow.SaveChangesAsync();
+            transaction.Complete();
             return new JwtResponseDtoV1
             {
                 Jwt = jwtResult.Jwt,
@@ -152,9 +163,11 @@ public class AccountController : ControllerBase
     {
         try
         {
+            using var transaction = TransactionUtils.NewTransactionScope();
             var jwtResult = await _identityUow.TokenService.RefreshTokenAsync(refreshTokenModel.Jwt,
                 refreshTokenModel.RefreshToken);
             await _identityUow.SaveChangesAsync();
+            transaction.Complete();
             return new JwtResponseDtoV1
             {
                 Jwt = jwtResult.Jwt,
@@ -193,8 +206,10 @@ public class AccountController : ControllerBase
     {
         try
         {
+            using var transaction = TransactionUtils.NewTransactionScope();
             await _identityUow.TokenService.DeleteRefreshTokenAsync(logout.Jwt, logout.RefreshToken);
             await _identityUow.SaveChangesAsync();
+            transaction.Complete();
             return Ok();
         }
         catch (InvalidJwtException)

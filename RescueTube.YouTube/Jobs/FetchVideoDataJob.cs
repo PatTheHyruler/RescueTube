@@ -3,6 +3,7 @@ using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.YouTube.Jobs;
@@ -23,6 +24,7 @@ public class FetchVideoDataJob
     [DisableConcurrentExecution(5 * 60)]
     public async Task EnqueueVideoDataFetchesRecurring(CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         var videoIds = _dataUow.Ctx.Videos
             .AsExpandable()
             .Where(v => v.Platform == EPlatform.YouTube
@@ -32,18 +34,22 @@ public class FetchVideoDataJob
                             DateTimeOffset.UtcNow.AddDays(-10),
                             DateTimeOffset.UtcNow.AddHours(-12)
                         ).Invoke(d)))
-            .Select(v => v.Id);
-        await foreach (var videoId in videoIds.AsAsyncEnumerable().WithCancellation(ct))
+            .Select(v => v.Id)
+            .AsAsyncEnumerable().WithCancellation(ct);
+        await foreach (var videoId in videoIds)
         {
             _backgroundJobClient.Enqueue<FetchVideoDataJob>(x =>
                 x.FetchVideoData(videoId, default));
         }
+        transaction.Complete();
     }
 
     [SkipConcurrentSameArgExecution]
     public async Task FetchVideoData(Guid videoId, CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeUow.VideoService.AddOrUpdateVideoAsync(videoId, ct);
         await _dataUow.SaveChangesAsync(ct);
+        transaction.Complete();
     }
 }

@@ -2,6 +2,7 @@ using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
+using RescueTube.Core.Utils;
 
 namespace RescueTube.Core.Jobs;
 
@@ -20,6 +21,7 @@ public class DownloadVideoImagesJob
     [SkipConcurrentSameArgExecution]
     public async Task DownloadVideoImages(Guid videoId, CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         var imageIds = _dataUow.Ctx.Images
             .Where(e => e.FailedFetchAttempts < 3 &&
                         e.VideoImages!.Any(vi =>
@@ -30,12 +32,14 @@ public class DownloadVideoImagesJob
         {
             _backgroundJobs.Enqueue<DownloadImageJob>(x => x.DownloadImage(imageId, default));
         }
+        transaction.Complete();
     }
 
     [DisableConcurrentExecution(10 * 60)]
     [Queue(JobQueues.LowerPriority)]
     public async Task DownloadAllNotDownloadedVideoImages(CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         var imageIds = _dataUow.Ctx.VideoImages
             .Where(e => e.Image!.LocalFilePath == null &&
                         e.Image.FailedFetchAttempts < 3 &&
@@ -48,5 +52,6 @@ public class DownloadVideoImagesJob
             _backgroundJobs.Enqueue<DownloadImageJob>(JobQueues.LowerPriority, x =>
                 x.DownloadImage(imageId, default));
         }
+        transaction.Complete();
     }
 }

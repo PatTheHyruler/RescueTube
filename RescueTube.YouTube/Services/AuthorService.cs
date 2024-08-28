@@ -194,7 +194,7 @@ public class AuthorService : BaseYouTubeService
         return (await AddOrGetAuthors(new[] { new AuthorFetchArg(id, newAuthorFunc) }, ct)).First();
     }
 
-    internal async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs,
+    private async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs,
         CancellationToken ct = default)
     {
         var authors = new List<Author>();
@@ -229,9 +229,8 @@ public class AuthorService : BaseYouTubeService
                 var author = arg.NewAuthorFunc();
 
                 DbCtx.Authors.Add(author);
-                DataUow.RegisterSavedChangesCallbackRunOnce(() =>
-                    _mediator.Publish(new AuthorAddedEvent(
-                        author.Id, EPlatform.YouTube, author.IdOnPlatform), ct));
+                await _mediator.Publish(new AuthorAddedEvent(
+                        author.Id, EPlatform.YouTube, author.IdOnPlatform), ct);
                 _cachedAuthors.TryAdd(arg.AuthorIdOnPlatform, author);
                 authors.Add(author);
             }

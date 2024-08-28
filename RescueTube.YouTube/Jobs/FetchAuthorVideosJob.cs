@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
+using RescueTube.Core.Utils;
 using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs;
@@ -21,6 +22,7 @@ public class FetchAuthorVideosJob
     [DisableConcurrentExecution(10 * 60)]
     public async Task EnqueueAuthorVideoFetchesRecurring(CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         var authorIds = _dataUow.Ctx.Authors
             .Where(AuthorService.AuthorHasNoTooRecentVideoFetches())
             .Where(AuthorService.AuthorIsActiveAndConfiguredForVideoArchival)
@@ -31,12 +33,15 @@ public class FetchAuthorVideosJob
             _backgroundJobClient.Enqueue<FetchAuthorVideosJob>(x =>
                 x.FetchAuthorVideos(authorId, false, default));
         }
+        transaction.Complete();
     }
 
     [DisableConcurrentExecution(10 * 60)]
     public async Task FetchAuthorVideos(Guid authorId, bool force, CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeUow.AuthorService.TryFetchAuthorVideosAsync(authorId: authorId, force: force, ct: ct);
         await _dataUow.SaveChangesAsync(ct);
+        transaction.Complete();
     }
 }

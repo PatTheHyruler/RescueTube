@@ -26,7 +26,7 @@ public class RegisterYouTubeJobsService : BackgroundService
         //     Cron.Hourly);
         recurringJobManager.AddOrUpdate<EnqueueSubmissionsJob>(
             "yt-enqueue-submissions-recurring",
-            x => x.RunAsync(),
+            x => x.RunAsync(default),
             Cron.Hourly);
         recurringJobManager.AddOrUpdate<DownloadVideoJob>(
             "yt-download-non-downloaded-videos-recurring",

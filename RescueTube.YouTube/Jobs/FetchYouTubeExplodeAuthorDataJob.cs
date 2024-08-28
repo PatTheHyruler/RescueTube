@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.YouTube.Jobs;
@@ -27,7 +28,8 @@ public class FetchYouTubeExplodeAuthorDataJob
     [DisableConcurrentExecution(5 * 60)]
     public async Task EnqueueYouTubeExplodeAuthorDataFetchesRecurring(CancellationToken ct)
     {
-        var query = _dataUow.Ctx.Authors
+        using var transaction = TransactionUtils.NewTransactionScope();
+        var authorIds = _dataUow.Ctx.Authors
             .AsExpandable()
             .Where(
                 a => a.Platform == EPlatform.YouTube
@@ -39,18 +41,22 @@ public class FetchYouTubeExplodeAuthorDataJob
                              DateTimeOffset.UtcNow.AddDays(-1)
                          ).Invoke(d)
                      )
-            ).Select(a => a.Id);
-        await foreach (var authorId in query.AsAsyncEnumerable().WithCancellation(ct))
+            )
+            .Select(a => a.Id)
+            .AsAsyncEnumerable().WithCancellation(ct);
+        await foreach (var authorId in authorIds)
         {
             _backgroundJobClient.Enqueue<FetchYouTubeExplodeAuthorDataJob>(x =>
                 x.FetchYouTubeExplodeAuthorData(authorId, default));
         }
+        transaction.Complete();
     }
 
     [AutomaticRetry(Attempts = 3, DelaysInSeconds = [1 * 3600, 2 * 3600, 4 * 3600])]
     [SkipConcurrentSameArgExecution]
     public async Task FetchYouTubeExplodeAuthorData(Guid authorId, CancellationToken ct)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         if (_youTubeUow.AuthorService.LastYtExplodeRateLimitHit > DateTimeOffset.Now.Subtract(TimeSpan.FromHours(1)))
         {
             _backgroundJobClient.Schedule<FetchYouTubeExplodeAuthorDataJob>(
@@ -61,10 +67,12 @@ public class FetchYouTubeExplodeAuthorDataJob
             _logger.LogInformation(
                 "Skipping YouTubeExplode extra author data fetch for author {AuthorId}, last rate limit hit: {LastRateLimitHit}",
                 authorId, _youTubeUow.AuthorService.LastYtExplodeRateLimitHit);
+            transaction.Complete();
             return;
         }
 
         await _youTubeUow.AuthorService.TryUpdateWithYouTubeExplodeDataAsync(authorId, ct);
         await _dataUow.SaveChangesAsync(ct);
+        transaction.Complete();
     }
 }

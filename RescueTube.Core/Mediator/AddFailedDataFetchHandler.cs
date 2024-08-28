@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Data;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Mediator;
@@ -16,6 +17,7 @@ public class AddFailedDataFetchHandler : IRequestHandler<AddFailedDataFetchReque
 
     public async Task Handle(AddFailedDataFetchRequest request, CancellationToken cancellationToken)
     {
+        using var transaction = TransactionUtils.NewTransactionScope();
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
         var dbCtx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         dbCtx.DataFetches.Add(new DataFetch
@@ -31,5 +33,6 @@ public class AddFailedDataFetchHandler : IRequestHandler<AddFailedDataFetchReque
             PlaylistId = request.PlaylistId,
         });
         await dbCtx.SaveChangesAsync(cancellationToken);
+        transaction.Complete();
     }
 }
