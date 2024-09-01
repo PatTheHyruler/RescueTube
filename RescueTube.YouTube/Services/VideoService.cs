@@ -10,6 +10,7 @@ using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
 using RescueTube.YouTube.Utils;
+using YoutubeDLSharp;
 using YoutubeDLSharp.Metadata;
 
 namespace RescueTube.YouTube.Services;
@@ -186,7 +187,7 @@ public class VideoService : BaseYouTubeService
         }
     }
 
-    public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
+    public async Task<(RunResult<string> Result, Video Video)> DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
         var query = DbCtx.Videos
             .Where(e => e.Platform == EPlatform.YouTube)
@@ -195,16 +196,21 @@ public class VideoService : BaseYouTubeService
             .Where(e => e.Id == videoId);
 
         var video = await query.FirstAsync(ct);
-        await DownloadVideoAsync(video, ct);
+        return (await DownloadVideoAsync(video, ct), video);
     }
 
-    private async Task DownloadVideoAsync(Video video, CancellationToken ct = default)
+    private async Task<RunResult<string>> DownloadVideoAsync(Video video, CancellationToken ct = default)
     {
         Logger.LogInformation("Started downloading video {IdOnPlatform} on platform {Platform}",
             video.IdOnPlatform, video.Platform);
-        var result = await YouTubeUow.YoutubeDl.RunVideoDownload(Url.ToVideoUrl(video.IdOnPlatform), ct: ct,
-            overrideOptions: YouTubeUow.DownloadOptions);
         // TODO: Progress display?
+        return await YouTubeUow.YoutubeDl.RunVideoDownload(Url.ToVideoUrl(video.IdOnPlatform), ct: ct,
+            overrideOptions: YouTubeUow.DownloadOptions);
+    }
+
+    public async Task PersistVideoDownloadResultAsync(RunResult<string> result, Video video,
+        CancellationToken ct = default)
+    {
         if (!result.Success)
         {
             var errorString = result.ErrorOutput.Length > 0 ? string.Join("\n", result.ErrorOutput) : null;

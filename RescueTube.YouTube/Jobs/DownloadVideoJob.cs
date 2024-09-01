@@ -22,8 +22,11 @@ public class DownloadVideoJob
     [RescheduleConcurrentExecution(Key = "yt:download-video")]
     public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
+        var result = await _videoService.DownloadVideoAsync(videoId, ct);
+
         using var transaction = TransactionUtils.NewTransactionScope();
-        await _videoService.DownloadVideoAsync(videoId, ct);
+        await _videoService.PersistVideoDownloadResultAsync(result.Result, result.Video, ct);
+
         await _videoService.DataUow.SaveChangesAsync(CancellationToken.None);
         transaction.Complete();
     }
@@ -34,15 +37,15 @@ public class DownloadVideoJob
         var addedToArchiveAtCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
         var videoIds = _videoService.DbCtx.Videos
             .Where(v =>
-                v.VideoFiles!.Count == 0
-                && v.AddedToArchiveAt < addedToArchiveAtCutoff
-                && v.DataFetches!
-                    .Where(d =>
-                        d.Source == YouTubeConstants.FetchTypes.YtDlp.Source
-                        && d.Type == YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload)
-                    .OrderByDescending(x => x.OccurredAt)
-                    .Take(3)
-                    .Count(x => !x.Success) < 3 // TODO: Make sure this compiles to SQL
+                    v.VideoFiles!.Count == 0
+                    && v.AddedToArchiveAt < addedToArchiveAtCutoff
+                    && v.DataFetches!
+                        .Where(d =>
+                            d.Source == YouTubeConstants.FetchTypes.YtDlp.Source
+                            && d.Type == YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload)
+                        .OrderByDescending(x => x.OccurredAt)
+                        .Take(3)
+                        .Count(x => !x.Success) < 3 // TODO: Make sure this compiles to SQL
             )
             .Select(v => v.Id)
             .AsAsyncEnumerable().WithCancellation(ct);
@@ -52,6 +55,7 @@ public class DownloadVideoJob
             _backgroundJobClient.Enqueue<DownloadVideoJob>(x =>
                 x.DownloadVideoAsync(videoId, default));
         }
+
         transaction.Complete();
     }
 }
