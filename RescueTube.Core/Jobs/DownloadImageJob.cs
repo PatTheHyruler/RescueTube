@@ -1,3 +1,4 @@
+using Hangfire;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
@@ -14,6 +15,7 @@ public class DownloadImageJob
     }
 
     [SkipConcurrent(Key = "core:download-image:{0}")]
+    [Queue(JobQueues.LowerPriority)]
     public async Task DownloadImage(Guid imageId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

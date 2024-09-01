@@ -194,7 +194,7 @@ public class AuthorService : BaseYouTubeService
         return (await AddOrGetAuthors(new[] { new AuthorFetchArg(id, newAuthorFunc) }, ct)).First();
     }
 
-    private async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs,
+    internal async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs,
         CancellationToken ct = default)
     {
         var authors = new List<Author>();
