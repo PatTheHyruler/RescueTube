@@ -44,7 +44,7 @@ public class FetchPlaylistDataJob
         transaction.Complete();
     }
 
-    [SkipConcurrentSameArgExecution]
+    [SkipConcurrent(Key = "yt:fetch-playlist-data:{0}")]
     public async Task FetchPlaylistData(Guid playlistId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

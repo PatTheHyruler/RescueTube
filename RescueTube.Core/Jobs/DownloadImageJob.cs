@@ -13,7 +13,7 @@ public class DownloadImageJob
         _imageService = imageService;
     }
 
-    [SkipConcurrentSameArgExecution]
+    [SkipConcurrent(Key = "core:download-image:{0}")]
     public async Task DownloadImage(Guid imageId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
