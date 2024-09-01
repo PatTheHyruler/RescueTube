@@ -62,7 +62,9 @@ public class TokenService
     /// <param name="audienceSuffix">Suffix to append to the default configured JWT audience</param>
     /// <returns>The created JWT.</returns>
     public string GenerateJwt(ClaimsPrincipal claimsPrincipal, int? expiresInSeconds = null,
-        string? audienceSuffix = null)
+        string? audienceSuffix = null) => GenerateJwt(claimsPrincipal.Claims, expiresInSeconds, audienceSuffix);
+
+    public string GenerateJwt(IEnumerable<Claim> claims, int? expiresInSeconds = null, string? audienceSuffix = null)
     {
         if (expiresInSeconds is <= 0)
         {
@@ -71,7 +73,7 @@ public class TokenService
         }
 
         return IdentityHelpers.GenerateJwt(
-            claimsPrincipal.Claims,
+            claims,
             _jwtBearerOptions.Key,
             _jwtBearerOptions.Issuer,
             _jwtBearerOptions.Audience + audienceSuffix,
@@ -202,7 +204,8 @@ public class TokenService
         }
     }
 
-    public ClaimsPrincipal ValidateJwtGetPrincipal(string jwt, bool ignoreExpiration = true, string? audienceSuffix = null)
+    public ClaimsPrincipal ValidateJwtGetPrincipal(string jwt, bool ignoreExpiration = true,
+        string? audienceSuffix = null)
     {
         return ValidateJwt(jwt, ignoreExpiration: ignoreExpiration, audienceSuffix: audienceSuffix)
             .Principal;

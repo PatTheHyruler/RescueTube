@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using RescueTube.Core;
 using RescueTube.Core.Identity.Exceptions;
 using RescueTube.Core.Identity.Services;
 using RescueTube.Core.Services;
@@ -151,7 +150,9 @@ public class VideoFileController : ControllerBase
 
     private (string Token, DateTimeOffset ExpiresAt) CreateVideoAccessToken(Guid videoId, ClaimsPrincipal claims)
     {
-        var token = _tokenService.GenerateJwt(claims, expiresInSeconds: ExpiresInSeconds,
+        var token = _tokenService.GenerateJwt(
+            claims.Claims.Where(c => c.Type != "aud"),
+            expiresInSeconds: ExpiresInSeconds,
             audienceSuffix: GetAudienceSuffix(videoId));
         return (token, DateTimeOffset.UtcNow.AddSeconds(ExpiresInSeconds));
     }
