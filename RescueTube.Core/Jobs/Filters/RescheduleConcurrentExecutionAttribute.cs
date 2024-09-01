@@ -64,6 +64,7 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
     {
         if (context.OldStateName == ProcessingState.StateName && context.NewState.Name != context.OldStateName)
         {
+            // TODO: Add and use job parameter to avoid releasing on jobs that started processing before filter was applied
             FilterUtils.TryRemoveLock(
                 GetResource(context.BackgroundJob.Job), context.Storage, context.Connection);    
         }
