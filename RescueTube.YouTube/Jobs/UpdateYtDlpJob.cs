@@ -1,4 +1,4 @@
-﻿using Hangfire;
+﻿using RescueTube.Core.Jobs.Filters;
 using YoutubeDLSharp;
 
 namespace RescueTube.YouTube.Jobs;
@@ -12,7 +12,7 @@ public class UpdateYtDlpJob
         _youtubeDl = youtubeDl;
     }
 
-    [DisableConcurrentExecution(60)]
+    [SkipConcurrent(Key = "yt:update-youtube-dl")]
     public async Task UpdateYouTubeDlAsync()
     {
         await _youtubeDl.RunUpdate();

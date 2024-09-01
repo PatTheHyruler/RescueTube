@@ -1,5 +1,6 @@
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Services;
@@ -17,7 +18,8 @@ public class FetchCommentsJob
         _backgroundJobClient = backgroundJobClient;
     }
 
-    [DisableConcurrentExecution(timeoutInSeconds: 60 * 10)]
+    [SkipConcurrent(Key = "yt:fetch-video-comments:{0}")]
+    [RescheduleConcurrentExecution(Key = "yt:fetch-video-comments")]
     public async Task FetchVideoComments(Guid videoId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
@@ -26,6 +28,7 @@ public class FetchCommentsJob
         transaction.Complete();
     }
 
+    [RescheduleConcurrentExecution(Key = "yt:queue-fetch-video-comments")]
     public async Task QueueVideosForCommentFetch(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

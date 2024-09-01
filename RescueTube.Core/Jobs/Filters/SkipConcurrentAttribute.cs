@@ -1,14 +1,8 @@
-using System.Data;
-using System.Reflection;
-using System.Transactions;
-using Dapper;
 using Hangfire;
 using Hangfire.Common;
-using Hangfire.PostgreSql;
 using Hangfire.Server;
 using Hangfire.States;
 using Hangfire.Storage;
-using IsolationLevel = System.Data.IsolationLevel;
 
 namespace RescueTube.Core.Jobs.Filters;
 
@@ -22,6 +16,11 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
     /// Can reference job arguments by index using format identifiers like {0}
     /// </summary>
     public required string Key { get; init; }
+
+    public SkipConcurrentAttribute()
+    {
+        Order = 50;
+    }
 
     private const string LockItemKey = "skipconcurrent_distributedlock";
 
@@ -75,7 +74,7 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
 
     public void OnStateApplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
     {
-        if (context.NewState.Name == EnqueuedState.StateName)
+        if (context.NewState.Name == EnqueuedState.StateName && context.NewState.Name != context.OldStateName)
         {
             AcquireDistributedLock(context.Connection, context.BackgroundJob);
         }
@@ -83,7 +82,7 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
 
     public void OnStateUnapplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
     {
-        if (context.OldStateName == EnqueuedState.StateName)
+        if (context.OldStateName == EnqueuedState.StateName && context.NewState.Name != context.OldStateName)
         {
             TryRemoveLock(context.BackgroundJob.Job, context.Storage, context.Connection);
         }
@@ -93,62 +92,5 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
         => storageConnection.AcquireDistributedLock(GetResource(backgroundJob.Job), TimeSpan.Zero);
 
     private void TryRemoveLock(Job job, JobStorage jobStorage, IStorageConnection storageConnection)
-        => TryRemoveLock(GetResource(job), jobStorage, storageConnection);
-
-    private static void TryRemoveLock(string resource, JobStorage jobStorage, IStorageConnection storageConnection)
-    {
-        if (storageConnection is not PostgreSqlConnection postgreSqlConnection)
-        {
-            throw new ArgumentException("Expected Postgres connection");
-        }
-
-        var storageCreateAndOpenConnectionMethod = typeof(PostgreSqlStorage).GetMethod("CreateAndOpenConnection",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-        var storageReleaseConnectionMethod =
-            typeof(PostgreSqlStorage).GetMethod("ReleaseConnection", BindingFlags.NonPublic | BindingFlags.Instance)
-            ?? throw new Exception($"Failed to get method {nameof(PostgreSqlStorage)}.ReleaseConnection");
-
-        var dbConnectionField =
-            typeof(PostgreSqlConnection).GetField("_dedicatedConnection",
-                BindingFlags.NonPublic | BindingFlags.Instance);
-        var dedicatedConnection = dbConnectionField?.GetValue(postgreSqlConnection) as IDbConnection;
-        IDbConnection? newConnection = null;
-        IDbTransaction? transaction = null;
-        try
-        {
-            if (dedicatedConnection is null)
-            {
-                newConnection = storageCreateAndOpenConnectionMethod?.Invoke(jobStorage, []) as IDbConnection;
-            }
-
-            var connection = dedicatedConnection ?? newConnection
-                ?? throw new Exception($"Failed to get {nameof(IDbConnection)}");
-            transaction = Transaction.Current == null
-                ? connection.BeginTransaction(IsolationLevel.ReadCommitted)
-                : null;
-
-            var options = typeof(PostgreSqlConnection)
-                              .GetField("_options", BindingFlags.NonPublic | BindingFlags.Instance)?
-                              .GetValue(postgreSqlConnection) as PostgreSqlStorageOptions
-                          ?? throw new Exception($"Failed to get {nameof(PostgreSqlStorageOptions)}");
-            var actualResource = $"{options.SchemaName}:{resource}";
-
-            connection.Execute(
-                $"""DELETE FROM "{options.SchemaName}"."lock" WHERE "resource" = @Resource""",
-                new
-                {
-                    Resource = actualResource,
-                }, transaction);
-            transaction?.Commit();
-        }
-        finally
-        {
-            if (newConnection is not null)
-            {
-                storageReleaseConnectionMethod.Invoke(jobStorage, [newConnection]);
-            }
-
-            transaction?.Dispose();
-        }
-    }
+        => FilterUtils.TryRemoveLock(GetResource(job), jobStorage, storageConnection);
 }

@@ -21,7 +21,7 @@ public class FetchPlaylistDataJob
         _backgroundJobClient = backgroundJobClient;
     }
 
-    [DisableConcurrentExecution(5 * 60)]
+    [RescheduleConcurrentExecution(Key = "yt:enqueue-playlist-data-fetches")]
     public async Task EnqueuePlaylistDataFetches(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

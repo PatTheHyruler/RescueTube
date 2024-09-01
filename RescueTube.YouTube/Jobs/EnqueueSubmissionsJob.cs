@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
+using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Enums;
 
@@ -17,7 +18,7 @@ public class EnqueueSubmissionsJob
         _dbContext = dbContext;
     }
 
-    [DisableConcurrentExecution(60 * 10)]
+    [RescheduleConcurrentExecution(Key = "yt:enqueue-submissions")]
     public async Task RunAsync(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
