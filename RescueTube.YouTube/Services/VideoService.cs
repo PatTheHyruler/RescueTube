@@ -203,9 +203,36 @@ public class VideoService : BaseYouTubeService
     {
         Logger.LogInformation("Started downloading video {IdOnPlatform} on platform {Platform}",
             video.IdOnPlatform, video.Platform);
-        // TODO: Progress display?
+
+        var downloadProgressLogger = new DownloadProgressLogger(Logger);
+        // TODO: Add way to see download progress on the video page itself
+
         return await YouTubeUow.YoutubeDl.RunVideoDownload(Url.ToVideoUrl(video.IdOnPlatform), ct: ct,
-            overrideOptions: YouTubeUow.DownloadOptions);
+            overrideOptions: YouTubeUow.DownloadOptions, progress: downloadProgressLogger);
+    }
+
+    private class DownloadProgressLogger : IProgress<DownloadProgress>
+    {
+        private readonly ILogger _logger;
+
+        public DownloadProgressLogger(ILogger logger)
+        {
+            _logger = logger;
+        }
+
+        public void Report(DownloadProgress value)
+        {
+            try
+            {
+                _logger.LogInformation(
+                    "Yt-dlp download progress: {ProgressPercentage}%, ETA: {ETA}, Speed: {DownloadSpeed}, TotalDownloadSize: {TotalDownloadSize}, State: {State}",
+                    value.Progress * 100, value.ETA, value.DownloadSpeed, value.TotalDownloadSize, value.State);
+            }
+            catch (Exception)
+            {
+                // Ignore
+            }
+        }
     }
 
     public async Task PersistVideoDownloadResultAsync(RunResult<string> result, Video video,
