@@ -18,7 +18,7 @@ public class DownloadVideoJob
     }
 
     [AutomaticRetry(Attempts = 0)]
-    [SkipConcurrent(Key = "yt:download-video:{0}")]
+    [SkipConcurrent("yt:download-video:{0}")]
     [RescheduleConcurrentExecution("yt:download-video")]
     public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {

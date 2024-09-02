@@ -12,7 +12,7 @@ public class UpdateYtDlpJob
         _youtubeDl = youtubeDl;
     }
 
-    [SkipConcurrent(Key = "yt:update-youtube-dl")]
+    [SkipConcurrent("yt:update-youtube-dl")]
     public async Task UpdateYouTubeDlAsync()
     {
         await _youtubeDl.RunUpdate();

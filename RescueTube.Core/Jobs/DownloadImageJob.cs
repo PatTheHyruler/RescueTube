@@ -14,7 +14,7 @@ public class DownloadImageJob
         _imageService = imageService;
     }
 
-    [SkipConcurrent(Key = "core:download-image:{0}")]
+    [SkipConcurrent("core:download-image:{0}")]
     [Queue(JobQueues.LowerPriority)]
     public async Task DownloadImage(Guid imageId, CancellationToken ct)
     {

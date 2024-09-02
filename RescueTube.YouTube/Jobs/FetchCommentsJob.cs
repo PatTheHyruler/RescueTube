@@ -18,7 +18,7 @@ public class FetchCommentsJob
         _backgroundJobClient = backgroundJobClient;
     }
 
-    [SkipConcurrent(Key = "yt:fetch-video-comments:{0}")]
+    [SkipConcurrent("yt:fetch-video-comments:{0}")]
     [RescheduleConcurrentExecution("yt:fetch-video-comments")]
     public async Task FetchVideoComments(Guid videoId, CancellationToken ct)
     {

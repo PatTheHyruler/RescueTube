@@ -44,7 +44,7 @@ public class FetchVideoDataJob
         transaction.Complete();
     }
 
-    [SkipConcurrent(Key = "yt:fetch-video-data:{0}")]
+    [SkipConcurrent("yt:fetch-video-data:{0}")]
     public async Task FetchVideoData(Guid videoId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

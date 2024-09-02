@@ -53,7 +53,7 @@ public class FetchYouTubeExplodeAuthorDataJob
     }
 
     [AutomaticRetry(Attempts = 3, DelaysInSeconds = [1 * 3600, 2 * 3600, 4 * 3600])]
-    [SkipConcurrent(Key = "yt:fetch-ytexplode-author-data:{0}")]
+    [SkipConcurrent("yt:fetch-ytexplode-author-data:{0}")]
     public async Task FetchYouTubeExplodeAuthorData(Guid authorId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

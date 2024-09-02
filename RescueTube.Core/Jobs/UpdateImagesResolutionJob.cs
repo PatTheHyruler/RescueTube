@@ -37,7 +37,7 @@ public class UpdateImagesResolutionJob
         transaction.Complete();
     }
 
-    [SkipConcurrent(Key = "core:update-author-images-resolutions:{0}")]
+    [SkipConcurrent("core:update-author-images-resolutions:{0}")]
     public async Task UpdateAuthorImagesResolutionsAsync(Guid authorId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
@@ -54,7 +54,7 @@ public class UpdateImagesResolutionJob
         transaction.Complete();
     }
 
-    [SkipConcurrent(Key = "core:update-video-images-resolutions:{0}")]
+    [SkipConcurrent("core:update-video-images-resolutions:{0}")]
     public async Task UpdateVideoImagesResolutionsAsync(Guid videoId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
@@ -71,7 +71,7 @@ public class UpdateImagesResolutionJob
         transaction.Complete();
     }
 
-    [SkipConcurrent(Key = "core:update-image-resolution:{0}")]
+    [SkipConcurrent("core:update-image-resolution:{0}")]
     public async Task UpdateResolutionAsync(Guid imageId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

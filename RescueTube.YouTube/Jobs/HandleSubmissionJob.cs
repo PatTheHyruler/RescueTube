@@ -15,7 +15,7 @@ public class HandleSubmissionJob
         _youTubeUow = youTubeUow;
     }
 
-    [SkipConcurrent(Key = "yt:handle-submission:{0}")]
+    [SkipConcurrent("yt:handle-submission:{0}")]
     public async Task RunAsync(Guid submissionId, CancellationToken ct = default)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

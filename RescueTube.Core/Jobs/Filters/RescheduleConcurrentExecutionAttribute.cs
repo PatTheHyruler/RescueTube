@@ -1,4 +1,5 @@
-﻿using Hangfire.Common;
+﻿using Hangfire;
+using Hangfire.Common;
 using Hangfire.PostgreSql;
 using Hangfire.States;
 using Hangfire.Storage;
@@ -26,6 +27,7 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
     public RescheduleConcurrentExecutionAttribute(string resource)
     {
         _resource = resource;
+        Order = 60;
     }
 
     public int DistributedLockTimeoutSeconds { get; init; } = 5;
@@ -40,18 +42,14 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
         // change the target state to another one, causing a worker not to process the
         // background job.
         if (context.CandidateState.Name != ProcessingState.StateName ||
-            context.BackgroundJob.Job == null)
+            context.BackgroundJob.Job is null)
         {
             return;
         }
 
         // This filter requires an extended set of storage operations. It's supported
         // by all the official storages, and many of the community-based ones.
-        if (context.Connection is not JobStorageConnection storageConnection)
-        {
-            throw new NotSupportedException(
-                "This version of storage doesn't support extended methods. Please try to update to the latest version.");
-        }
+        var storageConnection = context.Connection.AsJobStorageConnection();
 
         string? blockedBy;
 
@@ -65,31 +63,10 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
             // themselves.
             using (AcquireDistributedSetLock(context.Connection, context.BackgroundJob.Job.Args))
             {
-                // Resource set contains a background job id that acquired a mutex for the resource.
-                // We are getting only one element to see what background job blocked the invocation.
-                var range = storageConnection.GetRangeFromSet(
-                    GetResourceKey(context.BackgroundJob.Job.Args),
-                    0,
-                    0);
-
-                blockedBy = range.Count > 0 ? range[0] : null;
-
-                // We should permit an invocation only when the set is empty, or if current background
-                // job already owns the resource. This may happen when the localTransaction succeeded,
-                // but outer transaction failed.
-                if (blockedBy == null || blockedBy == context.BackgroundJob.Id)
+                if (!storageConnection.IsJobBlocked(GetResourceKey(context.BackgroundJob),
+                        context.BackgroundJob.Id, out blockedBy))
                 {
-                    // We need to commit the changes inside a distributed lock, otherwise it's 
-                    // useless. So we create a local transaction instead of using the 
-                    // context.Transaction property.
-                    var localTransaction = context.Connection.CreateWriteTransaction();
-
-                    // Add the current background job identifier to a resource set. This means
-                    // that resource is owned by the current background job. Identifier will be
-                    // removed only on failed state, or in one of final states (succeeded or
-                    // deleted).
-                    localTransaction.AddToSet(GetResourceKey(context.BackgroundJob.Job.Args), context.BackgroundJob.Id);
-                    localTransaction.Commit();
+                    context.Connection.AddBlock(GetResourceKey(context.BackgroundJob), context.BackgroundJob.Id);
 
                     // Invocation is permitted, and we did all the required things.
                     return;
@@ -101,7 +78,7 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
             if (e is not (DistributedLockTimeoutException or PostgreSqlDistributedLockException))
             {
                 throw;
-            }
+            }   
             // We weren't able to acquire a distributed lock within a specified window. This may
             // be caused by network delays, storage outages or abandoned locks in some storages.
             // Since it is required to expire abandoned locks after some time, we can simply
@@ -126,17 +103,13 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
 
     public void OnStateApplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
     {
-        if (context.BackgroundJob.Job == null) return;
+        if (context.BackgroundJob.Job is null) return;
 
         if (context.OldStateName == ProcessingState.StateName)
         {
             using (AcquireDistributedSetLock(context.Connection, context.BackgroundJob.Job.Args))
             {
-                var localTransaction = context.Connection.CreateWriteTransaction();
-                localTransaction.RemoveFromSet(GetResourceKey(context.BackgroundJob.Job.Args),
-                    context.BackgroundJob.Id);
-
-                localTransaction.Commit();
+                context.Connection.RemoveBlock(GetResourceKey(context.BackgroundJob), context.BackgroundJob.Id);
             }
         }
     }
@@ -177,6 +150,9 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
     {
         return $"extension:job-reschedule-mutex:lock:{GetKeyFormat(args, _resource)}";
     }
+
+    private string GetResourceKey(BackgroundJob backgroundJob)
+        => GetResourceKey(backgroundJob.Job.Args);
 
     private string GetResourceKey(IEnumerable<object> args)
     {

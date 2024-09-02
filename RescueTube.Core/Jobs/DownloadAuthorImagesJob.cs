@@ -17,7 +17,7 @@ public class DownloadAuthorImagesJob
         _dataUow = dataUow;
     }
 
-    [SkipConcurrent(Key = "core:download-author-images:{0}")]
+    [SkipConcurrent("core:download-author-images:{0}")]
     public async Task DownloadAuthorImages(Guid authorId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

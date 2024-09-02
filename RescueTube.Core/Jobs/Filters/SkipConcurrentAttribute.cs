@@ -6,91 +6,131 @@ using Hangfire.Storage;
 
 namespace RescueTube.Core.Jobs.Filters;
 
-/// <summary>
-/// Skip enqueueing/running the job if the same job with the same arguments is already enqueued/running
-/// </summary>
 public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElectStateFilter, IApplyStateFilter
 {
-    /// <summary>
-    /// Unique key to lock the job with.
-    /// Can reference job arguments by index using format identifiers like {0}
-    /// </summary>
-    public required string Key { get; init; }
+    private readonly string _resource;
 
-    public SkipConcurrentAttribute()
+    public SkipConcurrentAttribute(string resource)
     {
+        _resource = resource;
         Order = 50;
-    }
-
-    private const string LockItemKey = "skipconcurrent_distributedlock";
-
-    private string GetResource(Job job)
-    {
-        return string.Format("skipconcurrent:" + Key, job.Args.ToArray());
     }
 
     public void OnPerforming(PerformingContext context)
     {
-        IDisposable distributedLock;
-        try
-        {
-            distributedLock = AcquireDistributedLock(context.Connection, context.BackgroundJob);
-        }
-        catch (Exception)
-        {
-            context.Canceled = true;
-            return;
-        }
+        if (context.BackgroundJob.Job is null) return;
+        var storageConnection = context.Connection.AsJobStorageConnection();
 
-        context.Items[LockItemKey] = distributedLock;
+        using (AcquireDistributedLock(context.Connection, context.BackgroundJob))
+        {
+            if (storageConnection.IsJobBlocked(GetResourceKey(context.BackgroundJob),
+                    context.BackgroundJob.Id, out _))
+            {
+                context.Canceled = true;
+            }
+        }
     }
 
     public void OnPerformed(PerformedContext context)
     {
-        if (context.Items[LockItemKey] is IDisposable distributedLock)
-        {
-            distributedLock.Dispose();
-        }
-        else
-        {
-            TryRemoveLock(context.BackgroundJob.Job, context.Storage, context.Connection);
-        }
     }
 
     public void OnStateElection(ElectStateContext context)
     {
-        if (context.CandidateState.Name == EnqueuedState.StateName && context.CurrentState != EnqueuedState.StateName)
+        if (context.BackgroundJob.Job is null) return;
+        var storageConnection = context.Connection.AsJobStorageConnection();
+
+        if (IsStateChanging(context.CandidateState.Name, context.CurrentState,
+                EnqueuedState.StateName, ProcessingState.StateName))
         {
-            try
+            using (AcquireDistributedLock(context.Connection, context.BackgroundJob))
             {
-                using var @lock = AcquireDistributedLock(context.Connection, context.BackgroundJob);
-            }
-            catch (Exception e)
-            {
-                context.CandidateState = new DeletedState(new ExceptionInfo(e));
+                if (storageConnection.IsJobBlocked(GetResourceKey(context.BackgroundJob), context.BackgroundJob.Id,
+                        out var blockedBy))
+                {
+                    context.CandidateState = new DeletedState
+                    {
+                        Reason = $"Job blocked by {blockedBy}",
+                    };
+                }
             }
         }
     }
 
     public void OnStateApplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
     {
-        if (context.NewState.Name == EnqueuedState.StateName && context.NewState.Name != context.OldStateName)
+        if (context.BackgroundJob.Job is null) return;
+        var storageConnection = context.Connection.AsJobStorageConnection();
+
+        if (IsStateChanging(context.NewState.Name, context.OldStateName,
+                EnqueuedState.StateName, ProcessingState.StateName))
         {
-            AcquireDistributedLock(context.Connection, context.BackgroundJob);
+            using (AcquireDistributedLock(context.Connection, context.BackgroundJob))
+            {
+                if (storageConnection.IsJobBlocked(GetResourceKey(context.BackgroundJob), context.BackgroundJob.Id,
+                        out var blockedBy, out var isBlockedByCurrentJob))
+                {
+                    throw new Exception($"The job is blocked by {blockedBy}");
+                }
+
+                if (!isBlockedByCurrentJob)
+                {
+                    context.Connection.AddBlock(GetResourceKey(context.BackgroundJob), context.BackgroundJob.Id);
+                }
+            }
         }
     }
 
     public void OnStateUnapplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
     {
-        if (context.OldStateName == EnqueuedState.StateName && context.NewState.Name != context.OldStateName)
+        if (context.BackgroundJob.Job is null) return;
+        var storageConnection = context.Connection.AsJobStorageConnection();
+
+        if (IsStateChanging(context.OldStateName, context.NewState.Name,
+                EnqueuedState.StateName, ProcessingState.StateName))
         {
-            TryRemoveLock(context.BackgroundJob.Job, context.Storage, context.Connection);
+            using (AcquireDistributedLock(context.Connection, context.BackgroundJob))
+            {
+                if (storageConnection.IsJobBlocked(GetResourceKey(context.BackgroundJob), context.BackgroundJob.Id,
+                        out var blockedBy, out var isBlockedByCurrentJob))
+                {
+                    throw new Exception($"The job is blocked by {blockedBy}");
+                }
+
+                if (isBlockedByCurrentJob)
+                {
+                    context.Connection.RemoveBlock(GetResourceKey(context.BackgroundJob), context.BackgroundJob.Id);
+                }
+                else
+                {
+                    throw new Exception($"The job is not blocked by {context.BackgroundJob.Id}, but it should be");
+                }
+            }
         }
     }
 
-    private IDisposable AcquireDistributedLock(IStorageConnection storageConnection, BackgroundJob backgroundJob)
-        => storageConnection.AcquireDistributedLock(GetResource(backgroundJob.Job), TimeSpan.Zero);
+    private static bool IsStateChanging(string stateNameToCheck, string otherStateName,
+        params string[] targetStateNames)
+    {
+        return stateNameToCheck != otherStateName
+               && targetStateNames.Contains(stateNameToCheck)
+               && !targetStateNames.Contains(otherStateName);
+    }
 
-    private void TryRemoveLock(Job job, JobStorage jobStorage, IStorageConnection storageConnection)
-        => FilterUtils.TryRemoveLock(GetResource(job), jobStorage, storageConnection);
+    private IDisposable AcquireDistributedLock(IStorageConnection storageConnection, BackgroundJob backgroundJob)
+        => storageConnection.AcquireDistributedLock(
+            GetDistributedLockKey(backgroundJob.Job.Args), TimeSpan.Zero);
+
+    private string GetDistributedLockKey(IEnumerable<object> args) =>
+        $"extension:job-skip-concurrent:lock:{GetKeyFormat(args, _resource)}";
+
+    private string GetResourceKey(BackgroundJob backgroundJob) => GetResourceKey(backgroundJob.Job.Args);
+
+    private string GetResourceKey(IEnumerable<object> args) =>
+        $"extension:job-skip-concurrent:set:{GetKeyFormat(args, _resource)}";
+
+    private static string GetKeyFormat(IEnumerable<object> args, string keyFormat)
+    {
+        return string.Format(keyFormat, args.ToArray());
+    }
 }
