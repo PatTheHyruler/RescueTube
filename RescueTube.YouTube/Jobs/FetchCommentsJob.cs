@@ -19,7 +19,7 @@ public class FetchCommentsJob
     }
 
     [SkipConcurrent(Key = "yt:fetch-video-comments:{0}")]
-    [RescheduleConcurrentExecution(Key = "yt:fetch-video-comments")]
+    [RescheduleConcurrentExecution("yt:fetch-video-comments")]
     public async Task FetchVideoComments(Guid videoId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
@@ -28,7 +28,7 @@ public class FetchCommentsJob
         transaction.Complete();
     }
 
-    [RescheduleConcurrentExecution(Key = "yt:queue-fetch-video-comments")]
+    [RescheduleConcurrentExecution("yt:queue-fetch-video-comments")]
     public async Task QueueVideosForCommentFetch(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

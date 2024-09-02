@@ -18,7 +18,7 @@ public class EnqueueSubmissionsJob
         _dbContext = dbContext;
     }
 
-    [RescheduleConcurrentExecution(Key = "yt:enqueue-submissions")]
+    [RescheduleConcurrentExecution("yt:enqueue-submissions")]
     public async Task RunAsync(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

@@ -21,7 +21,7 @@ public class UpdateImagesResolutionJob
         _backgroundJobClient = backgroundJobClient;
     } 
 
-    [RescheduleConcurrentExecution(Key = "core:update-images-resolution-enqueue")]
+    [RescheduleConcurrentExecution("core:update-images-resolution-enqueue")]
     public async Task EnqueueAsync(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

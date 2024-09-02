@@ -25,7 +25,7 @@ public class FetchYouTubeExplodeAuthorDataJob
         _logger = logger;
     }
 
-    [RescheduleConcurrentExecution(Key = "yt:enqueue-ytexplode-author-data-fetches-recurring")]
+    [RescheduleConcurrentExecution("yt:enqueue-ytexplode-author-data-fetches-recurring")]
     public async Task EnqueueYouTubeExplodeAuthorDataFetchesRecurring(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

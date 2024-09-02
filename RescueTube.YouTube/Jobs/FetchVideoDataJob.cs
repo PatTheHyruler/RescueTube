@@ -21,7 +21,7 @@ public class FetchVideoDataJob
         _backgroundJobClient = backgroundJobClient;
     }
 
-    [RescheduleConcurrentExecution(Key = "yt:enqueue-video-data-fetches-recurring")]
+    [RescheduleConcurrentExecution("yt:enqueue-video-data-fetches-recurring")]
     public async Task EnqueueVideoDataFetchesRecurring(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

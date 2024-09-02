@@ -36,7 +36,7 @@ public class DownloadAuthorImagesJob
         transaction.Complete();
     }
 
-    [RescheduleConcurrentExecution(Key = "core:download-all-not-downloaded-author-images")]
+    [RescheduleConcurrentExecution("core:download-all-not-downloaded-author-images")]
     public async Task DownloadAllNotDownloadedAuthorImages(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

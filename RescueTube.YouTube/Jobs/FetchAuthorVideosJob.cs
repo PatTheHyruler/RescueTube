@@ -20,7 +20,7 @@ public class FetchAuthorVideosJob
         _backgroundJobClient = backgroundJobClient;
     }
 
-    [RescheduleConcurrentExecution(Key = "yt:enqueue-author-video-fetches-recurring")]
+    [RescheduleConcurrentExecution("yt:enqueue-author-video-fetches-recurring")]
     public async Task EnqueueAuthorVideoFetchesRecurring(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
@@ -37,7 +37,7 @@ public class FetchAuthorVideosJob
         transaction.Complete();
     }
 
-    [RescheduleConcurrentExecution(Key = "yt:fetch-author-videos")]
+    [RescheduleConcurrentExecution("yt:fetch-author-videos")]
     public async Task FetchAuthorVideos(Guid authorId, bool force, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

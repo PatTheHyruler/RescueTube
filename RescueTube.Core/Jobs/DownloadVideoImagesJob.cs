@@ -35,7 +35,7 @@ public class DownloadVideoImagesJob
         transaction.Complete();
     }
 
-    [RescheduleConcurrentExecution(Key = "core:download-all-not-downloaded-video-images")]
+    [RescheduleConcurrentExecution("core:download-all-not-downloaded-video-images")]
     [Queue(JobQueues.LowerPriority)]
     public async Task DownloadAllNotDownloadedVideoImages(CancellationToken ct)
     {
