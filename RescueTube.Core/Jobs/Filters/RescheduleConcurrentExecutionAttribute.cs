@@ -66,6 +66,8 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
                 if (!storageConnection.IsJobBlocked(GetResourceKey(context.BackgroundJob),
                         context.BackgroundJob.Id, out blockedBy))
                 {
+                    // TODO: Shouldn't we only check in OnStateElection, but actually add the block in OnStateApplied?
+                    // The state election could be cancelled by a later filter, surely?
                     context.Connection.AddBlock(GetResourceKey(context.BackgroundJob), context.BackgroundJob.Id);
 
                     // Invocation is permitted, and we did all the required things.
