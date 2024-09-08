@@ -8,6 +8,7 @@ public class AddFailedDataFetchRequest : IRequest
     public required string Type { get; set; }
     public required string Source { get; set; }
     public required bool ShouldAffectValidity { get; set; }
+    public string? Message { get; set; }
 
     public Guid? VideoId { get; set; }
     public Guid? AuthorId { get; set; }

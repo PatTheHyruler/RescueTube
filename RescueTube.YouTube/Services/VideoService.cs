@@ -277,6 +277,7 @@ public class VideoService : BaseYouTubeService
                 Source = YouTubeConstants.FetchTypes.YtDlp.Source,
                 ShouldAffectValidity = false,
                 VideoId = video.Id,
+                Message = errorString,
             }, ct);
             throw new ApplicationException(errorString ?? $"Failed to download video {video.Id}");
         }

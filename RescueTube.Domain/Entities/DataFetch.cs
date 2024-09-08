@@ -9,6 +9,7 @@ public class DataFetch : BaseIdDbEntity
     public required string Type { get; set; }
     public required bool ShouldAffectValidity { get; set; }
     public required string Source { get; set; }
+    public string? Message { get; set; }
 
     public Guid? VideoId { get; set; }
     public Video? Video { get; set; }

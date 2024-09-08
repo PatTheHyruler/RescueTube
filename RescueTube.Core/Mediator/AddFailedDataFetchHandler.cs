@@ -31,6 +31,7 @@ public class AddFailedDataFetchHandler : IRequestHandler<AddFailedDataFetchReque
             AuthorId = request.AuthorId,
             CommentId = request.CommentId,
             PlaylistId = request.PlaylistId,
+            Message = request.Message,
         });
         await dbCtx.SaveChangesAsync(cancellationToken);
         transaction.Complete();
