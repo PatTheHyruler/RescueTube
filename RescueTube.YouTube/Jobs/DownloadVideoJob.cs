@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Jobs.Filters;
@@ -8,54 +9,72 @@ namespace RescueTube.YouTube.Jobs;
 
 public class DownloadVideoJob
 {
-    private readonly VideoService _videoService;
-    private readonly IBackgroundJobClient _backgroundJobClient;
+    private readonly VideoDownloadService _videoDownloadService;
 
-    public DownloadVideoJob(VideoService videoService, IBackgroundJobClient backgroundJobClient)
+    private static readonly ConcurrentDictionary<Guid, DateTimeOffset> DownloadingVideoIds = new();
+
+    public DownloadVideoJob(VideoDownloadService videoDownloadService)
     {
-        _videoService = videoService;
-        _backgroundJobClient = backgroundJobClient;
+        _videoDownloadService = videoDownloadService;
     }
 
     [AutomaticRetry(Attempts = 0)]
     [SkipConcurrent("yt:download-video:{0}")]
     [RescheduleConcurrentExecution("yt:download-video")]
-    public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
+    private async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
-        var result = await _videoService.DownloadVideoAsync(videoId, ct);
+        if (!DownloadingVideoIds.IsEmpty || !DownloadingVideoIds.TryAdd(videoId, DateTimeOffset.UtcNow))
+        {
+            return;
+        }
 
-        using var transaction = TransactionUtils.NewTransactionScope();
-        await _videoService.PersistVideoDownloadResultAsync(result.Result, result.Video, ct);
+        try
+        {
+            var result = await _videoDownloadService.DownloadVideoAsync(videoId, ct);
 
-        await _videoService.DataUow.SaveChangesAsync(CancellationToken.None);
-        transaction.Complete();
+            using var transaction = TransactionUtils.NewTransactionScope();
+            await _videoDownloadService.PersistVideoDownloadResultAsync(result.Result, result.Video, ct);
+
+            await _videoDownloadService.DataUow.SaveChangesAsync(CancellationToken.None);
+            transaction.Complete();
+        }
+        finally
+        {
+            DownloadingVideoIds.TryRemove(videoId, out _);
+        }
     }
 
-    public async Task DownloadNotDownloadedVideosAsync(CancellationToken ct)
+    [SkipConcurrent("yt:download-not-downloaded-video-recurring")]
+    public async Task DownloadNotDownloadedVideoAsync(CancellationToken ct)
     {
-        using var transaction = TransactionUtils.NewTransactionScope();
-        var addedToArchiveAtCutoff = DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(1));
-        var videoIds = _videoService.DbCtx.Videos
+        if (!DownloadingVideoIds.IsEmpty)
+        {
+            return;
+        }
+        var videoId = await _videoDownloadService.DbCtx.Videos
             .Where(v =>
                     v.VideoFiles!.Count == 0
-                    && v.AddedToArchiveAt < addedToArchiveAtCutoff
                     && v.DataFetches!
                         .Where(d =>
                             d.Source == YouTubeConstants.FetchTypes.YtDlp.Source
                             && d.Type == YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload)
                         .OrderByDescending(x => x.OccurredAt)
                         .Take(3)
-                        .Count(x => !x.Success) < 3 // TODO: Make sure this compiles to SQL
+                        .Count(x => !x.Success) < 3
             )
             .Select(v => v.Id)
-            .AsAsyncEnumerable().WithCancellation(ct);
+            .FirstOrDefaultAsync(ct);
 
-        await foreach (var videoId in videoIds)
+        if (videoId == default)
         {
-            _backgroundJobClient.Enqueue<DownloadVideoJob>(x =>
-                x.DownloadVideoAsync(videoId, default));
+            return;
         }
 
-        transaction.Complete();
+        if (!DownloadingVideoIds.IsEmpty)
+        {
+            return;
+        }
+        
+        await DownloadVideoAsync(videoId, ct);
     }
 }

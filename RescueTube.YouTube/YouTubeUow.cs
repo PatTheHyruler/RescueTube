@@ -19,8 +19,9 @@ public class YouTubeUow
     }
 
     private YoutubeDL? _youtubeDl;
+
     public YoutubeDL YoutubeDl =>
-        _youtubeDl ??= _services.GetRequiredService<YoutubeDL>(); 
+        _youtubeDl ??= _services.GetRequiredService<YoutubeDL>();
 
     private YoutubeClient? _youTubeExplodeClient;
     public YoutubeClient YouTubeExplodeClient => _youTubeExplodeClient ??= new YoutubeClient();
@@ -49,9 +50,14 @@ public class YouTubeUow
     private VideoService? _videoService;
     public VideoService VideoService => _videoService ??= _services.GetRequiredService<VideoService>();
 
+    private VideoDownloadService? _videoDownloadService;
+
+    private VideoDownloadService VideoDownloadService =>
+        _videoDownloadService ??= _services.GetRequiredService<VideoDownloadService>();
+
     private PlaylistService? _playlistService;
     public PlaylistService PlaylistService => _playlistService ??= _services.GetRequiredService<PlaylistService>();
-    
+
     private AuthorService? _authorService;
     public AuthorService AuthorService => _authorService ??= _services.GetRequiredService<AuthorService>();
 }

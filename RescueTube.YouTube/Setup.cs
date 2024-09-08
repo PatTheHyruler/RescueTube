@@ -40,6 +40,7 @@ public static class Setup
 
         services.AddScoped<SubmitService>();
         services.AddScoped<VideoService>();
+        services.AddScoped<VideoDownloadService>();
         services.AddScoped<PlaylistService>();
         services.AddScoped<AuthorService>();
         services.AddScoped<CommentService>();
@@ -49,7 +50,7 @@ public static class Setup
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
         services.AddScoped<IPlatformPresentationHandler, PresentationHandler>();
 
-        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<VideoAddedDownloadHandler>(); });
+        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<SubmissionAddedEventHandler>(); });
 
         services.AddScoped(s =>
         {
