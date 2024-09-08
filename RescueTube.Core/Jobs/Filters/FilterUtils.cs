@@ -54,7 +54,7 @@ public static class FilterUtils
             .GetRangeFromSet(setResourceKey, 0, 0);
         isBlockedByCurrentJob = blockedBy?.Contains(backgroundJobId) ?? false;
 
-        if (blockedBy is null or { Count: < 0 })
+        if (blockedBy is null or { Count: <= 0 })
         {
             return false;
         }

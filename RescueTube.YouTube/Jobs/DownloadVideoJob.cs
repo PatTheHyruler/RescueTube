@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
@@ -18,12 +17,14 @@ public class DownloadVideoJob
         _videoDownloadService = videoDownloadService;
     }
 
-    [AutomaticRetry(Attempts = 0)]
-    [SkipConcurrent("yt:download-video:{0}")]
-    [RescheduleConcurrentExecution("yt:download-video")]
     private async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
         if (!DownloadingVideoIds.IsEmpty || !DownloadingVideoIds.TryAdd(videoId, DateTimeOffset.UtcNow))
+        {
+            return;
+        }
+
+        if (VideoDownloadService.LatestThrottlingAssessment?.ShouldSkipDownloading() ?? false)
         {
             return;
         }

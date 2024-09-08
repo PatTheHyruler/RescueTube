@@ -31,7 +31,7 @@ public class RegisterYouTubeJobsService : BackgroundService
         recurringJobManager.AddOrUpdate<DownloadVideoJob>(
             "yt-download-non-downloaded-videos-recurring",
             x => x.DownloadNotDownloadedVideoAsync(default),
-            Cron.Minutely);
+            "*/15 * * * * *"); // Every 15th second
         recurringJobManager.AddOrUpdate<UpdateYtDlpJob>(
             "yt-update-ytdlp-binary",
             x => x.UpdateYouTubeDlAsync(),
