@@ -215,15 +215,42 @@ public class VideoService : BaseYouTubeService
     {
         private readonly ILogger _logger;
 
+        private float _previousProgress = -1;
+        private DateTimeOffset _previousProcessedUpdateOccurredAt = DateTimeOffset.MinValue;
+        private DownloadState? _previousDownloadState;
+
         public DownloadProgressLogger(ILogger logger)
         {
             _logger = logger;
+        }
+
+        private bool ShouldLog(DownloadProgress progress)
+        {
+            if (progress.State != _previousDownloadState)
+            {
+                return true;
+            }
+
+            if (Math.Abs(progress.Progress - _previousProgress) > 0.0005)
+            {
+                return true;
+            }
+
+            return DateTimeOffset.UtcNow - _previousProcessedUpdateOccurredAt > TimeSpan.FromMinutes(2);
         }
 
         public void Report(DownloadProgress value)
         {
             try
             {
+                if (!ShouldLog(value))
+                {
+                    return;
+                }
+
+                _previousProcessedUpdateOccurredAt = DateTimeOffset.UtcNow;
+                _previousProgress = value.Progress;
+                _previousDownloadState = value.State;
                 _logger.LogInformation(
                     "Yt-dlp download progress: {ProgressPercentage}%, ETA: {ETA}, Speed: {DownloadSpeed}, TotalDownloadSize: {TotalDownloadSize}, State: {State}",
                     value.Progress * 100, value.ETA, value.DownloadSpeed, value.TotalDownloadSize, value.State);

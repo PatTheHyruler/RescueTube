@@ -28,13 +28,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Logging.ClearProviders();
-Log.Logger = new LoggerConfiguration()
+builder.Services.AddSerilog(c => c
     .ReadFrom.Configuration(builder.Configuration, new ConfigurationReaderOptions { SectionName = "Logging:Serilog" })
     .Enrich.With<ScopePathEnricher>()
-    .CreateLogger();
-builder.Logging.AddSerilog();
-builder.Services.AddSingleton(Log.Logger);
+);
 builder.Services.Configure<HostOptions>(hostOptions =>
 {
     hostOptions.BackgroundServiceExceptionBehavior =
@@ -56,7 +53,6 @@ builder.Services.AddHangfire(configuration => configuration
     .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(
         GetHangfireConnectionString(builder))
     )
-    .UseSerilogLogProvider()
     .UseConsole()
 );
 builder.Services.AddHangfireServer(options =>
