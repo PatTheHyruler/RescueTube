@@ -41,7 +41,7 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
         var storageConnection = context.Connection.AsJobStorageConnection();
 
         if (IsStateChanging(context.CandidateState.Name, context.CurrentState,
-                EnqueuedState.StateName, ProcessingState.StateName))
+                EnqueuedState.StateName, ProcessingState.StateName, ScheduledState.StateName))
         {
             using (AcquireDistributedLock(context.Connection, context.BackgroundJob))
             {
@@ -50,7 +50,7 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
                 {
                     context.CandidateState = new DeletedState
                     {
-                        Reason = $"Job blocked by {blockedBy}",
+                        Reason = $"Job blocked by {string.Join(", ", blockedBy)}",
                     };
                 }
             }
@@ -63,7 +63,7 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
         var storageConnection = context.Connection.AsJobStorageConnection();
 
         if (IsStateChanging(context.NewState.Name, context.OldStateName,
-                EnqueuedState.StateName, ProcessingState.StateName))
+                EnqueuedState.StateName, ProcessingState.StateName, ScheduledState.StateName))
         {
             using (AcquireDistributedLock(context.Connection, context.BackgroundJob))
             {
@@ -94,7 +94,8 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
                 if (storageConnection.IsJobBlocked(GetResourceKey(context.BackgroundJob), context.BackgroundJob.Id,
                         out var blockedBy, out var isBlockedByCurrentJob))
                 {
-                    throw new Exception($"The job is blocked by {blockedBy}");
+                    Console.WriteLine(
+                        $"The job is unexpectedly blocked by the following jobs when unblocking: {string.Join(", ", blockedBy)}");
                 }
 
                 if (isBlockedByCurrentJob)
@@ -103,7 +104,7 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
                 }
                 else
                 {
-                    throw new Exception($"The job is not blocked by {context.BackgroundJob.Id}, but it should be");
+                    Console.WriteLine($"The job is not blocked by {context.BackgroundJob.Id}, but it should be");
                 }
             }
         }
@@ -117,9 +118,10 @@ public class SkipConcurrentAttribute : JobFilterAttribute, IServerFilter, IElect
                && !targetStateNames.Contains(otherStateName);
     }
 
-    private IDisposable AcquireDistributedLock(IStorageConnection storageConnection, BackgroundJob backgroundJob)
+    private IDisposable AcquireDistributedLock(IStorageConnection storageConnection, BackgroundJob backgroundJob,
+        TimeSpan? lockWaitTimeout = null)
         => storageConnection.AcquireDistributedLock(
-            GetDistributedLockKey(backgroundJob.Job.Args), TimeSpan.Zero);
+            GetDistributedLockKey(backgroundJob.Job.Args), lockWaitTimeout ?? TimeSpan.FromSeconds(10));
 
     private string GetDistributedLockKey(IEnumerable<object> args) =>
         $"extension:job-skip-concurrent:lock:{GetKeyFormat(args, _resource)}";

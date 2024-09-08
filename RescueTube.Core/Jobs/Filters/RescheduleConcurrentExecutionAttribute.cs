@@ -30,7 +30,7 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
         Order = 60;
     }
 
-    public int DistributedLockTimeoutSeconds { get; init; } = 5;
+    public int DistributedLockTimeoutSeconds { get; init; } = 10;
     public int RetryInSeconds { get; init; } = 15;
     public int? MaxAttempts { get; init; }
     private TimeSpan DistributedLockTimeout => TimeSpan.FromMinutes(DistributedLockTimeoutSeconds);
@@ -51,7 +51,7 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
         // by all the official storages, and many of the community-based ones.
         var storageConnection = context.Connection.AsJobStorageConnection();
 
-        string? blockedBy;
+        List<string>? blockedBy;
 
         try
         {
@@ -80,7 +80,8 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
             if (e is not (DistributedLockTimeoutException or PostgreSqlDistributedLockException))
             {
                 throw;
-            }   
+            }
+
             // We weren't able to acquire a distributed lock within a specified window. This may
             // be caused by network delays, storage outages or abandoned locks in some storages.
             // Since it is required to expire abandoned locks after some time, we can simply
@@ -120,17 +121,18 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
     {
     }
 
-    private static DeletedState CreateDeletedState(string blockedBy)
+    private static DeletedState CreateDeletedState(List<string> blockedBy)
     {
         return new DeletedState
         {
-            Reason = $"Execution was blocked by background job {blockedBy}, all attempts exhausted"
+            Reason = $"Execution was blocked by background job {string.Join(", ", blockedBy)}, all attempts exhausted",
         };
     }
 
-    private ScheduledState CreateScheduledState(string blockedBy, int currentAttempt)
+    private ScheduledState CreateScheduledState(List<string> blockedBy, int currentAttempt)
     {
-        var reason = $"Execution is blocked by background job {blockedBy}, retry attempt: {currentAttempt}";
+        var reason =
+            $"Execution is blocked by background job {string.Join(", ", blockedBy)}, retry attempt: {currentAttempt}";
 
         if (MaxAttempts > 0)
         {
@@ -139,7 +141,7 @@ public class RescheduleConcurrentExecutionAttribute : JobFilterAttribute, IElect
 
         return new ScheduledState(TimeSpan.FromSeconds(RetryInSeconds))
         {
-            Reason = reason
+            Reason = reason,
         };
     }
 

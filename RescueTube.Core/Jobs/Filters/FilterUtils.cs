@@ -31,7 +31,7 @@ public static class FilterUtils
         this JobStorageConnection jobStorageConnection,
         string setResourceKey,
         string backgroundJobId,
-        [NotNullWhen(true)] out string? blockedBy
+        [NotNullWhen(true)] out List<string>? blockedBy
     ) => IsJobBlocked(
         jobStorageConnection,
         setResourceKey,
@@ -44,21 +44,27 @@ public static class FilterUtils
         this JobStorageConnection jobStorageConnection,
         string setResourceKey,
         string backgroundJobId,
-        [NotNullWhen(true)] out string? blockedBy,
+        [NotNullWhen(true)] out List<string>? blockedBy,
         out bool isBlockedByCurrentJob
     )
     {
         // Resource set contains a background job id that acquired a mutex for the resource.
         // We are getting only one element to see what background job blocked the invocation.
-        var range = jobStorageConnection
+        blockedBy = jobStorageConnection
             .GetRangeFromSet(setResourceKey, 0, 0);
-        blockedBy = range is { Count: > 0 } ? range[0] : null;
-        isBlockedByCurrentJob = range?.Contains(backgroundJobId) ?? false;
+        isBlockedByCurrentJob = blockedBy?.Contains(backgroundJobId) ?? false;
 
-        // We should permit an invocation only when the set is empty, or if current background
-        // job already owns the resource. This may happen when the localTransaction succeeded,
-        // but outer transaction failed.
-        return blockedBy is not null && blockedBy != backgroundJobId;
+        if (blockedBy is null or { Count: < 0 })
+        {
+            return false;
+        }
+
+        if (blockedBy.Count == 1 && isBlockedByCurrentJob)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     public static void AddBlock(this IStorageConnection connection, string setResourceKey, string backgroundJobId)
