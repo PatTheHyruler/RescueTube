@@ -3,6 +3,7 @@ using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
+using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Enums;
@@ -54,6 +55,7 @@ public class FetchYouTubeExplodeAuthorDataJob
 
     [AutomaticRetry(Attempts = 3, DelaysInSeconds = [1 * 3600, 2 * 3600, 4 * 3600])]
     [SkipConcurrent("yt:fetch-ytexplode-author-data:{0}")]
+    [Queue(JobQueues.LowPriority)]
     public async Task FetchYouTubeExplodeAuthorData(Guid authorId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

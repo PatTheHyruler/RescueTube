@@ -1,4 +1,6 @@
-﻿using RescueTube.Core.Data;
+﻿using Hangfire;
+using RescueTube.Core.Data;
+using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
 
@@ -16,6 +18,7 @@ public class HandleSubmissionJob
     }
 
     [SkipConcurrent("yt:handle-submission:{0}")]
+    [Queue(JobQueues.Critical)]
     public async Task RunAsync(Guid submissionId, CancellationToken ct = default)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

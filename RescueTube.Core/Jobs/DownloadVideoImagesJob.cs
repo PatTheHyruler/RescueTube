@@ -19,6 +19,7 @@ public class DownloadVideoImagesJob
     }
 
     [SkipConcurrent("core:download-video-images:{0}")]
+    [Queue(JobQueues.LowPriority)]
     public async Task DownloadVideoImages(Guid videoId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

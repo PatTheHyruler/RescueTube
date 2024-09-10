@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
@@ -64,6 +66,7 @@ public class DownloadVideoJob
     }
 
     [SkipConcurrent("yt:download-not-downloaded-video-recurring")]
+    [Queue(JobQueues.HighPriority)]
     public async Task DownloadNotDownloadedVideoAsync(CancellationToken ct)
     {
         if (!DownloadingVideoIds.IsEmpty)

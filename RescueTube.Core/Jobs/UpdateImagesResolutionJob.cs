@@ -22,6 +22,7 @@ public class UpdateImagesResolutionJob
     } 
 
     [RescheduleConcurrentExecution("core:update-images-resolution-enqueue")]
+    [Queue(JobQueues.LowerPriority)]
     public async Task EnqueueAsync(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
@@ -38,6 +39,7 @@ public class UpdateImagesResolutionJob
     }
 
     [SkipConcurrent("core:update-author-images-resolutions:{0}")]
+    [Queue(JobQueues.LowerPriority)]
     public async Task UpdateAuthorImagesResolutionsAsync(Guid authorId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
@@ -55,6 +57,7 @@ public class UpdateImagesResolutionJob
     }
 
     [SkipConcurrent("core:update-video-images-resolutions:{0}")]
+    [Queue(JobQueues.LowerPriority)]
     public async Task UpdateVideoImagesResolutionsAsync(Guid videoId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
@@ -72,6 +75,7 @@ public class UpdateImagesResolutionJob
     }
 
     [SkipConcurrent("core:update-image-resolution:{0}")]
+    [Queue(JobQueues.LowerPriority)]
     public async Task UpdateResolutionAsync(Guid imageId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

@@ -18,6 +18,7 @@ public class DownloadAuthorImagesJob
     }
 
     [SkipConcurrent("core:download-author-images:{0}")]
+    [Queue(JobQueues.LowPriority)]
     public async Task DownloadAuthorImages(Guid authorId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
@@ -37,6 +38,7 @@ public class DownloadAuthorImagesJob
     }
 
     [RescheduleConcurrentExecution("core:download-all-not-downloaded-author-images")]
+    [Queue(JobQueues.LowPriority)]
     public async Task DownloadAllNotDownloadedAuthorImages(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();

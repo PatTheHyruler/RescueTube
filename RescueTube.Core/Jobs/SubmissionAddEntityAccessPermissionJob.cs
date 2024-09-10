@@ -1,4 +1,5 @@
-﻿using RescueTube.Core.Services;
+﻿using Hangfire;
+using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 
 namespace RescueTube.Core.Jobs;
@@ -12,6 +13,7 @@ public class SubmissionAddEntityAccessPermissionJob
         _submissionService = submissionService;
     }
 
+    [Queue(JobQueues.HighPriority)]
     public async Task RunAsync(Guid submissionId, CancellationToken ct = default)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
