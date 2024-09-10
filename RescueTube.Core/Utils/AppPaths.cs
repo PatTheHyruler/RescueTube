@@ -33,7 +33,9 @@ public class AppPaths
         Path.Combine(_options.Downloads, path);
 
     public string GetAbsolutePathFromDownloads(string path) =>
-        Path.Combine(_contentRootPath, GetPathFromDownloads(path));
+        GetAbsolutePathFromContentRoot(GetPathFromDownloads(path));
+
+    public string GetAbsolutePathFromContentRoot(string path) => Path.Combine(_contentRootPath, path);
 }
 
 public class AppPathOptions

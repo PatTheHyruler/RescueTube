@@ -2,7 +2,9 @@ using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Jobs.Filters;
+using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
+using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs;
@@ -11,12 +13,18 @@ public class DownloadVideoJob
 {
     private readonly VideoDownloadService _videoDownloadService;
     private readonly ILogger<DownloadVideoJob> _logger;
+    private readonly StorageLimitService _storageLimitService;
 
     private static readonly ConcurrentDictionary<Guid, DateTimeOffset> DownloadingVideoIds = new();
 
-    public DownloadVideoJob(VideoDownloadService videoDownloadService, ILogger<DownloadVideoJob> logger)
+    public DownloadVideoJob(
+        VideoDownloadService videoDownloadService,
+        ILogger<DownloadVideoJob> logger,
+        StorageLimitService storageLimitService
+    )
     {
         _videoDownloadService = videoDownloadService;
+        _storageLimitService = storageLimitService;
         _logger = logger;
     }
 
@@ -30,6 +38,12 @@ public class DownloadVideoJob
         if (VideoDownloadService.LatestThrottlingAssessment?.ShouldSkipDownloading() ?? false)
         {
             _logger.LogInformation("Skipping video download due to likely throttling.");
+            return;
+        }
+
+        if (await _storageLimitService.IsVideoDownloadForbidden(EPlatform.YouTube, ct))
+        {
+            _logger.LogWarning("Skipping video download, storage limit reached.");
             return;
         }
 
@@ -56,16 +70,17 @@ public class DownloadVideoJob
         {
             return;
         }
+
         var videoId = await _videoDownloadService.DbCtx.Videos
             .Where(v =>
-                    v.VideoFiles!.Count == 0
-                    && v.DataFetches!
-                        .Where(d =>
-                            d.Source == YouTubeConstants.FetchTypes.YtDlp.Source
-                            && d.Type == YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload)
-                        .OrderByDescending(x => x.OccurredAt)
-                        .Take(3)
-                        .Count(x => !x.Success) < 3
+                v.VideoFiles!.Count == 0
+                && v.DataFetches!
+                    .Where(d =>
+                        d.Source == YouTubeConstants.FetchTypes.YtDlp.Source
+                        && d.Type == YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload)
+                    .OrderByDescending(x => x.OccurredAt)
+                    .Take(3)
+                    .Count(x => !x.Success) < 3
             )
             .Select(v => v.Id)
             .FirstOrDefaultAsync(ct);
@@ -79,7 +94,7 @@ public class DownloadVideoJob
         {
             return;
         }
-        
+
         await DownloadVideoAsync(videoId, ct);
     }
 }

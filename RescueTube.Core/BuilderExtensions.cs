@@ -26,6 +26,8 @@ public static class BuilderExtensions
         services.AddScoped<CommentService>();
         services.AddScoped<StatusChangeService>();
 
+        services.AddScoped<StorageLimitService>();
+
         services.AddScoped<EntityMapper>();
 
         services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<SubmissionService>(); });
