@@ -25,6 +25,7 @@ public static class BuilderExtensions
         services.AddScoped<EntityUpdateService>();
         services.AddScoped<CommentService>();
         services.AddScoped<StatusChangeService>();
+        services.AddScoped<StatisticsPresentationService>();
 
         services.AddScoped<StorageLimitService>();
 

@@ -1,6 +1,8 @@
 ﻿using RescueTube.Core.DTO.Entities;
+using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
+using WebApp.ApiModels.Statistics;
 using WebApp.Utils;
 
 namespace WebApp.ApiModels.Mappers;
@@ -134,6 +136,17 @@ public static class ApiMapper
             ReplyCount = src.ReplyCount,
             IsFavorited = src.IsFavorited,
             ValidAt = src.ValidAt,
+        };
+    }
+
+    public static VideoDownloadStatisticByPlatformDtoV1 MapVideoDownloadStatisticByPlatformDtoV1(
+        this StatisticsPresentationService.VideoDownloadStatisticByPlatformDto src)
+    {
+        return new VideoDownloadStatisticByPlatformDtoV1
+        {
+            Platform = src.Platform,
+            HasVideoFile = src.HasVideoFile,
+            Count = src.Count,
         };
     }
 }
