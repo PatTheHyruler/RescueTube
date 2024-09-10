@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
 using RescueTube.YouTube.Services;
@@ -9,12 +10,14 @@ namespace RescueTube.YouTube.Jobs;
 public class DownloadVideoJob
 {
     private readonly VideoDownloadService _videoDownloadService;
+    private readonly ILogger<DownloadVideoJob> _logger;
 
     private static readonly ConcurrentDictionary<Guid, DateTimeOffset> DownloadingVideoIds = new();
 
-    public DownloadVideoJob(VideoDownloadService videoDownloadService)
+    public DownloadVideoJob(VideoDownloadService videoDownloadService, ILogger<DownloadVideoJob> logger)
     {
         _videoDownloadService = videoDownloadService;
+        _logger = logger;
     }
 
     private async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
@@ -26,6 +29,7 @@ public class DownloadVideoJob
 
         if (VideoDownloadService.LatestThrottlingAssessment?.ShouldSkipDownloading() ?? false)
         {
+            _logger.LogInformation("Skipping video download due to likely throttling.");
             return;
         }
 

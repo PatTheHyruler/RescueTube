@@ -59,6 +59,8 @@ public partial class VideoDownloadService : BaseYouTubeService
         var result = await YouTubeUow.YoutubeDl.RunVideoDownload(Url.ToVideoUrl(video.IdOnPlatform), ct: ct,
             overrideOptions: YouTubeUow.DownloadOptions, progress: downloadProgressHandler);
         var throttlingAssessment = downloadSpeedMonitor.GetThrottlingAssessment();
+        Logger.LogInformation("Video download finished, average download speed: {DownloadSpeed} B/s",
+            downloadSpeedMonitor.AverageDownloadSpeed);
         LatestThrottlingAssessment = new ThrottlingAssessmentWithValidity(throttlingAssessment, DateTimeOffset.UtcNow);
         return result;
     }
@@ -172,6 +174,8 @@ public partial class VideoDownloadService : BaseYouTubeService
         }
 
         private const double CutoffThrottlingSpeedBytes = 400 * 1024;
+
+        public double? AverageDownloadSpeed => _downloadSpeeds.Where(v => v.HasValue).Average();
 
         public ThrottlingAssessment GetThrottlingAssessment()
         {
