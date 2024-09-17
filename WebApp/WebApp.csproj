@@ -5,60 +5,60 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-      <UserSecretsId>836b5279-2b83-47e8-852b-cf4165055fd6</UserSecretsId>
-  </PropertyGroup>
+        <UserSecretsId>836b5279-2b83-47e8-852b-cf4165055fd6</UserSecretsId>
+    </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
-        <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
-        <PackageReference Include="Hangfire.AspNetCore" Version="1.8.12" />
-        <PackageReference Include="Hangfire.Console.Extensions.Serilog" Version="2.0.0" />
-        <PackageReference Include="Hangfire.PostgreSql" Version="1.20.9" />
-        <PackageReference Include="Htmx" Version="1.8.0" />
-        <PackageReference Include="MediatR" Version="12.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
-        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.6" />
+        <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0"/>
+        <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0"/>
+        <PackageReference Include="Hangfire.AspNetCore" Version="1.8.12"/>
+        <PackageReference Include="Hangfire.Console.Extensions.Serilog" Version="2.0.0"/>
+        <PackageReference Include="Hangfire.PostgreSql" Version="1.20.9"/>
+        <PackageReference Include="Htmx" Version="1.8.0"/>
+        <PackageReference Include="MediatR" Version="12.2.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4"/>
+        <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="8.0.6"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-        <PackageReference Include="MimeTypesMap" Version="1.0.8" />
-        <PackageReference Include="Serilog" Version="3.1.1" />
-        <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
-        <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
-        <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-        <PackageReference Include="Serilog.Sinks.Seq" Version="7.0.1" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0"/>
+        <PackageReference Include="MimeTypesMap" Version="1.0.8"/>
+        <PackageReference Include="Serilog" Version="3.1.1"/>
+        <PackageReference Include="Serilog.AspNetCore" Version="8.0.1"/>
+        <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0"/>
+        <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0"/>
+        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1"/>
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0"/>
+        <PackageReference Include="Serilog.Sinks.Seq" Version="7.0.1"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\RescueTube.YouTube\RescueTube.YouTube.csproj" />
-      <ProjectReference Include="..\RescueTube.Core\RescueTube.Core.csproj" />
-      <ProjectReference Include="..\RescueTube.DAL.EF.Postgres\RescueTube.DAL.EF.Postgres.csproj" />
-      <ProjectReference Include="..\RescueTube.DAL.EF\RescueTube.DAL.EF.csproj" />
-      <ProjectReference Include="..\Resources\Resources.csproj" />
+        <ProjectReference Include="..\RescueTube.YouTube\RescueTube.YouTube.csproj"/>
+        <ProjectReference Include="..\RescueTube.Core\RescueTube.Core.csproj"/>
+        <ProjectReference Include="..\RescueTube.DAL.EF.Postgres\RescueTube.DAL.EF.Postgres.csproj"/>
+        <ProjectReference Include="..\RescueTube.DAL.EF\RescueTube.DAL.EF.csproj"/>
+        <ProjectReference Include="..\Resources\Resources.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="ClientApp\" />
+        <Folder Include="ClientApp\"/>
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="ClientApp\**\*.*">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+        <None Update="ClientApp\**\*.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
     <PropertyGroup>
