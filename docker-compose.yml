@@ -18,6 +18,21 @@ services:
       options: 
         max-size: 10m
         max-file: "3"
+  seq:
+    container_name: rescue_tube_seq
+    image: datalust/seq:2024.3
+    environment:
+      ACCEPT_EULA: Y
+      SEQ_API_CANONICAL_URI: http://localhost:16580
+      # Generate hash using `echo '<password>' | docker run --rm -i datalust/seq config hash)`
+      # This one was generated from 'seqadminpassword'
+      SEQ_FIRSTRUN_ADMINPASSWORDHASH: QHW+jhuW+KSzgaQluRuSGQp6tLUVBcchLpDMtWioZ3UxiJm7vnBr+wrT7bOFd8if9rNRRb0uV0RjexcytZtS9JmG1Veiev/GlX5frE9aGClP
+    volumes:
+      - seq-data-volume:/data
+    ports:
+      - 16580:80
+      - 5341:5341
 
 volumes:
   db-postgres-volume:
+  seq-data-volume:

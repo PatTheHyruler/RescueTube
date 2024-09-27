@@ -15,6 +15,10 @@ Preferably at least one per connection?
 Start local dev DB:
 `docker compose up db -d`
 
+## SEQ
+Example of configuring SEQ logging is in dev appsettings.  
+To override the API key in user secrets without redefining the entire logging config, use the config key `Logging:Serilog:WriteTo:1:Args:apiKey`.
+
 ## Dotnet tools
 `dotnet tool restore`
 
