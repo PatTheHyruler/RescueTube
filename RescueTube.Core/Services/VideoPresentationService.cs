@@ -41,6 +41,7 @@ public class VideoPresentationService : BaseService
             })
             .Paginate(paginationQuery)
             .Select(_mapper.ToVideoSimple)
+            .AsSplitQuery()
             .ToListAsync();
         MakePresentable(videos);
 

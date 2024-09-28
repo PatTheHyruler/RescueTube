@@ -66,6 +66,7 @@ public class PlaylistService : BaseYouTubeService
             .ThenInclude(pi => pi.PositionHistories!
                 .OrderByDescending(ph => ph.ValidUntil)
                 .Take(1))
+            .AsSplitQuery()
             .FirstOrDefaultAsync(ct);
         var isNew = playlist == null;
         playlist ??= new Playlist { IdOnPlatform = playlistData.ID, PlaylistItems = new List<PlaylistItem>() };

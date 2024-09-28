@@ -53,6 +53,7 @@ public class ImageService : BaseService
             .Include(e => e.AuthorImages)
             .Include(e => e.VideoImages)
             .Include(e => e.PlaylistImages)
+            .AsSingleQuery()
             .FirstAsync(ct);
         await UpdateImage(image, ct);
     }

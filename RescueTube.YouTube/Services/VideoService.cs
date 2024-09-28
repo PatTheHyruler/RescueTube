@@ -75,6 +75,7 @@ public class VideoService : BaseYouTubeService
             .ThenInclude(vi => vi.Image)
             .Include(v => v.VideoFiles)
             //Authors etc???
+            .AsSplitQuery()
             .FirstOrDefaultAsync(cancellationToken: ct);
         var isNew = video == null;
         video ??= new Video { IdOnPlatform = videoData.ID };
