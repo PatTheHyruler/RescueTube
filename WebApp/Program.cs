@@ -122,89 +122,108 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-if (!app.Environment.IsDevelopment() || true)
+try
 {
-    await using var scope = app.Services.CreateAsyncScope();
-    await scope.ServiceProvider.MigrateDbAsync<AppDbContext>();
-}
-
-app.SeedIdentity();
-app.SetupYouTube();
-
-app.UseHttpsRedirection();
-
-app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), apiApp =>
-{
-    apiApp.UseExceptionHandler(apiBuilder =>
+    if (!app.Environment.IsDevelopment() || true)
     {
-        apiBuilder.Run(async context =>
+        await using var scope = app.Services.CreateAsyncScope();
+        await scope.ServiceProvider.MigrateDbAsync<AppDbContext>();
+    }
+
+    app.SeedIdentity();
+    app.SetupYouTube();
+
+    app.UseHttpsRedirection();
+
+    app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), apiApp =>
+    {
+        apiApp.UseExceptionHandler(apiBuilder =>
         {
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            await context.Response.WriteAsJsonAsync(new ErrorResponseDto
+            apiBuilder.Run(async context =>
             {
-                ErrorType = EErrorType.GenericError,
-                Message = "Something went wrong",
-            }, JsonUtils.DefaultJsonSerializerOptions);
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsJsonAsync(new ErrorResponseDto
+                {
+                    ErrorType = EErrorType.GenericError,
+                    Message = "Something went wrong",
+                }, JsonUtils.DefaultJsonSerializerOptions);
+            });
         });
     });
-});
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
+    if (app.Environment.IsDevelopment())
     {
-        var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-        foreach (var description in provider.ApiVersionDescriptions)
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
         {
-            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
-        }
-    });
-}
-
-var imagesDirectory = app.Services.GetRequiredService<AppPaths>().GetImagesDirectoryAbsolute();
-var imagesDirectoryPath = Path.Combine(app.Environment.ContentRootPath, imagesDirectory);
-Directory.CreateDirectory(imagesDirectoryPath);
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(imagesDirectoryPath),
-    RequestPath = "/images",
-});
-
-app.UseStaticFiles();
-
-string[] specialPaths = ["/api", "/hangfire"];
-bool IsSpecialPath(string path) => specialPaths.Any(path.StartsWith);
-
-var spaIndexPath = Path.Combine(app.Environment.ContentRootPath, spaDirectory, "index.html");
-if (Path.Exists(spaIndexPath))
-{
-    app.MapWhen(c => !IsSpecialPath(c.Request.Path.Value ?? ""),
-        spaAppBuilder =>
-        {
-            spaAppBuilder.UseSpaStaticFiles();
-            spaAppBuilder.UseSpa(_ => { });
+            var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+            foreach (var description in provider.ApiVersionDescriptions)
+            {
+                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
+            }
         });
+    }
+
+    var imagesDirectory = app.Services.GetRequiredService<AppPaths>().GetImagesDirectoryAbsolute();
+    var imagesDirectoryPath = Path.Combine(app.Environment.ContentRootPath, imagesDirectory);
+    Directory.CreateDirectory(imagesDirectoryPath);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(imagesDirectoryPath),
+        RequestPath = "/images",
+    });
+
+    app.UseStaticFiles();
+
+    string[] specialPaths = ["/api", "/hangfire"];
+    bool IsSpecialPath(string path) => specialPaths.Any(path.StartsWith);
+
+    var spaIndexPath = Path.Combine(app.Environment.ContentRootPath, spaDirectory, "index.html");
+    if (Path.Exists(spaIndexPath))
+    {
+        app.MapWhen(c => !IsSpecialPath(c.Request.Path.Value ?? ""),
+            spaAppBuilder =>
+            {
+                spaAppBuilder.UseSpaStaticFiles();
+                spaAppBuilder.UseSpa(_ => { });
+            });
+    }
+
+    app.UseRouting();
+
+    app.UseCors(corsAllowAllName);
+    app.UseCors(corsAllowCredentialsName);
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.UseHangfireDashboard(options: new DashboardOptions
+    {
+        AppPath = null,
+        DarkModeEnabled = true,
+        Authorization = app.Services.GetRequiredService<IEnumerable<IDashboardAuthorizationFilter>>(),
+        AsyncAuthorization = app.Services.GetRequiredService<IEnumerable<IDashboardAsyncAuthorizationFilter>>(),
+    });
+
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception e)
+{
+    try
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(e, "An error occured while running the application.");
+        await Log.CloseAndFlushAsync();
+    }
+    catch (Exception logException)
+    {
+        await Console.Error.WriteLineAsync($"Failed to log catchall application error {logException.GetType()}: {logException.Message}");
+    }
+    throw;
 }
 
-app.UseRouting();
-
-app.UseCors(corsAllowAllName);
-app.UseCors(corsAllowCredentialsName);
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseHangfireDashboard(options: new DashboardOptions
-{
-    AppPath = null,
-    DarkModeEnabled = true,
-    Authorization = app.Services.GetRequiredService<IEnumerable<IDashboardAuthorizationFilter>>(),
-    AsyncAuthorization = app.Services.GetRequiredService<IEnumerable<IDashboardAsyncAuthorizationFilter>>(),
-});
-
-app.MapControllers();
-
-app.Run();
 return;
 
 string GetHangfireConnectionString(WebApplicationBuilder webApplicationBuilder)
