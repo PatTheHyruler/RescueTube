@@ -7,10 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MediatR" Version="12.2.0" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
-      <PackageReference Include="YoutubeDLSharp" Version="1.1.0" />
-      <PackageReference Include="YoutubeExplode" Version="6.3.14" />
+      <PackageReference Include="MediatR" Version="12.4.1" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.1" />
+      <PackageReference Include="YoutubeDLSharp" Version="1.1.1" />
+      <PackageReference Include="YoutubeExplode" Version="6.5.2" />
     </ItemGroup>
 
     <ItemGroup>
