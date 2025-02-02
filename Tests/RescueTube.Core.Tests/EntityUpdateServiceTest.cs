@@ -1,13 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.Services;
 using RescueTube.DAL.EF.Postgres;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
-using RescueTube.Tests.Common.Logging;
-using Xunit.Abstractions;
 
 namespace RescueTube.Core.Tests;
 
@@ -17,7 +16,7 @@ public class EntityUpdateServiceTest
 
     private IServiceScope CreateScope() => _serviceCollection.BuildServiceProvider().CreateScope();
 
-    public EntityUpdateServiceTest(ITestOutputHelper output)
+    public EntityUpdateServiceTest()
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new List<KeyValuePair<string, string?>>
@@ -27,13 +26,13 @@ public class EntityUpdateServiceTest
             .Build();
         _serviceCollection = new ServiceCollection();
         _serviceCollection.AddSingleton<IConfiguration>(config);
-        _serviceCollection.AddXunitLogging(output);
+        _serviceCollection.AddLogging(b => b.AddConsole());
         _serviceCollection.AddDbPersistenceEfPostgres(config);
         _serviceCollection.AddBll();
     }
 
-    [Fact]
-    public void UpdateTranslations_AddNewTranslation_InvalidatesOriginal()
+    [Test]
+    public async Task UpdateTranslations_AddNewTranslation_InvalidatesOriginal()
     {
         var firstTranslationContent = Guid.NewGuid().ToString();
         var originalTranslationKey = new TextTranslationKey
@@ -72,31 +71,32 @@ public class EntityUpdateServiceTest
         var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
         entityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
 
-        Assert.Equal(originalTranslationKey.Id, video.Title.Id);
-        Assert.NotEqual(newTranslationKey.Id, video.Title.Id);
-        Assert.Same(originalTranslationKey, video.Title);
+        await Assert.That(originalTranslationKey.Id).IsEqualTo(video.Title.Id);
+        await Assert.That(newTranslationKey.Id).IsNotEqualTo(video.Title.Id);
+        await Assert.That(originalTranslationKey).IsSameReferenceAs(video.Title);
 
-        Assert.Equal(2, video.Title.Translations.Count);
-        Assert.Contains(video.Title.Translations, t => t.Content == firstTranslationContent);
-        Assert.Contains(video.Title.Translations, t => t.Content == secondTranslationContent);
+        await Assert.That(video.Title.Translations.Count).IsEqualTo(2);
+        await Assert.That(video.Title.Translations).Contains(t => t.Content == firstTranslationContent);
+        await Assert.That(video.Title.Translations).Contains(t => t.Content == secondTranslationContent);
 
         var firstTranslationValidUntil =
             video.Title.Translations
                 .Single(t => t.Content == firstTranslationContent)
                 .ValidUntil;
-        Assert.NotNull(firstTranslationValidUntil);
-        Assert.True(firstTranslationValidUntil > DateTimeOffset.UtcNow.AddSeconds(-20)
-                    && firstTranslationValidUntil < DateTimeOffset.UtcNow.AddSeconds(20));
+        await Assert.That(firstTranslationValidUntil).IsNotNull();
+        await Assert.That(firstTranslationValidUntil!.Value) // TODO: better dev ergonomics for this?
+            .IsGreaterThan(DateTimeOffset.UtcNow.AddSeconds(-20)) // TODO: use TimeProvider in solution?
+            .And.IsLessThan(DateTimeOffset.UtcNow.AddSeconds(20));
 
         var secondTranslationValidUntil =
             video.Title.Translations
                 .Single(t => t.Content == secondTranslationContent)
                 .ValidUntil;
-        Assert.Null(secondTranslationValidUntil);
+        await Assert.That(secondTranslationValidUntil).IsNull();
     }
 
-    [Fact]
-    public void UpdateTranslations_AddNewTranslation_DoesNotInvalidateUnrelatedCulture()
+    [Test]
+    public async Task UpdateTranslations_AddNewTranslation_DoesNotInvalidateUnrelatedCulture()
     {
         var firstTranslationContent = Guid.NewGuid().ToString();
         var originalTranslationKey = new TextTranslationKey
@@ -135,29 +135,29 @@ public class EntityUpdateServiceTest
         var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
         entityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
 
-        Assert.Equal(originalTranslationKey.Id, video.Title.Id);
-        Assert.NotEqual(newTranslationKey.Id, video.Title.Id);
-        Assert.Same(originalTranslationKey, video.Title);
+        await Assert.That(originalTranslationKey.Id).IsEqualTo(video.Title.Id);
+        await Assert.That(newTranslationKey.Id).IsNotEqualTo(video.Title.Id);
+        await Assert.That(originalTranslationKey).IsSameReferenceAs(video.Title);
 
-        Assert.Equal(2, video.Title.Translations.Count);
-        Assert.Contains(video.Title.Translations, t => t.Content == firstTranslationContent);
-        Assert.Contains(video.Title.Translations, t => t.Content == secondTranslationContent);
+        await Assert.That(video.Title.Translations.Count).IsEqualTo(2);
+        await Assert.That(video.Title.Translations).Contains(t => t.Content == firstTranslationContent);
+        await Assert.That(video.Title.Translations).Contains(t => t.Content == secondTranslationContent);
 
         var firstTranslationValidUntil =
             video.Title.Translations
                 .Single(t => t.Content == firstTranslationContent)
                 .ValidUntil;
-        Assert.Null(firstTranslationValidUntil);
+        await Assert.That(firstTranslationValidUntil).IsNull();
 
         var secondTranslationValidUntil =
             video.Title.Translations
                 .Single(t => t.Content == secondTranslationContent)
                 .ValidUntil;
-        Assert.Null(secondTranslationValidUntil);
+        await Assert.That(secondTranslationValidUntil).IsNull();
     }
 
-    [Fact]
-    public void UpdateTranslations_AddNewTranslation_DoesNotAddIfMatchesPrevious()
+    [Test]
+    public async Task UpdateTranslations_AddNewTranslation_DoesNotAddIfMatchesPrevious()
     {
         var translationContent = Guid.NewGuid().ToString();
         var originalTranslationKey = new TextTranslationKey
@@ -195,22 +195,22 @@ public class EntityUpdateServiceTest
         var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
         entityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
 
-        Assert.Equal(originalTranslationKey.Id, video.Title.Id);
-        Assert.NotEqual(newTranslationKey.Id, video.Title.Id);
-        Assert.Same(originalTranslationKey, video.Title);
+        await Assert.That(originalTranslationKey.Id).IsEqualTo(video.Title.Id);
+        await Assert.That(newTranslationKey.Id).IsNotEqualTo(video.Title.Id);
+        await Assert.That(originalTranslationKey).IsSameReferenceAs(video.Title);
 
-        Assert.Equal(1, video.Title.Translations.Count);
-        Assert.Contains(video.Title.Translations, t => t.Content == translationContent);
+        await Assert.That(video.Title.Translations).HasSingleItem();
+        await Assert.That(video.Title.Translations).ContainsOnly(t => t.Content == translationContent);
 
         var translationValidUntil =
             video.Title.Translations
                 .Single()
                 .ValidUntil;
-        Assert.Null(translationValidUntil);
+        await Assert.That(translationValidUntil).IsNull();
     }
 
-    [Fact]
-    public void UpdateTranslations_AddNewTranslation_CreatesNewKeyIfNecessary()
+    [Test]
+    public async Task UpdateTranslations_AddNewTranslation_CreatesNewKeyIfNecessary()
     {
         var video = new Video
         {
@@ -235,14 +235,15 @@ public class EntityUpdateServiceTest
         var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
         entityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
 
-        Assert.NotNull(video.Title);
-        Assert.NotNull(video.Title.Translations);
-        Assert.Equal(1, video.Title.Translations.Count);
-        Assert.Equal(translationContent, video.Title.Translations.Single().Content);
+        await Assert.That(video.Title).IsNotNull();
+        await Assert.That(video.Title!.Translations)
+            .IsNotNull()
+            .And.HasSingleItem();
+        await Assert.That(video.Title.Translations!.Single().Content).IsEqualTo(translationContent);
     }
 
-    [Fact]
-    public void UpdateEntityImages_ExpireNonMatching_LeavesEntityImagesInCorrectState()
+    [Test]
+    public async Task UpdateEntityImages_ExpireNonMatching_LeavesEntityImagesInCorrectState()
     {
         // Arrange
         VideoImage CreateFakeVideoImage(string? url = null)
@@ -290,41 +291,42 @@ public class EntityUpdateServiceTest
 
         // Assert
         var entries = dbCtx.ChangeTracker.Entries<VideoImage>().ToList();
-        Assert.Equal(3, entries.Count);
+        await Assert.That(entries.Count).IsEqualTo(3);
 
         var addedEntry = entries.Find(e => e.Entity.Image!.Url == addedVideoImageUrl);
-        Assert.NotNull(addedEntry);
-        Assert.Equal(EntityState.Added, addedEntry.State);
-        Assert.NotNull(addedEntry.Entity.Image);
-        var addedImageEntry = dbCtx.Entry(addedEntry.Entity.Image);
-        Assert.NotNull(addedImageEntry);
-        Assert.Equal(EntityState.Added, addedImageEntry.State);
+        await Assert.That(addedEntry).IsNotNull();
+        await Assert.That(addedEntry!.State).IsEqualTo(EntityState.Added);
+        await Assert.That(addedEntry.Entity.Image).IsNotNull();
+        var addedImageEntry = dbCtx.Entry(addedEntry.Entity.Image!);
+        await Assert.That(addedImageEntry).IsNotNull();
+        await Assert.That(addedImageEntry.State).IsEqualTo(EntityState.Added);
 
         var existingEntry = entries.Find(e => e.Entity.Image!.Url == existingVideoImageFound.Image!.Url);
-        Assert.NotNull(existingEntry);
-        Assert.Equal(EntityState.Modified, existingEntry.State);
-        Assert.NotNull(existingEntry.Entity.Image);
-        var existingImageEntry = dbCtx.Entry(existingEntry.Entity.Image);
-        Assert.NotNull(existingImageEntry);
-        Assert.Equal(EntityState.Unchanged, existingImageEntry.State);
+        await Assert.That(existingEntry).IsNotNull();
+        await Assert.That(existingEntry!.State).IsEqualTo(EntityState.Modified);
+        await Assert.That(existingEntry.Entity.Image).IsNotNull();
+        var existingImageEntry = dbCtx.Entry(existingEntry.Entity.Image!);
+        await Assert.That(existingImageEntry).IsNotNull();
+        await Assert.That(existingImageEntry.State).IsEqualTo(EntityState.Unchanged);
 
         var removedEntry = entries.Find(e => e.Entity.Image!.Url == existingVideoImageRemoved.Image!.Url);
-        Assert.NotNull(removedEntry);
-        Assert.Equal(EntityState.Modified, removedEntry.State);
-        Assert.NotNull(removedEntry.Entity.Image);
-        var removedImageEntry = dbCtx.Entry(removedEntry.Entity.Image);
-        Assert.NotNull(removedImageEntry);
-        Assert.Equal(EntityState.Unchanged, removedImageEntry.State);
+        await Assert.That(removedEntry).IsNotNull();
+        await Assert.That(removedEntry!.State).IsEqualTo(EntityState.Modified);
+        await Assert.That(removedEntry.Entity.Image).IsNotNull();
+        var removedImageEntry = dbCtx.Entry(removedEntry.Entity.Image!);
+        await Assert.That(removedImageEntry).IsNotNull();
+        await Assert.That(removedImageEntry.State).IsEqualTo(EntityState.Unchanged);
 
-        Assert.Null(existingEntry.Entity.ValidUntil);
-        Assert.Null(addedEntry.Entity.ValidUntil);
-        Assert.NotNull(removedEntry.Entity.ValidUntil);
-        Assert.True(IsBetweenStartTimeAndCurrent(removedEntry.Entity.ValidUntil.Value, startTime));
+        await Assert.That(existingEntry.Entity.ValidUntil).IsNull();
+        await Assert.That(addedEntry.Entity.ValidUntil).IsNull();
+        await Assert.That(removedEntry.Entity.ValidUntil).IsNotNull();
+        await Assert.That(IsBetweenStartTimeAndCurrent(removedEntry.Entity.ValidUntil!.Value, startTime)).IsTrue();
 
-        Assert.Equal(3, video.VideoImages.Count);
-        Assert.Contains(existingEntry.Entity, video.VideoImages);
-        Assert.Contains(addedEntry.Entity, video.VideoImages);
-        Assert.Contains(removedEntry.Entity, video.VideoImages);
+        await Assert.That(video.VideoImages.Count).IsEqualTo(3);
+        await Assert.That(video.VideoImages)
+            .Contains(existingEntry.Entity)
+            .And.Contains(addedEntry.Entity)
+            .And.Contains(removedEntry.Entity);
     }
 
     private static bool IsBetweenStartTimeAndCurrent(DateTimeOffset value, DateTimeOffset startTime)
