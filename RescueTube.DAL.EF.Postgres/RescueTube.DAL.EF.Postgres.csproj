@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <PackageReference Include="LinqKit.Microsoft.EntityFrameworkCore" Version="8.1.5" />
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
     </ItemGroup>
 
 </Project>
