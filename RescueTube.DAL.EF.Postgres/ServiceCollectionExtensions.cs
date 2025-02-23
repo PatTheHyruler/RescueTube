@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Data;
 using RescueTube.Core.Data.Specifications;
 using RescueTube.DAL.EF.MigrationUtils;
+using RescueTube.DAL.EF.Postgres.Specifications;
 using RescueTube.DAL.EF.Specifications;
 
 namespace RescueTube.DAL.EF.Postgres;

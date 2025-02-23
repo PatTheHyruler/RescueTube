@@ -4,7 +4,7 @@ using RescueTube.Core.Data.Specifications;
 using RescueTube.Core.DTO.Enums;
 using RescueTube.Domain.Entities;
 
-namespace RescueTube.DAL.EF.Specifications;
+namespace RescueTube.DAL.EF.Postgres.Specifications;
 
 public class VideoSpecification : BaseDbService, IVideoSpecification
 {
