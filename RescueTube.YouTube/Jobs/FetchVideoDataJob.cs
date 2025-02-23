@@ -33,7 +33,7 @@ public class FetchVideoDataJob
         const int targetConcurrentDataFetches = 5;
         using var transaction = TransactionUtils.NewTransactionScope();
 
-        var currentlyProcessingVideoIds = await _jobStorageAccessor.GetActiveVideoFetchJobVideoIdsAsync(ct);
+        var currentlyProcessingVideoIds = await _jobStorageAccessor.GetActiveYouTubeVideoFetchJobVideoIdsAsync(ct);
 
         var openProcessingSlots = targetConcurrentDataFetches - currentlyProcessingVideoIds.Count;
         if (openProcessingSlots <= 0)

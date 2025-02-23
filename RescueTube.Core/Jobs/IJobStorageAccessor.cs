@@ -4,5 +4,5 @@ namespace RescueTube.Core.Jobs;
 
 public interface IJobStorageAccessor
 {
-    public Task<IImmutableSet<Guid>> GetActiveVideoFetchJobVideoIdsAsync(CancellationToken ct);
+    public Task<IImmutableSet<Guid>> GetActiveYouTubeVideoFetchJobVideoIdsAsync(CancellationToken ct);
 }

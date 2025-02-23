@@ -16,7 +16,7 @@ public class PostgresJobStorageAccessor : IJobStorageAccessor
         _dataSource = dataSource;
     }
 
-    public async Task<IImmutableSet<Guid>> GetActiveVideoFetchJobVideoIdsAsync(CancellationToken ct)
+    public async Task<IImmutableSet<Guid>> GetActiveYouTubeVideoFetchJobVideoIdsAsync(CancellationToken ct)
     {
         await using var connection = await _dataSource.OpenConnectionAsync(ct);
 
