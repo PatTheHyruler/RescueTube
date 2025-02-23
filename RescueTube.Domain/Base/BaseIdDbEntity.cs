@@ -6,7 +6,7 @@ public abstract class BaseIdDbEntity : BaseIdDbEntity<Guid>, IIdDatabaseEntity
 {
     protected BaseIdDbEntity()
     {
-        Id = Ulid.NewUlid().ToGuid();
+        Id = Guid.CreateVersion7();
     }
 }
 
