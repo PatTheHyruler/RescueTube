@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using Dapper;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils;
@@ -8,17 +9,16 @@ namespace RescueTube.Jobs.DAL.Postgres;
 
 public class PostgresJobStorageAccessor : IJobStorageAccessor
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgresJobStorageAccessor(string connectionString)
+    public PostgresJobStorageAccessor([FromKeyedServices(typeof(PostgresJobStorageAccessor))] NpgsqlDataSource dataSource)
     {
-        _connectionString = connectionString;
+        _dataSource = dataSource;
     }
 
     public async Task<IImmutableSet<Guid>> GetActiveVideoFetchJobVideoIdsAsync(CancellationToken ct)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync(ct);
+        await using var connection = await _dataSource.OpenConnectionAsync(ct);
 
         const string jobType = "RescueTube.YouTube.Jobs.FetchVideoDataJob, RescueTube.YouTube";
         const string methodName = "FetchVideoData";
