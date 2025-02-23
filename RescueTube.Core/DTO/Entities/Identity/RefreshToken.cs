@@ -13,8 +13,6 @@ public class RefreshToken : BaseIdDbEntity
 
     public required string JwtHash { get; set; }
 
-    public bool IsExpired => ExpiresAt <= DateTimeOffset.UtcNow;
-
     public RefreshToken()
     {
     }
