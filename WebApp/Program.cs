@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using RescueTube.Core;
@@ -8,6 +9,7 @@ using Hangfire.Console.Extensions;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Data;
@@ -114,6 +116,10 @@ builder.Services.AddCors(options =>
 });
 
 builder.AddCustomIdentity<AppDbContext>();
+builder.Services
+    .AddScoped<HangfireAuthService>()
+    .AddScoped<HangfireDashboardAuthenticationMiddleware>();
+
 builder.Services.AddBll();
 builder.Services.AddYouTube();
 
@@ -194,15 +200,26 @@ try
     app.UseCors(corsAllowAllName);
     app.UseCors(corsAllowCredentialsName);
 
+    app.MapGet("/auth/hangfire", (
+        [FromServices] HangfireAuthService hangfireAuthService,
+        HttpResponse response,
+        [FromQuery, Required] string hangfireToken,
+        [FromQuery, Required] string targetUrl,
+        [FromQuery] string? appAuthUrl = null
+    ) => hangfireAuthService.HandleInitialAuth(new(HangfireJwt: hangfireToken, TargetUrl: targetUrl, AppAuthUrl: appAuthUrl), response));
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.UseHangfireDashboard(options: new DashboardOptions
+    app.UseWhen(context => context.Request.Path.StartsWithSegments("/hangfire"), hangfireApp =>
     {
-        AppPath = null,
-        DarkModeEnabled = true,
-        Authorization = app.Services.GetRequiredService<IEnumerable<IDashboardAuthorizationFilter>>(),
-        AsyncAuthorization = app.Services.GetRequiredService<IEnumerable<IDashboardAsyncAuthorizationFilter>>(),
+        hangfireApp.UseMiddleware<HangfireDashboardAuthenticationMiddleware>();
+        hangfireApp.UseHangfireDashboard(options: new DashboardOptions
+        {
+            AppPath = null,
+            DarkModeEnabled = true,
+            Authorization = app.Services.GetRequiredService<IEnumerable<IDashboardAuthorizationFilter>>(),
+            AsyncAuthorization = app.Services.GetRequiredService<IEnumerable<IDashboardAsyncAuthorizationFilter>>(),
+        });
     });
 
     app.MapControllers();
