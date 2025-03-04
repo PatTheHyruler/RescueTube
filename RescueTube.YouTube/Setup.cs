@@ -6,6 +6,7 @@ using RescueTube.Core.Contracts;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.EventHandlers;
 using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.Registration;
 using RescueTube.YouTube.Services;
@@ -49,7 +50,7 @@ public static class Setup
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
         services.AddScoped<IPlatformPresentationHandler, PresentationHandler>();
 
-        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<SubmissionAddedEventHandler>(); });
+        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<AuthorAddedFetchYouTubeExplodeHandler>(); });
 
         services.AddScoped(s =>
         {
