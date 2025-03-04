@@ -69,7 +69,6 @@ public static class Setup
             };
         });
 
-        services.AddScoped<FetchCommentsJob>();
         services.AddScoped<HandleSubmissionJob>();
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
         services.AddHostedService<RegisterYouTubeJobsService>();
