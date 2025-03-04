@@ -20,7 +20,7 @@ public static class YouTubeConstants
             public const string VideoPage = "videopage";
             public const string Playlist = "playlist";
             public const string Comments = "comments";
-            public const string VideoFileDownload = "videofiledownload";
+            public const string VideoFileDownload = Core.Constants.DataFetches.DataFetchTypes.VideoFileDownload;
         }
 
         public static class YouTubeExplode

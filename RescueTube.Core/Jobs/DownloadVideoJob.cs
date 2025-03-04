@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.Constants.DataFetches;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Mediator;
@@ -53,7 +54,7 @@ public class DownloadVideoJob
             .Where(v => v.VideoFiles!.Count == 0)
             .Where(v => v.DataFetches!
                 .Where(d =>
-                    d.Type == "videofiledownload") // TODO: Use common constant for this
+                    d.Type == DataFetchTypes.VideoFileDownload)
                 .OrderByDescending(d => d.OccurredAt)
                 .Take(3)
                 .Count(d => !d.Success) < 3)

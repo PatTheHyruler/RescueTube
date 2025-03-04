@@ -34,7 +34,7 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
 
     public DataFetchDefinition DataFetchDefinition { get; } = new(
         Source: YouTubeConstants.FetchTypes.YtDlp.Source,
-        Type: YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload // TODO: Define common constant in Core for this
+        Type: YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload
     );
 
     public async Task<string> DownloadVideoAsync(Video video, CancellationToken ct = default)
