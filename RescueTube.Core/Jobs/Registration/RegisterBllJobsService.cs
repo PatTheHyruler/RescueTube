@@ -25,6 +25,10 @@ public class RegisterBllJobsService : BackgroundService
             "download-all-not-downloaded-author-images",
             x => x.DownloadAllNotDownloadedAuthorImages(default),
             Cron.Daily);
+        recurringJobManager.AddOrUpdate<DownloadVideoJob>(
+            "download-non-downloaded-videos-recurring",
+            x => x.DownloadNextNotDownloadedVideoAsync(CancellationToken.None),
+            "*/15 * * * * *"); // Every 15th second
         recurringJobManager.AddOrUpdate<DeleteExpiredRefreshTokensJob>("delete-expired-refresh-tokens",
             x => x.DeleteExpiredRefreshTokens(),
             Cron.Daily);

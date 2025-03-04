@@ -1,50 +1,43 @@
 ﻿using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using RescueTube.Core.Mediator;
+using RescueTube.Core.Services.Interfaces;
 using RescueTube.Core.Utils;
+using RescueTube.Domain;
 using RescueTube.Domain.Entities;
-using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
 using RescueTube.YouTube.Utils;
 using YoutubeDLSharp;
 
 namespace RescueTube.YouTube.Services;
 
-public partial class VideoDownloadService : BaseYouTubeService
+public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDownloadService
 {
     private readonly AppPaths _appPaths;
-    private readonly IMediator _mediator;
 
-    public static ThrottlingAssessmentWithValidity? LatestThrottlingAssessment { get; private set; }
+    private static ThrottlingAssessmentWithValidity? LatestThrottlingAssessment { get; set; }
 
     public VideoDownloadService(
         IServiceProvider services,
         ILogger<VideoDownloadService> logger,
-        AppPaths appPaths,
-        IMediator mediator
+        AppPaths appPaths
     ) : base(services, logger)
     {
         _appPaths = appPaths;
-        _mediator = mediator;
     }
 
-    public async Task<(RunResult<string> Result, Video Video)> DownloadVideoAsync(Guid videoId, CancellationToken ct)
+    public bool IsLikelyThrottled()
     {
-        var query = DbCtx.Videos
-            .Where(e => e.Platform == EPlatform.YouTube)
-            .Include(e => e.VideoFiles)
-            .Where(e => e.VideoFiles!.Count == 0)
-            .Where(e => e.Id == videoId);
-
-        var video = await query.FirstAsync(ct);
-        return (await DownloadVideoAsync(video, ct), video);
+        return LatestThrottlingAssessment?.ShouldSkipDownloading() ?? false;
     }
 
-    private async Task<RunResult<string>> DownloadVideoAsync(Video video, CancellationToken ct = default)
+    public DataFetchDefinition DataFetchDefinition { get; } = new(
+        Source: YouTubeConstants.FetchTypes.YtDlp.Source,
+        Type: YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload // TODO: Define common constant in Core for this
+    );
+
+    public async Task<string> DownloadVideoAsync(Video video, CancellationToken ct = default)
     {
         Logger.LogInformation("Started downloading video {IdOnPlatform} on platform {Platform}",
             video.IdOnPlatform, video.Platform);
@@ -62,61 +55,26 @@ public partial class VideoDownloadService : BaseYouTubeService
         Logger.LogInformation("Video download finished, average download speed: {DownloadSpeed} B/s",
             downloadSpeedMonitor.AverageDownloadSpeed);
         LatestThrottlingAssessment = new ThrottlingAssessmentWithValidity(throttlingAssessment, DateTimeOffset.UtcNow);
-        return result;
-    }
 
-    public async Task PersistVideoDownloadResultAsync(RunResult<string> result, Video video,
-        CancellationToken ct = default)
-    {
         if (!result.Success)
         {
-            var errorString = result.ErrorOutput.Length > 0 ? string.Join("\n", result.ErrorOutput) : null;
-            Logger.LogError("Failed to download {Platform} video with ID {IdOnPlatform}.\nErrors: [{Errors}]",
-                EPlatform.YouTube, video.IdOnPlatform,
-                errorString);
-            await _mediator.Send(new AddFailedDataFetchRequest
-            {
-                Type = YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload,
-                Source = YouTubeConstants.FetchTypes.YtDlp.Source,
-                ShouldAffectValidity = false,
-                VideoId = video.Id,
-                Message = errorString,
-            }, ct);
-            throw new ApplicationException(errorString ?? $"Failed to download video {video.Id}");
+            throw new ApplicationException($"YouTube video download failed: {result.ErrorOutputToString()}");
         }
 
-        DbCtx.DataFetches.Add(new DataFetch
+        var videoFilePath = result.Data.AssertNotNull();
+
+        try
         {
-            Video = video,
-            VideoId = video.Id,
-            OccurredAt = DateTimeOffset.UtcNow,
-            Success = true,
-            Type = YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload,
-            Source = YouTubeConstants.FetchTypes.YtDlp.Source,
-            ShouldAffectValidity = false,
-        });
-        if (video.VideoFiles != null)
+            var infoJsonPath = PathUtils.GetFilePathWithoutExtension(videoFilePath) + ".info.json";
+            video.InfoJsonPath = _appPaths.GetPathRelativeToDownloads(infoJsonPath);
+            video.InfoJson = await File.ReadAllTextAsync(infoJsonPath, ct);
+        }
+        catch (Exception e)
         {
-            foreach (var videoFile in video.VideoFiles)
-            {
-                if (videoFile.ValidUntil == null || videoFile.ValidUntil > DateTimeOffset.UtcNow)
-                {
-                    videoFile.ValidUntil = DateTimeOffset.UtcNow;
-                }
-            }
+            Logger.LogError(e, "Failed to set video info JSON for video {VideoId}", video.Id);
         }
 
-        var videoFilePath = result.Data;
-        var infoJsonPath = PathUtils.GetFilePathWithoutExtension(videoFilePath) + ".info.json";
-        video.InfoJsonPath = _appPaths.GetPathRelativeToDownloads(infoJsonPath);
-        video.InfoJson = await File.ReadAllTextAsync(infoJsonPath, CancellationToken.None);
-        DbCtx.VideoFiles.Add(new VideoFile
-        {
-            FilePath = _appPaths.GetPathRelativeToDownloads(videoFilePath),
-            ValidSince = DateTimeOffset.UtcNow, // Questionable semantics?
-            LastFetched = DateTimeOffset.UtcNow,
-            Video = video,
-        });
+        return videoFilePath;
     }
 
     private class DownloadProgressLogger : IProgress<DownloadProgress>

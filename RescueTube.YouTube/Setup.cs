@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.Services.Interfaces;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
@@ -40,7 +41,7 @@ public static class Setup
 
         services.AddScoped<SubmitService>();
         services.AddScoped<VideoService>();
-        services.AddScoped<VideoDownloadService>();
+        services.AddKeyedScoped<IPlatformVideoDownloadService, VideoDownloadService>(EPlatform.YouTube);
         services.AddScoped<PlaylistService>();
         services.AddScoped<AuthorService>();
         services.AddScoped<CommentService>();
@@ -68,7 +69,6 @@ public static class Setup
             };
         });
 
-        services.AddScoped<DownloadVideoJob>();
         services.AddScoped<FetchCommentsJob>();
         services.AddScoped<HandleSubmissionJob>();
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();

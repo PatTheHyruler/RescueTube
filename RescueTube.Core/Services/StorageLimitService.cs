@@ -36,13 +36,13 @@ public class StorageLimitService
         }
     }
 
-    public async Task<bool> IsVideoDownloadForbidden(EPlatform platform, CancellationToken ct = default)
+    public async Task<bool> IsVideoDownloadForbiddenAsync(CancellationToken ct)
     {
         // TODO: Allow configuring this. Globally, per platform, per video type, per author???
         const long minFreeSpace = 400L * 1024 * 1024 * 1024;
 
         // TODO: Allow caching this maybe?
-        var driveInfo = new DriveInfo(_appPaths.GetAbsolutePathFromContentRoot(_appPaths.GetVideosDirectory(platform)));
+        var driveInfo = new DriveInfo(_appPaths.GetAbsolutePathFromContentRoot(_appPaths.GetVideosBaseDirectory()));
 
         await WaitForDriveToBeReady(driveInfo, ct);
 
