@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
-using RescueTube.Core.Services.Interfaces;
+using RescueTube.Core.Contracts;
 using RescueTube.Core.Utils;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;

@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Constants.DataFetches;
+using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Mediator;
 using RescueTube.Core.Services;
-using RescueTube.Core.Services.Interfaces;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 

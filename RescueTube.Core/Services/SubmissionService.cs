@@ -96,4 +96,40 @@ public class SubmissionService : BaseService
                 throw new ApplicationException($"Unsupported entity type {submission.EntityType}");
         }
     }
+
+    public async Task HandleSubmissionAsync(Guid submissionId, CancellationToken ct)
+    {
+        var submission = await DbCtx.Submissions
+            .Where(s => s.Id == submissionId)
+            .FirstAsync(cancellationToken: ct);
+
+        if (submission.ApprovedAt is null)
+        {
+            throw new ApplicationException($"Submission {submissionId} not approved");
+        }
+
+        if (submission.CompletedAt != null)
+        {
+            Logger.LogInformation("Submission {SubmissionId} already handled at {CompletedAt}, skipping",
+                submissionId, submission.CompletedAt);
+            return;
+        }
+
+        var submissionHandler = SubmissionHandlers.FirstOrDefault(x => x.Platform == submission.Platform);
+        if (submissionHandler is null)
+        {
+            throw new ApplicationException($"No submission handler for platform {submission.Platform}");
+        }
+
+        await submissionHandler.HandleSubmissionAsync(submission, ct);
+
+        submission.CompletedAt = DateTimeOffset.UtcNow;
+
+        await _mediator.Publish(new SubmissionHandledEvent
+        {
+            SubmissionId = submissionId,
+            Platform = submission.Platform,
+            EntityType = submission.EntityType,
+        }, ct);
+    }
 }

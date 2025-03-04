@@ -18,10 +18,6 @@ public class RegisterYouTubeJobsService : BackgroundService
         using var scope = _serviceScopeFactory.CreateAsyncScope();
 
         var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
-        recurringJobManager.AddOrUpdate<EnqueueSubmissionsJob>(
-            "yt-enqueue-submissions-recurring",
-            x => x.RunAsync(default),
-            Cron.Hourly);
         recurringJobManager.AddOrUpdate<UpdateYtDlpJob>(
             "yt-update-ytdlp-binary",
             x => x.UpdateYouTubeDlAsync(),

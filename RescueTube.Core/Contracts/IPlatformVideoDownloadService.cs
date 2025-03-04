@@ -1,7 +1,7 @@
 ﻿using RescueTube.Domain;
 using RescueTube.Domain.Entities;
 
-namespace RescueTube.Core.Services.Interfaces;
+namespace RescueTube.Core.Contracts;
 
 public interface IPlatformVideoDownloadService
 {

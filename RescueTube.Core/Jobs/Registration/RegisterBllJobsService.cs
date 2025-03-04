@@ -17,6 +17,10 @@ public class RegisterBllJobsService : BackgroundService
     {
         using var scope = _serviceScopeFactory.CreateAsyncScope();
         var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+        recurringJobManager.AddOrUpdate<EnqueueSubmissionsJob>(
+            "enqueue-submissions-recurring",
+            x => x.RunAsync(default),
+            Cron.Hourly);
         recurringJobManager.AddOrUpdate<DownloadVideoImagesJob>(
             "download-all-not-downloaded-video-images", 
             x => x.DownloadAllNotDownloadedVideoImages(default),

@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Events;
 using RescueTube.Core.Exceptions;
-using RescueTube.Core.Utils;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
@@ -52,29 +51,8 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         return false;
     }
 
-    public async Task HandleSubmissionAsync(Guid submissionId, CancellationToken ct = default)
+    public async Task HandleSubmissionAsync(Submission submission, CancellationToken ct)
     {
-        var submission = await DbCtx.Submissions
-            .Where(s => s.Id == submissionId)
-            .FirstOrDefaultAsync(cancellationToken: ct);
-
-        // TODO: Use fluent validation maybe?
-        submission = submission switch
-        {
-            null => throw new ApplicationException("Submission not found"),
-            { ApprovedAt: null } => throw new ApplicationException("Submission not approved"),
-            { Platform: not EPlatform.YouTube } => throw new ApplicationException(
-                $"Invalid platform {submission.Platform}, expected {EPlatform.YouTube}"),
-            _ => submission,
-        };
-
-        if (submission.CompletedAt != null)
-        {
-            Logger.LogInformation("Submission {SubmissionId} already handled at {CompletedAt}, skipping",
-                submissionId, submission.CompletedAt);
-            return;
-        }
-
         switch (submission.EntityType)
         {
             case EEntityType.Video:
@@ -92,15 +70,6 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             default:
                 throw new ApplicationException($"Unsupported entity type {submission.EntityType}");
         }
-
-        submission.CompletedAt = DateTimeOffset.UtcNow;
-
-        await _mediator.Publish(new SubmissionHandledEvent
-        {
-            SubmissionId = submissionId,
-            Platform = submission.Platform,
-            EntityType = submission.EntityType,
-        }, ct);
     }
 
     private async Task<Author> SubmitAuthorAsync(string idOnPlatform, string? idType,

@@ -3,11 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Contracts;
-using RescueTube.Core.Services.Interfaces;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
-using RescueTube.YouTube.EventHandlers;
 using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.Registration;
 using RescueTube.YouTube.Services;
@@ -69,7 +67,6 @@ public static class Setup
             };
         });
 
-        services.AddScoped<HandleSubmissionJob>();
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
         services.AddHostedService<RegisterYouTubeJobsService>();
     }
