@@ -7,6 +7,7 @@ using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Enums;
+using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs;
 
@@ -59,16 +60,16 @@ public class FetchYouTubeExplodeAuthorDataJob
     public async Task FetchYouTubeExplodeAuthorData(Guid authorId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
-        if (_youTubeUow.AuthorService.LastYtExplodeRateLimitHit > DateTimeOffset.Now.Subtract(TimeSpan.FromHours(1)))
+        if (AuthorService.LastYtExplodeRateLimitHit > DateTimeOffset.Now.Subtract(TimeSpan.FromHours(1)))
         {
             _backgroundJobClient.Schedule<FetchYouTubeExplodeAuthorDataJob>(
                 x => x.FetchYouTubeExplodeAuthorData(authorId, default),
-                _youTubeUow.AuthorService.LastYtExplodeRateLimitHit
+                AuthorService.LastYtExplodeRateLimitHit
                     .AddHours(1)
                     .AddMinutes(Random.Shared.Next(-10, 10)));
             _logger.LogInformation(
                 "Skipping YouTubeExplode extra author data fetch for author {AuthorId}, last rate limit hit: {LastRateLimitHit}",
-                authorId, _youTubeUow.AuthorService.LastYtExplodeRateLimitHit);
+                authorId, AuthorService.LastYtExplodeRateLimitHit);
             transaction.Complete();
             return;
         }

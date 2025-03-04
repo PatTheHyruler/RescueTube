@@ -25,7 +25,7 @@ public class AuthorService : BaseYouTubeService
     /// <summary>
     /// Last YouTubeExplode exception time (probably means we hit rate limit)
     /// </summary>
-    public DateTimeOffset LastYtExplodeRateLimitHit { get; private set; } = DateTimeOffset.MinValue;
+    public static DateTimeOffset LastYtExplodeRateLimitHit { get; private set; } = DateTimeOffset.MinValue;
 
     public AuthorService(IServiceProvider services, ILogger<AuthorService> logger, IMediator mediator) : base(services,
         logger)
