@@ -48,7 +48,7 @@ public class FetchPlaylistDataJob
     public async Task FetchPlaylistData(Guid playlistId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
-        await _youTubeUow.PlaylistService.AddOrUpdatePlaylistAsync(playlistId, ct);
+        await _youTubeUow.PlaylistService.UpdatePlaylistAsync(playlistId, ct);
         await _dataUow.SaveChangesAsync(ct);
         transaction.Complete();
     }

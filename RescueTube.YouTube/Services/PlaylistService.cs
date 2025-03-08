@@ -14,7 +14,7 @@ namespace RescueTube.YouTube.Services;
 
 public class PlaylistService : BaseYouTubeService
 {
-    public PlaylistService(IServiceProvider services, ILogger<BaseYouTubeService> logger) : base(services, logger)
+    public PlaylistService(IServiceProvider services, ILogger<PlaylistService> logger) : base(services, logger)
     {
     }
 
@@ -29,13 +29,13 @@ public class PlaylistService : BaseYouTubeService
         return playlistResult.Data;
     }
 
-    public async Task<Playlist?> AddOrUpdatePlaylistAsync(Guid id, CancellationToken ct = default)
+    public async Task UpdatePlaylistAsync(Guid id, CancellationToken ct = default)
     {
         var idOnPlatform = await DbCtx.Playlists
             .Where(p => p.Id == id)
             .Select(p => p.IdOnPlatform)
             .FirstAsync(ct);
-        return await AddOrUpdatePlaylistAsync(idOnPlatform, ct);
+        await AddOrUpdatePlaylistAsync(idOnPlatform, ct);
     }
 
     public async Task<Playlist?> AddOrUpdatePlaylistAsync(string id, CancellationToken ct = default)
@@ -82,10 +82,9 @@ public class PlaylistService : BaseYouTubeService
             .Select(df => df.OccurredAt)
             .OrderDescending()
             .FirstOrDefault() ?? DateTimeOffset.UtcNow;
-        await UpdatePlaylistItems(playlist, playlistData, isNew, fetchTime, ct);
+        await UpdatePlaylistItemsAsync(playlist, playlistData, isNew, fetchTime, ct);
 
-        var author = await YouTubeUow.AuthorService.AddOrGetAuthor(
-            playlistData, YouTubeConstants.FetchTypes.YtDlp.Playlist, ct);
+        var author = await YouTubeUow.AuthorService.AddOrGetAuthor(playlistData, fetchType, ct);
         playlist.Creator = author;
         playlist.CreatorId = author.Id;
 
@@ -97,7 +96,7 @@ public class PlaylistService : BaseYouTubeService
         return playlist;
     }
 
-    private async Task UpdatePlaylistItems(Playlist playlist, VideoData playlistData,
+    private async Task UpdatePlaylistItemsAsync(Playlist playlist, VideoData playlistData,
         bool isNew, DateTimeOffset fetchTime, CancellationToken ct)
     {
         var previousPlaylistItems =
