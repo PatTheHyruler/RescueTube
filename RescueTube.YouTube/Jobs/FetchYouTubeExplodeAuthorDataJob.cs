@@ -49,6 +49,10 @@ public class FetchYouTubeExplodeAuthorDataJob
             .OrderBy(a => a.Id)
             .Select(a => a.Id)
             .FirstOrDefaultAsync(ct);
+        if (authorId == Guid.Empty)
+        {
+            return;
+        }
         await FetchYouTubeExplodeAuthorDataAsync(authorId, ct);
     }
 
