@@ -68,6 +68,7 @@ public class DownloadVideoJob
             return;
         }
 
+        // TODO: Use DataFetchContext here instead?
         if (!DownloadingVideoIds.TryAdd(video.Id, _timeProvider.GetUtcNow()))
         {
             _logger.LogError("Video {VideoId} is already downloading.", video.Id);

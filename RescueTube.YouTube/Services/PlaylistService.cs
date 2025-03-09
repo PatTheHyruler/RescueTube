@@ -35,7 +35,7 @@ public class PlaylistService : BaseYouTubeService
             .Where(p => p.Id == id)
             .Select(p => p.IdOnPlatform)
             .FirstAsync(ct);
-        await AddOrUpdatePlaylistAsync(idOnPlatform, ct);
+        await AddOrUpdatePlaylistAsync(idOnPlatform, ct); // TODO: add failed data fetch
     }
 
     public async Task<Playlist?> AddOrUpdatePlaylistAsync(string id, CancellationToken ct = default)

@@ -3,13 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.Events;
-using RescueTube.Core.Mediator;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
 using RescueTube.YouTube.Utils;
-using YoutubeDLSharp;
 using YoutubeDLSharp.Metadata;
 
 namespace RescueTube.YouTube.Services;
@@ -17,11 +15,13 @@ namespace RescueTube.YouTube.Services;
 public class VideoService : BaseYouTubeService
 {
     private readonly IMediator _mediator;
+    private readonly DataFetchContext _dataFetchContext;
 
-    public VideoService(IServiceProvider services, ILogger<VideoService> logger, IMediator mediator)
+    public VideoService(IServiceProvider services, ILogger<VideoService> logger, IMediator mediator, DataFetchContext dataFetchContext)
         : base(services, logger)
     {
         _mediator = mediator;
+        _dataFetchContext = dataFetchContext;
     }
 
     public async Task<VideoData?> FetchVideoDataYtdlAsync(string id, bool fetchComments, CancellationToken ct = default)
@@ -30,8 +30,6 @@ public class VideoService : BaseYouTubeService
             Url.ToVideoUrl(id), fetchComments: fetchComments, ct: ct);
         if (videoResult is not { Success: true })
         {
-            ct.ThrowIfCancellationRequested();
-
             // TODO: Add status change if video exists in archive
 
             return null;
@@ -40,23 +38,29 @@ public class VideoService : BaseYouTubeService
         return videoResult.Data;
     }
 
-    public async Task<Video?> AddOrUpdateVideoAsync(Guid videoId, CancellationToken ct = default)
+    public async Task UpdateVideoAsync(Guid videoId, CancellationToken ct)
     {
         var idOnPlatform = await DbCtx.Videos
             .Where(v => v.Id == videoId && v.Platform == EPlatform.YouTube)
             .Select(v => v.IdOnPlatform).FirstAsync(ct);
-        return await AddOrUpdateVideoAsync(idOnPlatform, ct);
+        if (_dataFetchContext.IsFetching(YouTubeConstants.DataFetches.YtDlp.VideoPage, idOnPlatform))
+        {
+            Logger.LogInformation("Already fetching {Platform} video {VideoIdOnPlatform}, skipping duplicate fetch", EPlatform.YouTube, idOnPlatform);
+            return;
+        }
+        await AddOrUpdateVideoAsync(idOnPlatform, ct); // TODO: add failed data fetch
     }
 
-    public async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, CancellationToken ct = default)
+    public async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, CancellationToken ct)
     {
+        using var d = _dataFetchContext.StartDataFetch(YouTubeConstants.DataFetches.YtDlp.VideoPage, idOnPlatform);
         var videoData = await FetchVideoDataYtdlAsync(idOnPlatform, false, ct);
         return videoData == null
             ? null
             : await AddOrUpdateVideoAsync(videoData, YouTubeConstants.FetchTypes.YtDlp.VideoPage, ct);
     }
 
-    public Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, CancellationToken ct = default) =>
+    public Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, CancellationToken ct) =>
         AddOrUpdateVideoAsync(videoData: videoData, fetchType: fetchType, author: null, ct: ct);
 
     public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, Author? author,

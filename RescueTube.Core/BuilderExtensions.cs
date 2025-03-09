@@ -15,6 +15,8 @@ public static class BuilderExtensions
         services.AddOptionsFull<AppPathOptions>(AppPathOptions.Section);
         services.AddSingleton<AppPaths>();
 
+        services.AddSingleton<DataFetchContext>();
+
         services.AddScoped<ServiceUow>();
 
         services.AddScoped<SubmissionService>();

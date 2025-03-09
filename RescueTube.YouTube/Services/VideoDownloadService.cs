@@ -32,10 +32,7 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
         return LatestThrottlingAssessment?.ShouldSkipDownloading() ?? false;
     }
 
-    public DataFetchDefinition DataFetchDefinition { get; } = new(
-        Source: YouTubeConstants.FetchTypes.YtDlp.Source,
-        Type: YouTubeConstants.FetchTypes.YtDlp.VideoFileDownload
-    );
+    public DataFetchDefinition DataFetchDefinition => YouTubeConstants.DataFetches.YtDlp.VideoFileDownload;
 
     public async Task<string> DownloadVideoAsync(Video video, CancellationToken ct = default)
     {

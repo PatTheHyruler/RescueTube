@@ -1,3 +1,6 @@
+using RescueTube.Domain;
+using RescueTube.Domain.Enums;
+
 namespace RescueTube.YouTube;
 
 public static class YouTubeConstants
@@ -7,6 +10,28 @@ public static class YouTubeConstants
         public static class Author
         {
             public const string Handle = "handle";
+        }
+    }
+
+    public static class DataFetches
+    {
+        public static class YtDlp
+        {
+            public static readonly DataFetchDefinition VideoPage = new()
+            {
+                Type = FetchTypes.YtDlp.VideoPage,
+                Source = FetchTypes.YtDlp.Source,
+                EntityType = EEntityType.Video,
+                Platform = EPlatform.YouTube,
+            };
+
+            public static readonly DataFetchDefinition VideoFileDownload = new()
+            {
+                Source = FetchTypes.YtDlp.Source,
+                Type = FetchTypes.YtDlp.VideoFileDownload,
+                Platform = EPlatform.YouTube,
+                EntityType = EEntityType.Video,
+            };
         }
     }
 

@@ -31,9 +31,9 @@ public class RegisterYouTubeJobsService : BackgroundService
             x => x.EnqueueYouTubeExplodeAuthorDataFetchesRecurring(default),
             Cron.Daily);
         recurringJobManager.AddOrUpdate<FetchVideoDataJob>(
-            "yt-fetch-videos-data-recurring",
-            x => x.EnqueueVideoDataFetchesRecurring(default),
-            Cron.Minutely);
+            "yt-fetch-next-video-data-recurring",
+            x => x.FetchNextVideoDataAsync(default),
+            "*/15 * * * * *"); // Every 15th second
         recurringJobManager.AddOrUpdate<FetchPlaylistDataJob>(
             "yt-fetch-playlists-data-recurring",
             x => x.EnqueuePlaylistDataFetches(default),

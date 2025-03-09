@@ -1,12 +1,11 @@
-﻿using Hangfire;
-using LinqKit;
+﻿using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
-using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
-using RescueTube.Domain.Enums;
+using RescueTube.Domain;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.YouTube.Jobs;
 
@@ -14,65 +13,41 @@ public class FetchVideoDataJob
 {
     private readonly IDataUow _dataUow;
     private readonly YouTubeUow _youTubeUow;
-    private readonly IBackgroundJobClient _backgroundJobClient;
-    private readonly IJobStorageAccessor _jobStorageAccessor;
     private readonly ILogger<FetchVideoDataJob> _logger;
 
-    public FetchVideoDataJob(IDataUow dataUow, YouTubeUow youTubeUow, IBackgroundJobClient backgroundJobClient, IJobStorageAccessor jobStorageAccessor, ILogger<FetchVideoDataJob> logger)
+    public FetchVideoDataJob(IDataUow dataUow, YouTubeUow youTubeUow, ILogger<FetchVideoDataJob> logger)
     {
         _dataUow = dataUow;
         _youTubeUow = youTubeUow;
-        _backgroundJobClient = backgroundJobClient;
-        _jobStorageAccessor = jobStorageAccessor;
         _logger = logger;
     }
 
-    [SkipConcurrent("yt:enqueue-video-data-fetches-recurring")]
-    public async Task EnqueueVideoDataFetchesRecurring(CancellationToken ct)
+    private static readonly DataFetchJobDefinition JobDefinition = new(
+        YouTubeConstants.DataFetches.YtDlp.VideoPage,
+        successCutoffOffset: TimeSpan.FromDays(10),
+        failureCutoffOffset: TimeSpan.FromDays(12));
+
+    [SkipConcurrent("yt:fetch-next-video-data")]
+    public async Task FetchNextVideoDataAsync(CancellationToken ct)
     {
-        const int targetConcurrentDataFetches = 5;
-        using var transaction = TransactionUtils.NewTransactionScope();
-
-        var currentlyProcessingVideoIds = await _jobStorageAccessor.GetActiveYouTubeVideoFetchJobVideoIdsAsync(ct);
-
-        var openProcessingSlots = targetConcurrentDataFetches - currentlyProcessingVideoIds.Count;
-        if (openProcessingSlots <= 0)
-        {
-            _logger.LogInformation("Skipping recurring video data fetch enqueue, {JobCount} active jobs already exist", currentlyProcessingVideoIds.Count);
-            transaction.Complete();
-            return;
-        }
-
-        var videoIds = await _dataUow.Ctx.Videos
+        var videoId = await _dataUow.Ctx.Videos
             .AsExpandable()
-            .Where(v => v.Platform == EPlatform.YouTube
-                        && !currentlyProcessingVideoIds.Contains(v.Id)
-                        && !v.DataFetches!.Any(d => _dataUow.DataFetches.IsTooRecent(
-                            YouTubeConstants.FetchTypes.YtDlp.Source,
-                            YouTubeConstants.FetchTypes.YtDlp.VideoPage,
-                            DateTimeOffset.UtcNow.AddDays(-10),
-                            DateTimeOffset.UtcNow.AddHours(-12)
-                        ).Invoke(d)))
+            .Where(_dataUow.DataFetches.ShouldFetchData<Video>(JobDefinition))
             .OrderBy(v => v.Id) // TODO: Better thing to order by
             .Select(v => v.Id)
-            .Take(targetConcurrentDataFetches)
-            .ToListAsync(ct);
-        _logger.LogInformation("Fetched {VideoIdsToEnqueueCount} video IDs to enqueue with {AlreadyProcessingVideoIdsCount} video IDs already processing", videoIds.Count, currentlyProcessingVideoIds.Count);
-
-        foreach (var videoId in videoIds)
+            .FirstOrDefaultAsync(ct);
+        if (videoId == Guid.Empty)
         {
-            _backgroundJobClient.Enqueue<FetchVideoDataJob>(x =>
-                x.FetchVideoData(videoId, default));
+            return;
         }
-
-        transaction.Complete();
+        await FetchVideoDataAsync(videoId, ct);
     }
 
-    [SkipConcurrent("yt:fetch-video-data:{0}")]
-    public async Task FetchVideoData(Guid videoId, CancellationToken ct)
+    private async Task FetchVideoDataAsync(Guid videoId, CancellationToken ct)
     {
+        using var logScope = _logger.BeginScope($"Fetching video data for video {videoId}");
         using var transaction = TransactionUtils.NewTransactionScope();
-        await _youTubeUow.VideoService.AddOrUpdateVideoAsync(videoId, ct);
+        await _youTubeUow.VideoService.UpdateVideoAsync(videoId, ct);
         await _dataUow.SaveChangesAsync(ct);
         transaction.Complete();
     }

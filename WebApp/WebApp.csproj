@@ -43,7 +43,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\RescueTube.Jobs.DAL.Postgres\RescueTube.Jobs.DAL.Postgres.csproj" />
         <ProjectReference Include="..\RescueTube.YouTube\RescueTube.YouTube.csproj"/>
         <ProjectReference Include="..\RescueTube.Core\RescueTube.Core.csproj"/>
         <ProjectReference Include="..\RescueTube.DAL.EF.Postgres\RescueTube.DAL.EF.Postgres.csproj"/>

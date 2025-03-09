@@ -17,7 +17,6 @@ using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils;
 using RescueTube.DAL.EF.MigrationUtils;
 using RescueTube.DAL.EF.Postgres;
-using RescueTube.Jobs.DAL.Postgres;
 using RescueTube.YouTube;
 using Serilog;
 using Serilog.Settings.Configuration;
@@ -57,7 +56,7 @@ builder.Services.AddHangfire(configuration => configuration
         GetHangfireConnectionString(builder))
     )
     .UseConsole()
-).AddHangfirePostgresStorageAccessor(GetHangfireConnectionString(builder));
+);
 builder.Services.AddHangfireServer(options =>
 {
     options.Queues = JobQueues.Queues;
