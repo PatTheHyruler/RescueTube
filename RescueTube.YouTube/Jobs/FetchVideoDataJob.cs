@@ -1,4 +1,5 @@
-﻿using LinqKit;
+﻿using Hangfire;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
@@ -27,6 +28,7 @@ public class FetchVideoDataJob
         successCutoffOffset: TimeSpan.FromDays(10),
         failureCutoffOffset: TimeSpan.FromDays(12));
 
+    [AutomaticRetry(Attempts = 0)]
     [SkipConcurrent("yt:fetch-next-video-data")]
     public async Task FetchNextVideoDataAsync(CancellationToken ct)
     {

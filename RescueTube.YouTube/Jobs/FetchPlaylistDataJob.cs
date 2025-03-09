@@ -1,4 +1,5 @@
-﻿using LinqKit;
+﻿using Hangfire;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
@@ -27,6 +28,7 @@ public class FetchPlaylistDataJob
         successCutoffOffset: TimeSpan.FromDays(5),
         failureCutoffOffset: TimeSpan.FromDays(1));
 
+    [AutomaticRetry(Attempts = 0)]
     [SkipConcurrent("yt:fetch-next-playlist-data")]
     public async Task FetchNextPlaylistDataAsync(CancellationToken ct)
     {

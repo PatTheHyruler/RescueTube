@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
@@ -24,6 +25,7 @@ public class FetchAuthorVideosJob
         AuthorService.LatestAllowedVideosFetchOffset,
         AuthorService.LatestAllowedVideosFetchOffset);
 
+    [AutomaticRetry(Attempts = 0)]
     [SkipConcurrent("yt:fetch-next-playlist-data")]
     public async Task FetchNextChannelVideosAsync(CancellationToken ct)
     {

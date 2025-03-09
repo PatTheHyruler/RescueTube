@@ -32,6 +32,7 @@ public class FetchYouTubeExplodeAuthorDataJob
         successCutoffOffset: TimeSpan.FromDays(10),
         failureCutoffOffset: TimeSpan.FromDays(1));
 
+    [AutomaticRetry(Attempts = 0)]
     [SkipConcurrent("yt:fetch-next-ytexplode-author-data")]
     [Queue(JobQueues.LowPriority)]
     public async Task FetchNextYouTubeExplodeAuthorDataAsync(CancellationToken ct)

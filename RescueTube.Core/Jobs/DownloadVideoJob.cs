@@ -39,6 +39,7 @@ public class DownloadVideoJob
 
     private static readonly ConcurrentDictionary<Guid, DateTimeOffset> DownloadingVideoIds = new();
 
+    [AutomaticRetry(Attempts = 0)]
     [SkipConcurrent("core:download-not-downloaded-video-recurring")]
     [Queue(JobQueues.HighPriority)]
     public async Task DownloadNextNotDownloadedVideoAsync(CancellationToken ct)
