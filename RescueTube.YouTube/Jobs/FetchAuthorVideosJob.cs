@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
@@ -30,6 +31,7 @@ public class FetchAuthorVideosJob
     public async Task FetchNextChannelVideosAsync(CancellationToken ct)
     {
         var authorId = await _dataUow.Ctx.Authors
+            .AsExpandable()
             .Where(_dataUow.DataFetches.ShouldFetchData<Author>(JobDefinition))
             .Where(AuthorService.AuthorIsActiveAndConfiguredForVideoArchival)
             .Select(a => a.Id)
