@@ -53,7 +53,7 @@ public class VideoService : BaseYouTubeService
 
     public async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, CancellationToken ct)
     {
-        using var d = _dataFetchContext.StartDataFetch(YouTubeConstants.DataFetches.YtDlp.VideoPage, idOnPlatform);
+        using var _ = _dataFetchContext.StartDataFetch(YouTubeConstants.DataFetches.YtDlp.VideoPage, idOnPlatform);
         var videoData = await FetchVideoDataYtdlAsync(idOnPlatform, false, ct);
         return videoData == null
             ? null

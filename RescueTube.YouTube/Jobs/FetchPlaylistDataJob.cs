@@ -1,10 +1,11 @@
-﻿using Hangfire;
-using LinqKit;
+﻿using LinqKit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
-using RescueTube.Domain.Enums;
+using RescueTube.Domain;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.YouTube.Jobs;
 
@@ -12,41 +13,40 @@ public class FetchPlaylistDataJob
 {
     private readonly IDataUow _dataUow;
     private readonly YouTubeUow _youTubeUow;
-    private readonly IBackgroundJobClient _backgroundJobClient;
+    private readonly ILogger<FetchPlaylistDataJob> _logger;
 
-    public FetchPlaylistDataJob(IDataUow dataUow, YouTubeUow youTubeUow, IBackgroundJobClient backgroundJobClient)
+    public FetchPlaylistDataJob(IDataUow dataUow, YouTubeUow youTubeUow, ILogger<FetchPlaylistDataJob> logger)
     {
         _dataUow = dataUow;
         _youTubeUow = youTubeUow;
-        _backgroundJobClient = backgroundJobClient;
+        _logger = logger;
     }
 
-    [RescheduleConcurrentExecution("yt:enqueue-playlist-data-fetches")]
-    public async Task EnqueuePlaylistDataFetches(CancellationToken ct)
+    private static readonly DataFetchJobDefinition JobDefinition = new(
+        YouTubeConstants.DataFetches.YtDlp.Playlist,
+        successCutoffOffset: TimeSpan.FromDays(5),
+        failureCutoffOffset: TimeSpan.FromDays(1));
+
+    [SkipConcurrent("yt:fetch-next-playlist-data")]
+    public async Task FetchNextPlaylistDataAsync(CancellationToken ct)
     {
-        using var transaction = TransactionUtils.NewTransactionScope();
-        var playlistIds = _dataUow.Ctx.Playlists
+        var playlistId = await _dataUow.Ctx.Playlists
             .AsExpandable()
-            .Where(p => p.Platform == EPlatform.YouTube
-                        && !p.DataFetches!.Any(d => _dataUow.DataFetches.IsTooRecent(
-                            YouTubeConstants.FetchTypes.YtDlp.Source,
-                            YouTubeConstants.FetchTypes.YtDlp.Playlist,
-                            DateTimeOffset.UtcNow.AddDays(-5),
-                            DateTimeOffset.UtcNow.AddDays(-1)
-                        ).Invoke(d)))
+            .Where(_dataUow.DataFetches.ShouldFetchData<Playlist>(JobDefinition))
+            .OrderBy(p => p.Id)
             .Select(p => p.Id)
-            .AsAsyncEnumerable().WithCancellation(ct);
-        await foreach (var playlistId in playlistIds)
+            .FirstOrDefaultAsync(ct);
+        if (playlistId == Guid.Empty)
         {
-            _backgroundJobClient.Enqueue<FetchPlaylistDataJob>(x =>
-                x.FetchPlaylistData(playlistId, default));
+            return;
         }
-        transaction.Complete();
+
+        await FetchPlaylistDataAsync(playlistId, ct);
     }
 
-    [SkipConcurrent("yt:fetch-playlist-data:{0}")]
-    public async Task FetchPlaylistData(Guid playlistId, CancellationToken ct)
+    private async Task FetchPlaylistDataAsync(Guid playlistId, CancellationToken ct)
     {
+        using var logScope = _logger.BeginScope("Fetching playlist data for playlist {PlaylistId}", playlistId);
         using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeUow.PlaylistService.UpdatePlaylistAsync(playlistId, ct);
         await _dataUow.SaveChangesAsync(ct);

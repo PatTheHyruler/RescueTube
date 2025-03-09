@@ -45,7 +45,7 @@ public class FetchVideoDataJob
 
     private async Task FetchVideoDataAsync(Guid videoId, CancellationToken ct)
     {
-        using var logScope = _logger.BeginScope($"Fetching video data for video {videoId}");
+        using var logScope = _logger.BeginScope("Fetching video data for video {VideoId}", videoId);
         using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeUow.VideoService.UpdateVideoAsync(videoId, ct);
         await _dataUow.SaveChangesAsync(ct);
