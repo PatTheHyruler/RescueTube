@@ -1,10 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Contracts;
-using RescueTube.Core.Events;
 using RescueTube.Core.Exceptions;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;
@@ -16,12 +14,9 @@ namespace RescueTube.YouTube.Services;
 
 public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 {
-    private readonly IMediator _mediator;
-
-    public SubmitService(IServiceProvider services, ILogger<SubmitService> logger, IMediator mediator) : base(services,
+    public SubmitService(IServiceProvider services, ILogger<SubmitService> logger) : base(services,
         logger)
     {
-        _mediator = mediator;
     }
 
     public bool IsPlatformUrl(string url, [NotNullWhen(true)] out RecognizedPlatformUrl? recognizedPlatformUrl)
@@ -114,12 +109,6 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         addedOrExistingAuthor.ArchivalSettings =
             options ?? AuthorArchivalSettings.ArchivedDefault(); // TODO: Better logic for this
         DbCtx.Add(addedOrExistingAuthor.ArchivalSettings);
-        await _mediator.Publish(new AuthorArchivalEnabledEvent
-        {
-            AuthorId = addedOrExistingAuthor.Id,
-            Platform = EPlatform.YouTube,
-            AuthorArchivalSettings = addedOrExistingAuthor.ArchivalSettings,
-        }, ct);
 
         return addedOrExistingAuthor;
     }

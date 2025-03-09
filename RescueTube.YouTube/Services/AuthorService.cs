@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using LinqKit;
 using MediatR;
@@ -21,26 +20,30 @@ public class AuthorService : BaseYouTubeService
 {
     private readonly Dictionary<string, Author> _cachedAuthors = new();
     private readonly IMediator _mediator;
+    private readonly TimeProvider _timeProvider;
+    private readonly DataFetchContext _dataFetchContext;
 
     /// <summary>
     /// Last YouTubeExplode exception time (probably means we hit rate limit)
     /// </summary>
     public static DateTimeOffset LastYtExplodeRateLimitHit { get; private set; } = DateTimeOffset.MinValue;
 
-    public AuthorService(IServiceProvider services, ILogger<AuthorService> logger, IMediator mediator) : base(services,
+    public AuthorService(IServiceProvider services, ILogger<AuthorService> logger, IMediator mediator, TimeProvider timeProvider, DataFetchContext dataFetchContext) : base(services,
         logger)
     {
         _mediator = mediator;
+        _timeProvider = timeProvider;
+        _dataFetchContext = dataFetchContext;
     }
 
-    private static DateTimeOffset GetLatestAllowedVideosFetchTime() =>
-        DateTimeOffset.UtcNow.Subtract(TimeSpan.FromDays(10));
+    public static readonly TimeSpan LatestAllowedVideosFetchOffset = TimeSpan.FromDays(10);
 
-    public static Expression<Func<Author, bool>> AuthorHasNoTooRecentVideoFetches(
-        DateTimeOffset? latestAllowedVideosFetchTime = null)
+    private DateTimeOffset GetLatestAllowedVideosFetchTime() =>
+        _timeProvider.GetUtcNow().Subtract(LatestAllowedVideosFetchOffset);
+
+    private static Expression<Func<Author, bool>> AuthorHasNoTooRecentVideoFetches(
+        DateTimeOffset latestAllowedVideosFetchTime)
     {
-        latestAllowedVideosFetchTime ??= GetLatestAllowedVideosFetchTime();
-
         return a =>
             !a.DataFetches!.Any(df =>
                 df.Source == YouTubeConstants.FetchTypes.YtDlp.Source
@@ -58,14 +61,14 @@ public class AuthorService : BaseYouTubeService
         using var logScope = Logger.BeginScope(
             nameof(TryFetchAuthorVideosAsync) + " AuthorId: {AuthorId}, Force: {Force}",
             authorId, force);
-        const string fetchType = YouTubeConstants.FetchTypes.YtDlp.ChannelVideos;
+        var dataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.ChannelVideos;
 
         var author = await DbCtx.Authors
             .Where(a => a.Id == authorId)
             .Include(a => a.ArchivalSettings)
             .Include(a => a.DataFetches!.Where(df =>
-                df.Source == YouTubeConstants.FetchTypes.YtDlp.Source
-                && df.Type == fetchType))
+                df.Source == dataFetchDefinition.Source
+                && df.Type == dataFetchDefinition.Type))
             .Include(a => a.AuthorImages!)
             .ThenInclude(ai => ai.Image)
             .FirstAsync(ct);
@@ -75,10 +78,18 @@ public class AuthorService : BaseYouTubeService
             case false when !ShouldFetchAuthorVideos(author):
                 return;
             case true when !AuthorHasNoTooRecentVideoFetches(
-                    DateTimeOffset.UtcNow.Subtract(TimeSpan.FromMinutes(10)))
+                    _timeProvider.GetUtcNow().Subtract(TimeSpan.FromMinutes(10)))
                 .Invoke(author):
                 Logger.LogInformation("Author {AuthorId} latest VideoFetch occurred too recently, skipping", authorId);
                 return;
+        }
+
+        using var fetchContext = _dataFetchContext.StartDataFetch(
+            dataFetchDefinition, author.IdOnPlatform, throwOnConflict: false);
+        if (fetchContext is null)
+        {
+            Logger.LogWarning("Channel videos data fetch for author {AuthorId} is already ongoing, skipping duplicate fetch", authorId);
+            return;
         }
 
         Logger.LogInformation("Fetching videos for author {AuthorId}", authorId);
@@ -93,15 +104,15 @@ public class AuthorService : BaseYouTubeService
             Logger.LogError("Failed to fetch videos for author {AuthorId}", authorId);
             await _mediator.Send(new AddFailedDataFetchRequest
             {
-                Type = fetchType,
-                Source = YouTubeConstants.FetchTypes.YtDlp.Source,
+                Type = dataFetchDefinition.Type,
+                Source = dataFetchDefinition.Source,
                 ShouldAffectValidity = false,
                 AuthorId = authorId,
             }, ct);
             return;
         }
 
-        var domainAuthorData = authorResult.Data.ToDomainAuthorFromChannel(fetchType);
+        var domainAuthorData = authorResult.Data.ToDomainAuthorFromChannel(dataFetchDefinition.Type);
         ServiceUow.EntityUpdateService.UpdateAuthor(author, domainAuthorData, false,
             new EntityUpdateService.UpdateAuthorOptions
             {
@@ -109,7 +120,7 @@ public class AuthorService : BaseYouTubeService
             });
 
         await YouTubeUow.VideoService.AddOrUpdateVideosFromAuthorVideosFetchAsync(
-            authorResult.Data, author, fetchType, ct);
+            authorResult.Data, author, dataFetchDefinition.Type, ct);
     }
 
     private bool ShouldFetchAuthorVideos(Author author)
@@ -136,7 +147,7 @@ public class AuthorService : BaseYouTubeService
             .MaxBy(d => d.OccurredAt);
         if (latestDataFetch != null && latestDataFetch.OccurredAt > latestAllowedVideosFetchTime)
         {
-            Logger.LogInformation("Skipping videos fetch for author {AuthorId}, latest data fetch: {LatestDataFetch}",
+            Logger.LogInformation("Skipping videos fetch for author {AuthorId}, latest data fetch: {@LatestDataFetch}",
                 author.Id,
                 new { latestDataFetch.OccurredAt, latestDataFetch.Id, latestDataFetch.Source, latestDataFetch.Type });
             return false;
@@ -191,7 +202,7 @@ public class AuthorService : BaseYouTubeService
 
     private async Task<Author> AddOrGetAuthor(string id, Func<Author> newAuthorFunc, CancellationToken ct = default)
     {
-        return (await AddOrGetAuthors(new[] { new AuthorFetchArg(id, newAuthorFunc) }, ct)).First();
+        return (await AddOrGetAuthors([new AuthorFetchArg(id, newAuthorFunc)], ct)).First();
     }
 
     internal async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs,

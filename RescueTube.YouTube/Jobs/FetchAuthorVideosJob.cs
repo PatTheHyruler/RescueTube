@@ -1,8 +1,9 @@
-﻿using Hangfire;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
+using RescueTube.Domain;
+using RescueTube.Domain.Entities;
 using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs;
@@ -11,34 +12,34 @@ public class FetchAuthorVideosJob
 {
     private readonly IDataUow _dataUow;
     private readonly YouTubeUow _youTubeUow;
-    private readonly IBackgroundJobClient _backgroundJobClient;
 
-    public FetchAuthorVideosJob(IDataUow dataUow, YouTubeUow youTubeUow, IBackgroundJobClient backgroundJobClient)
+    public FetchAuthorVideosJob(IDataUow dataUow, YouTubeUow youTubeUow)
     {
         _dataUow = dataUow;
         _youTubeUow = youTubeUow;
-        _backgroundJobClient = backgroundJobClient;
     }
 
-    [RescheduleConcurrentExecution("yt:enqueue-author-video-fetches-recurring")]
-    public async Task EnqueueAuthorVideoFetchesRecurring(CancellationToken ct)
+    private static readonly DataFetchJobDefinition JobDefinition = new(
+        YouTubeConstants.DataFetches.YtDlp.ChannelVideos,
+        AuthorService.LatestAllowedVideosFetchOffset,
+        AuthorService.LatestAllowedVideosFetchOffset);
+
+    [SkipConcurrent("yt:fetch-next-playlist-data")]
+    public async Task FetchNextChannelVideosAsync(CancellationToken ct)
     {
-        using var transaction = TransactionUtils.NewTransactionScope();
-        var authorIds = _dataUow.Ctx.Authors
-            .Where(AuthorService.AuthorHasNoTooRecentVideoFetches())
+        var authorId = await _dataUow.Ctx.Authors
+            .Where(_dataUow.DataFetches.ShouldFetchData<Author>(JobDefinition))
             .Where(AuthorService.AuthorIsActiveAndConfiguredForVideoArchival)
             .Select(a => a.Id)
-            .AsAsyncEnumerable().WithCancellation(ct);
-        await foreach (var authorId in authorIds)
+            .FirstOrDefaultAsync(ct);
+        if (authorId == Guid.Empty)
         {
-            _backgroundJobClient.Enqueue<FetchAuthorVideosJob>(x =>
-                x.FetchAuthorVideos(authorId, false, default));
+            return;
         }
-        transaction.Complete();
+        await FetchChannelVideos(authorId, false, ct);
     }
 
-    [RescheduleConcurrentExecution("yt:fetch-author-videos")]
-    public async Task FetchAuthorVideos(Guid authorId, bool force, CancellationToken ct)
+    private async Task FetchChannelVideos(Guid authorId, bool force, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeUow.AuthorService.TryFetchAuthorVideosAsync(authorId: authorId, force: force, ct: ct);

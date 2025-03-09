@@ -40,6 +40,14 @@ public static class YouTubeConstants
                 Platform = EPlatform.YouTube,
                 EntityType = EEntityType.Playlist,
             };
+
+            public static readonly DataFetchDefinition ChannelVideos = new()
+            {
+                Source = FetchTypes.YtDlp.Source,
+                Type = FetchTypes.YtDlp.ChannelVideos,
+                Platform = EPlatform.YouTube,
+                EntityType = EEntityType.Author,
+            };
         }
     }
 
