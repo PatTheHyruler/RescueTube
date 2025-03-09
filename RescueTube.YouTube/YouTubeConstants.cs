@@ -49,6 +49,17 @@ public static class YouTubeConstants
                 EntityType = EEntityType.Author,
             };
         }
+
+        public static class YouTubeExplode
+        {
+            public static DataFetchDefinition Channel = new()
+            {
+                Source = FetchTypes.YouTubeExplode.Source,
+                Type = FetchTypes.YouTubeExplode.Channel,
+                Platform = EPlatform.YouTube,
+                EntityType = EEntityType.Author,
+            };
+        }
     }
 
     public static class FetchTypes

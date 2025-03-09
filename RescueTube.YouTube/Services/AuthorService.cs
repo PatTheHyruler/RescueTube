@@ -270,6 +270,8 @@ public class AuthorService : BaseYouTubeService
             .Include(a => a.AuthorImages!)
             .ThenInclude(ai => ai.Image!)
             .FirstAsync(cancellationToken: ct);
+        using var _ = _dataFetchContext.StartDataFetch(
+            YouTubeConstants.DataFetches.YouTubeExplode.Channel, author.IdOnPlatform);
         var newAuthorData = await TryFetchExtraYouTubeExplodeAuthorDataAsync(author.IdOnPlatform, ct);
         ServiceUow.EntityUpdateService.UpdateAuthor(author, newAuthorData, false, new()
         {

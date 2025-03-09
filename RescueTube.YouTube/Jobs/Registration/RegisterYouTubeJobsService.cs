@@ -28,8 +28,8 @@ public class RegisterYouTubeJobsService : BackgroundService
             "*/15 * * * * *"); // Every 15th second
         recurringJobManager.AddOrUpdate<FetchYouTubeExplodeAuthorDataJob>(
             "yt-fetch-ytexplode-author-data-recurring",
-            x => x.EnqueueYouTubeExplodeAuthorDataFetchesRecurring(default),
-            Cron.Daily);
+            x => x.FetchNextYouTubeExplodeAuthorDataAsync(default),
+            "*/15 * * * * *"); // Every 15th second
         recurringJobManager.AddOrUpdate<FetchVideoDataJob>(
             "yt-fetch-next-video-data-recurring",
             x => x.FetchNextVideoDataAsync(default),
