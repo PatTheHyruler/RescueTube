@@ -1,6 +1,7 @@
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RescueTube.Core.DataFetches.Jobs;
 
 namespace RescueTube.Core.Jobs.Registration;
 
@@ -13,10 +14,13 @@ public class RegisterBllJobsService : BackgroundService
         _serviceScopeFactory = serviceScopeFactory;
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var scope = _serviceScopeFactory.CreateAsyncScope();
+        await using var scope = _serviceScopeFactory.CreateAsyncScope();
+
         var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+
+        // TODO: Also remove old recurring jobs
         recurringJobManager.AddOrUpdate<EnqueueSubmissionsJob>(
             "enqueue-submissions-recurring",
             x => x.RunAsync(default),
@@ -39,6 +43,17 @@ public class RegisterBllJobsService : BackgroundService
         recurringJobManager.AddOrUpdate<UpdateImagesResolutionJob>("update-images-resolution-from-file",
             x => x.EnqueueAsync(default),
             Cron.Daily);
-        return Task.CompletedTask;
+
+        foreach (var workerIndex in Enumerable.Range(0, 10))
+        {
+            recurringJobManager.AddOrUpdate<ProcessNextDataFetchJob>(
+                $"core:process-next-data-fetch:{workerIndex}",
+                x => x.RunAsync(workerIndex, CancellationToken.None),
+                "*/15 * * * * *"); // Every 15th second
+        }
+        recurringJobManager.AddOrUpdate<ClearOldDataFetchContextEntriesJob>(
+            "clear-old-data-fetch-context-entries-recurring",
+            x => x.Run(CancellationToken.None),
+            "*/15 * * * *"); // Every 15th minute
     }
 }

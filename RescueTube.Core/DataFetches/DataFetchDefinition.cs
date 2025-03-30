@@ -1,8 +1,8 @@
 ﻿using RescueTube.Domain.Enums;
 
-namespace RescueTube.Domain;
+namespace RescueTube.Core.DataFetches;
 
-public readonly record struct DataFetchDefinition
+public record DataFetchDefinition
 {
     public required string Type { get; init; }
     public required string Source { get; init; }

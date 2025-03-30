@@ -3,6 +3,8 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.DataFetches;
+using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;

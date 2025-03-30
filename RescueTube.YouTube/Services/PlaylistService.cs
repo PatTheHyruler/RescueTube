@@ -2,6 +2,7 @@
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.DataFetches;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;

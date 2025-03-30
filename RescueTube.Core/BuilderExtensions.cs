@@ -1,6 +1,7 @@
 using RescueTube.Core.Utils.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Data.Mappers;
+using RescueTube.Core.DataFetches;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Registration;
 using RescueTube.Core.Services;
@@ -14,6 +15,9 @@ public static class BuilderExtensions
     {
         services.AddOptionsFull<AppPathOptions>(AppPathOptions.Section);
         services.AddSingleton<AppPaths>();
+
+        services.AddSingleton<DataFetchJobContext>();
+        services.AddOptions<DataFetchJobsConfiguration>();
 
         services.AddSingleton<DataFetchContext>();
 

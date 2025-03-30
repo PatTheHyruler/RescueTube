@@ -1,8 +1,9 @@
 ﻿using System.Linq.Expressions;
 using LinqKit;
 using RescueTube.Core.Data.Specifications;
+using RescueTube.Core.DataFetches;
+using RescueTube.Core.Jobs;
 using RescueTube.Core.Services;
-using RescueTube.Domain;
 using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Entities;
 
@@ -30,6 +31,18 @@ public class DataFetchSpecification : IDataFetchSpecification
                 || (!d.Success && d.OccurredAt > failureCutoff)
             );
     }
+
+    public Expression<Func<Author, bool>> ShouldFetchAuthorData(DataFetchJobDefinition dataFetchJobDefinition)
+    {
+        return a =>
+            AuthorIsActiveAndConfiguredForVideoArchival.Invoke(a)
+            && ShouldFetchData<Author>(dataFetchJobDefinition).Invoke(a);
+    }
+
+    private static Expression<Func<Author, bool>> AuthorIsActiveAndConfiguredForVideoArchival => a =>
+        a.ArchivalSettingsId != null
+        && a.ArchivalSettings!.Active
+        && a.ArchivalSettings!.ArchiveVideos;
 
     public Expression<Func<TEntity, bool>> ShouldFetchData<TEntity>(DataFetchJobDefinition dataFetchJobDefinition)
         where TEntity : IIdDatabaseEntity, IPlatformEntity, IFetchable

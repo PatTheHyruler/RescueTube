@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data.Extensions;
+using RescueTube.Core.DataFetches;
 using RescueTube.Core.Events;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;

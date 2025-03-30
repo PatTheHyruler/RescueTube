@@ -1,8 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using RescueTube.Domain;
 
-namespace RescueTube.Core.Services;
+namespace RescueTube.Core.DataFetches;
 
 public class DataFetchContext
 {

@@ -46,7 +46,7 @@ public class DownloadVideoJob
     {
         if (await _storageLimitService.IsVideoDownloadForbiddenAsync(ct))
         {
-            _logger.LogWarning("Skipping video download, storage limit reached.");
+            _logger.LogWarning("Skipping video download, storage limit reached");
             return;
         }
 
@@ -72,7 +72,7 @@ public class DownloadVideoJob
         // TODO: Use DataFetchContext here instead?
         if (!DownloadingVideoIds.TryAdd(video.Id, _timeProvider.GetUtcNow()))
         {
-            _logger.LogError("Video {VideoId} is already downloading.", video.Id);
+            _logger.LogError("Video {VideoId} is already downloading", video.Id);
             return;
         }
 
@@ -81,7 +81,7 @@ public class DownloadVideoJob
             var platformVideoDownloadService = _serviceProvider.GetRequiredKeyedService<IPlatformVideoDownloadService>(video.Platform);
             if (platformVideoDownloadService.IsLikelyThrottled())
             {
-                _logger.LogInformation("Skipping video download due to likely throttling.");
+                _logger.LogInformation("Skipping video download due to likely throttling");
                 return;
             }
 
@@ -135,7 +135,7 @@ public class DownloadVideoJob
         {
             if (!DownloadingVideoIds.TryRemove(video.Id, out _))
             {
-                _logger.LogError("Video {VideoId} download wasn't tracked at end of download.", video.Id);
+                _logger.LogError("Video {VideoId} download wasn't tracked at end of download", video.Id);
             }
         }
     }

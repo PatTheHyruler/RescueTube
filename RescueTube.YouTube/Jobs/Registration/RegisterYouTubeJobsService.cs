@@ -22,22 +22,6 @@ public class RegisterYouTubeJobsService : BackgroundService
             "yt-update-ytdlp-binary",
             x => x.UpdateYouTubeDlAsync(),
             Cron.Daily);
-        recurringJobManager.AddOrUpdate<FetchAuthorVideosJob>(
-            "yt-fetch-next-channel-videos-recurring",
-            x => x.FetchNextChannelVideosAsync(default),
-            "*/15 * * * * *"); // Every 15th second
-        recurringJobManager.AddOrUpdate<FetchYouTubeExplodeAuthorDataJob>(
-            "yt-fetch-ytexplode-author-data-recurring",
-            x => x.FetchNextYouTubeExplodeAuthorDataAsync(default),
-            "*/15 * * * * *"); // Every 15th second
-        recurringJobManager.AddOrUpdate<FetchVideoDataJob>(
-            "yt-fetch-next-video-data-recurring",
-            x => x.FetchNextVideoDataAsync(default),
-            "*/15 * * * * *"); // Every 15th second
-        recurringJobManager.AddOrUpdate<FetchPlaylistDataJob>(
-            "yt-fetch-next-playlist-data-recurring",
-            x => x.FetchNextPlaylistDataAsync(default),
-            "*/15 * * * * *"); // Every 15th second
 
         return Task.CompletedTask;
     }

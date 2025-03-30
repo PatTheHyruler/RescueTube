@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data.Extensions;
+using RescueTube.Core.DataFetches;
 using RescueTube.Core.Events;
 using RescueTube.Core.Mediator;
 using RescueTube.Core.Services;
@@ -50,11 +51,6 @@ public class AuthorService : BaseYouTubeService
                 && df.Type == YouTubeConstants.FetchTypes.YtDlp.ChannelVideos
                 && df.OccurredAt > latestAllowedVideosFetchTime);
     }
-
-    public static Expression<Func<Author, bool>> AuthorIsActiveAndConfiguredForVideoArchival => a =>
-        a.ArchivalSettingsId != null
-        && a.ArchivalSettings!.Active
-        && a.ArchivalSettings!.ArchiveVideos;
 
     public async Task TryFetchAuthorVideosAsync(Guid authorId, bool force, CancellationToken ct = default)
     {

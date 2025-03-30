@@ -1,4 +1,4 @@
-﻿using RescueTube.Domain;
+﻿using RescueTube.Core.DataFetches;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Contracts;

@@ -3,11 +3,14 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.DataFetches;
+using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.EventHandlers;
 using RescueTube.YouTube.Jobs;
+using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Jobs.Registration;
 using RescueTube.YouTube.Services;
 using YoutubeDLSharp;
@@ -70,6 +73,34 @@ public static class Setup
 
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
         services.AddHostedService<RegisterYouTubeJobsService>();
+
+        services.Configure<DataFetchJobsConfiguration>(c => c.RegisterJobs(
+            new DataFetchJobDefinition<FetchPlaylistDataJob>
+            {
+                DataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.Playlist,
+                SuccessCutoffOffset = TimeSpan.FromDays(5),
+                FailureCutoffOffset = TimeSpan.FromDays(1),
+            },
+            new DataFetchJobDefinition<FetchVideoDataJob>
+            {
+                DataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.VideoPage,
+                SuccessCutoffOffset = TimeSpan.FromDays(10),
+                FailureCutoffOffset = TimeSpan.FromDays(12),
+            },
+            new DataFetchJobDefinition<FetchYouTubeExplodeAuthorDataJob>
+            {
+                DataFetchDefinition = YouTubeConstants.DataFetches.YouTubeExplode.Channel,
+                SuccessCutoffOffset = TimeSpan.FromDays(10),
+                FailureCutoffOffset = TimeSpan.FromDays(1),
+                Priority = -10,
+            },
+            new DataFetchJobDefinition<FetchAuthorVideosJob>
+            {
+                DataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.ChannelVideos,
+                SuccessCutoffOffset = AuthorService.LatestAllowedVideosFetchOffset,
+                FailureCutoffOffset = AuthorService.LatestAllowedVideosFetchOffset,
+            }
+        ));
     }
 
     public static void SetupYouTube(this WebApplication app)
