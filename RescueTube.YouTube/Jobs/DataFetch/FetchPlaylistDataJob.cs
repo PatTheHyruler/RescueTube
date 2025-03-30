@@ -1,26 +1,37 @@
-﻿using RescueTube.Core.Data;
+﻿using System.Linq.Expressions;
+using Microsoft.Extensions.Logging;
+using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
-using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.YouTube.Jobs.DataFetch;
 
-public class FetchPlaylistDataJob : IEntityDataFetchJob
+public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist>
 {
-    private readonly IDataUow _dataUow;
     private readonly YouTubeUow _youTubeUow;
 
-    public FetchPlaylistDataJob(IDataUow dataUow, YouTubeUow youTubeUow)
+    public FetchPlaylistDataJob(IDataUow dataUow, YouTubeUow youTubeUow, ILogger<FetchPlaylistDataJob> logger)
+        : base(dataUow, logger, JobDefinition.DataFetchDefinition)
     {
-        _dataUow = dataUow;
         _youTubeUow = youTubeUow;
     }
 
-    public async Task ExecuteEntityDataFetchAsync(Guid entityId, CancellationToken ct)
+    private static readonly DataFetchJobDefinition JobDefinition = new()
+    {
+        DataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.Playlist,
+        SuccessCutoffOffset = TimeSpan.FromDays(5),
+        FailureCutoffOffset = TimeSpan.FromDays(1),
+    };
+
+    protected override Expression<Func<Playlist, bool>> FilterExpression =>
+        DataUow.DataFetches.ShouldFetchPlaylistData(JobDefinition);
+
+    protected override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeUow.PlaylistService.UpdatePlaylistAsync(entityId, ct);
-        await _dataUow.SaveChangesAsync(ct);
+        await DataUow.SaveChangesAsync(ct);
         transaction.Complete();
     }
 }

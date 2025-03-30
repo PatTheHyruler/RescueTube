@@ -1,7 +1,7 @@
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RescueTube.Core.DataFetches.Jobs;
+using RescueTube.Core.JobOrchestration.Jobs;
 
 namespace RescueTube.Core.Jobs.Registration;
 
@@ -46,12 +46,12 @@ public class RegisterBllJobsService : BackgroundService
 
         foreach (var workerIndex in Enumerable.Range(0, 10))
         {
-            recurringJobManager.AddOrUpdate<ProcessNextDataFetchJob>(
+            recurringJobManager.AddOrUpdate<ProcessNextPullingJob>(
                 $"core:process-next-data-fetch:{workerIndex}",
                 x => x.RunAsync(workerIndex, CancellationToken.None),
                 "*/15 * * * * *"); // Every 15th second
         }
-        recurringJobManager.AddOrUpdate<ClearOldDataFetchContextEntriesJob>(
+        recurringJobManager.AddOrUpdate<ClearOldJobExecutionStatsJob>(
             "clear-old-data-fetch-context-entries-recurring",
             x => x.Run(CancellationToken.None),
             "*/15 * * * *"); // Every 15th minute

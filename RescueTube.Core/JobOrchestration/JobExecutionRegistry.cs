@@ -1,11 +1,11 @@
 using System.Collections.Concurrent;
 
-namespace RescueTube.Core.DataFetches;
+namespace RescueTube.Core.JobOrchestration;
 
-public class DataFetchJobContext
+public class JobExecutionRegistry
 {
     public ConcurrentDictionary<
-        DataFetchDefinition,
+        JobDefinition,
         ConcurrentDictionary<Guid, JobInvocationInfo>
     > StartedJobs { get; } = [];
 

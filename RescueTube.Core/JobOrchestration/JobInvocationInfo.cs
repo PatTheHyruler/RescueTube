@@ -1,4 +1,4 @@
-namespace RescueTube.Core.DataFetches;
+namespace RescueTube.Core.JobOrchestration;
 
 public record JobInvocationInfo
 {
