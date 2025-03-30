@@ -25,8 +25,9 @@ public class DownloadVideoJob
     private readonly TimeProvider _timeProvider;
     private readonly AppPaths _appPaths;
     private readonly IMediator _mediator;
+    private readonly ServiceRegistry _serviceRegistry;
 
-    public DownloadVideoJob(ILogger<DownloadVideoJob> logger, StorageLimitService storageLimitService, IDataUow dataUow, IServiceProvider serviceProvider, TimeProvider timeProvider, AppPaths appPaths, IMediator mediator)
+    public DownloadVideoJob(ILogger<DownloadVideoJob> logger, StorageLimitService storageLimitService, IDataUow dataUow, IServiceProvider serviceProvider, TimeProvider timeProvider, AppPaths appPaths, IMediator mediator, ServiceRegistry serviceRegistry)
     {
         _logger = logger;
         _storageLimitService = storageLimitService;
@@ -35,6 +36,7 @@ public class DownloadVideoJob
         _timeProvider = timeProvider;
         _appPaths = appPaths;
         _mediator = mediator;
+        _serviceRegistry = serviceRegistry;
     }
 
     private static readonly ConcurrentDictionary<Guid, DateTimeOffset> DownloadingVideoIds = new();
@@ -51,7 +53,9 @@ public class DownloadVideoJob
         }
 
         var downloadingVideoIds = DownloadingVideoIds.Keys.ToImmutableHashSet();
+        var supportedPlatforms = _serviceRegistry.GetSupportedPlatforms<IPlatformVideoDownloadService>().AsEnumerable();
         var video = await _dataUow.Ctx.Videos
+            .Where(v => supportedPlatforms.Contains(v.Platform))
             .Where(v => v.VideoFiles!.Count == 0)
             .Where(v => v.DataFetches!
                 .Where(d =>

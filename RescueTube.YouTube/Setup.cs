@@ -3,8 +3,8 @@ using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using RescueTube.Core;
 using RescueTube.Core.Contracts;
-using RescueTube.Core.DataFetches;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
@@ -43,7 +43,7 @@ public static class Setup
 
         services.AddScoped<SubmitService>();
         services.AddScoped<VideoService>();
-        services.AddKeyedScoped<IPlatformVideoDownloadService, VideoDownloadService>(EPlatform.YouTube);
+        services.AddPlatformVideoDownloadService<VideoDownloadService>(EPlatform.YouTube);
         services.AddScoped<PlaylistService>();
         services.AddScoped<AuthorService>();
         services.AddScoped<CommentService>();
