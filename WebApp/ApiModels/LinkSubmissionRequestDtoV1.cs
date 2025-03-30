@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RescueTube.Domain.Enums;
 
 namespace WebApp.ApiModels;
 

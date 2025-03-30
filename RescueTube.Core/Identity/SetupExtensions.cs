@@ -1,5 +1,4 @@
 using System.Text;
-using RescueTube.Core.Utils.Validation;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RescueTube.Core.Identity.Options;
 using RescueTube.Core.Identity.Services;
+using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Entities.Identity;
 
 namespace RescueTube.Core.Identity;

@@ -1,4 +1,3 @@
-using RescueTube.Core.Utils.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data.Mappers;
@@ -8,6 +7,7 @@ using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Registration;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
+using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core;

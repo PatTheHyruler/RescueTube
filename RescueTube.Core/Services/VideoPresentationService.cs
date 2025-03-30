@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using RescueTube.Core.Identity.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
@@ -9,6 +8,7 @@ using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.Data.Specifications;
 using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.DTO.Enums;
+using RescueTube.Core.Identity.Services;
 using RescueTube.Core.Utils.Pagination;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;

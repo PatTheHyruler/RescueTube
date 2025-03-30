@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using RescueTube.Core.Utils;
-using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Services;
 

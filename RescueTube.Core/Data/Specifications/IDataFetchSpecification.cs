@@ -1,7 +1,5 @@
 ﻿using System.Linq.Expressions;
 using RescueTube.Core.DataFetches;
-using RescueTube.Core.Jobs;
-using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Data.Specifications;

@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
-using RescueTube.Core.Utils;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Base;
 using RescueTube.Core.Data;
+using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.ExpressionUtils;
 using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Entities;
