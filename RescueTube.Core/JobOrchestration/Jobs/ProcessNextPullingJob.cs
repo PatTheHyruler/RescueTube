@@ -22,7 +22,7 @@ public class ProcessNextPullingJob
         _jobExecutionRegistry = jobExecutionRegistry;
     }
 
-    [SkipConcurrent("core:process-next-data-fetch:{0}")]
+    [SkipConcurrent("core:process-next-pulling-job:{0}")]
     [AutomaticRetry(Attempts = 0)]
     public async Task RunAsync(int workerIndex, CancellationToken ct)
     {
@@ -34,7 +34,7 @@ public class ProcessNextPullingJob
         }
         try
         {
-            await ProcessNextDataFetchAsync(ct);
+            await ProcessNextJobAsync(ct);
         }
         finally
         {
@@ -46,7 +46,7 @@ public class ProcessNextPullingJob
         }
     }
 
-    private async Task ProcessNextDataFetchAsync(CancellationToken ct)
+    private async Task ProcessNextJobAsync(CancellationToken ct)
     {
         var jobDefinition = GetNextJobDefinition();
         if (jobDefinition is null)
