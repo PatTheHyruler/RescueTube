@@ -64,10 +64,11 @@ public class ProcessNextPullingJob
             _jobExecutionRegistry.StartedJobs.GetOrAdd(jobDefinition, [])[jobId] = new JobInvocationInfo(_timeProvider.GetUtcNow());
 
             var job = jobDefinition.GetJob(_serviceProvider);
+            _logger.LogInformation("Executing job {JobType}", job.GetType().FullName);
             var result = await job.RunAsync(ct);
             if (result == JobExecutionResult.NothingToProcess)
             {
-                // TODO: Defer next job execution?
+                // TODO: Defer next job execution? Handle other result types?
             }
         }
         finally
