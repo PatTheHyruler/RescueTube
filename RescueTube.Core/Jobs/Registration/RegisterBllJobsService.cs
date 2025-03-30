@@ -47,12 +47,12 @@ public class RegisterBllJobsService : BackgroundService
         foreach (var workerIndex in Enumerable.Range(0, 10))
         {
             recurringJobManager.AddOrUpdate<ProcessNextPullingJob>(
-                $"core:process-next-data-fetch:{workerIndex}",
+                $"core:process-next-pulling-job:{workerIndex}",
                 x => x.RunAsync(workerIndex, CancellationToken.None),
                 "*/15 * * * * *"); // Every 15th second
         }
         recurringJobManager.AddOrUpdate<ClearOldJobExecutionStatsJob>(
-            "clear-old-data-fetch-context-entries-recurring",
+            "clear-old-job-execution-stats-recurring",
             x => x.Run(CancellationToken.None),
             "*/15 * * * *"); // Every 15th minute
     }
