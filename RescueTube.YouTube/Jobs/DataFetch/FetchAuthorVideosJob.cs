@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using LinqKit;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
@@ -26,7 +27,8 @@ public class FetchAuthorVideosJob : EntityDataFetchJobBase<Author>
     };
 
     protected override Expression<Func<Author, bool>> FilterExpression =>
-        DataUow.DataFetches.ShouldFetchAuthorData(JobDefinition);
+        DataUow.DataFetches.ShouldFetchAuthorData(JobDefinition)
+            .And(DataUow.DataFetches.AuthorIsActiveAndConfiguredForVideoArchival);
 
     protected override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {

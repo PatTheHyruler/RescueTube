@@ -20,9 +20,7 @@ public class DataFetchSpecification : IDataFetchSpecification
 
     public Expression<Func<Author, bool>> ShouldFetchAuthorData(DataFetchJobDefinition jobDefinition)
     {
-        return a =>
-            AuthorIsActiveAndConfiguredForVideoArchival.Invoke(a)
-            && ShouldFetchData<Author>(jobDefinition).Invoke(a);
+        return a => ShouldFetchData<Author>(jobDefinition).Invoke(a);
     }
 
     public Expression<Func<Playlist, bool>> ShouldFetchPlaylistData(DataFetchJobDefinition jobDefinition)
@@ -35,7 +33,7 @@ public class DataFetchSpecification : IDataFetchSpecification
         return ShouldFetchData<Video>(jobDefinition);
     }
 
-    private static Expression<Func<Author, bool>> AuthorIsActiveAndConfiguredForVideoArchival => a =>
+    public Expression<Func<Author, bool>> AuthorIsActiveAndConfiguredForVideoArchival => a =>
         a.ArchivalSettingsId != null
         && a.ArchivalSettings!.Active
         && a.ArchivalSettings!.ArchiveVideos;
