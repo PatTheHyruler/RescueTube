@@ -31,13 +31,14 @@ public abstract class EntityDataFetchJobBase<TEntity> : IJob
 
     public async Task<JobExecutionResult> RunAsync(CancellationToken ct)
     {
-        var entityId = await DataUow.Ctx.Set<TEntity>()
+        var entityIds = await DataUow.Ctx.Set<TEntity>()
             .AsExpandable()
             .Where(FilterExpression)
             .OrderBy(x => x.Id)
             .Select(x => x.Id)
-            .FirstOrDefaultAsync(ct);
-        if (entityId == Guid.Empty)
+            .Take(2)
+            .ToArrayAsync(ct);
+        if (entityIds is not [var entityId, .. var nextIds])
         {
             return JobExecutionResult.NothingToProcess;
         }
@@ -47,7 +48,7 @@ public abstract class EntityDataFetchJobBase<TEntity> : IJob
             DataFetchDefinition.Type, DataFetchDefinition.Source, DataFetchDefinition.Platform,
             DataFetchDefinition.EntityType, entityId);
         await FetchEntityDataAsync(entityId, ct);
-        return JobExecutionResult.Succeeded;
+        return nextIds.Length != 0 ? JobExecutionResult.HasMoreToProcess : JobExecutionResult.Succeeded;
     }
 
     protected abstract Expression<Func<TEntity, bool>> FilterExpression { get; }

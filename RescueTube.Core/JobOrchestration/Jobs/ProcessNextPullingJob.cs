@@ -66,14 +66,11 @@ public class ProcessNextPullingJob
             var job = jobDefinition.GetJob(_serviceProvider);
             _logger.LogInformation("Executing job {JobType}", job.GetType().FullName);
             var result = await job.RunAsync(ct);
-            if (result == JobExecutionResult.NothingToProcess)
-            {
-                // TODO: Defer next job execution? Handle other result types?
-            }
+            _jobExecutionRegistry.StartedJobs[jobDefinition][jobId].MarkFinished(_timeProvider.GetUtcNow(), result);
         }
-        finally
+        catch
         {
-            _jobExecutionRegistry.StartedJobs[jobDefinition][jobId].MarkFinished(_timeProvider.GetUtcNow());
+            _jobExecutionRegistry.StartedJobs[jobDefinition][jobId].MarkFinished(_timeProvider.GetUtcNow(), JobExecutionResult.Errored);
         }
     }
 
@@ -90,8 +87,8 @@ public class ProcessNextPullingJob
 
     private int GetJobPriority(JobDefinition jobDefinition)
     {
-        var invocations = _jobExecutionRegistry.StartedJobs.GetOrAdd(jobDefinition, []);
-        var runningInvocationsCount = invocations.Values.Count(i => i.IsRunning);
+        var invocations = _jobExecutionRegistry.StartedJobs.GetOrAdd(jobDefinition, []).Values;
+        var runningInvocationsCount = invocations.Count(i => i.IsRunning);
 
         var maxInvocationsRank = jobDefinition.PreferredMaxConcurrentExecutions - runningInvocationsCount;
         if (maxInvocationsRank <= 0)
@@ -109,10 +106,34 @@ public class ProcessNextPullingJob
 
         result += jobDefinition.Priority * 64;
 
+        var erroredCount = invocations.Count(x => x is { IsRunning: false, Result: JobExecutionResult.Errored });
+        var totalCount = invocations.Count(x => !x.IsRunning);
+        if (totalCount > 0 && (float)erroredCount / totalCount > 0.9)
+        {
+            return int.MinValue;
+        }
+
+        var previousExecutionInfo = invocations
+            .Where(x => !x.IsRunning)
+            .OrderByDescending(x => x.FinishedAt)
+            .FirstOrDefault();
+        if (previousExecutionInfo is not null)
+        {
+            switch (previousExecutionInfo.Result)
+            {
+                case JobExecutionResult.NothingToProcess
+                    when previousExecutionInfo.FinishedAt > _timeProvider.GetUtcNow().AddSeconds(-60):
+                    return int.MinValue;
+                case JobExecutionResult.HasMoreToProcess:
+                    result += 64;
+                    break;
+            }
+        }
+
         var now = _timeProvider.GetUtcNow();
         var resourceUsageTimespan = TimeSpan.FromMinutes(5);
         var timeUsageFairnessCutoff = now.Subtract(resourceUsageTimespan);
-        var resourceUsageStatistics = invocations.Values
+        var resourceUsageStatistics = invocations
             .Where(i => i.StartedAt > timeUsageFairnessCutoff)
             .Select(i => (i.FinishedAt ?? now) - i.StartedAt)
             .Aggregate((UsedTime: TimeSpan.Zero, Count: 0),

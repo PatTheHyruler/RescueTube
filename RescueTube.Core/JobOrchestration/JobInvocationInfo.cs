@@ -7,7 +7,7 @@ public record JobInvocationInfo
         StartedAt = startedAt;
     }
 
-    public void MarkFinished(DateTimeOffset finishedAt)
+    public void MarkFinished(DateTimeOffset finishedAt, JobExecutionResult result)
     {
         if (FinishedAt is not null)
         {
@@ -15,10 +15,13 @@ public record JobInvocationInfo
         }
         ArgumentOutOfRangeException.ThrowIfLessThan(finishedAt, StartedAt);
         FinishedAt = finishedAt;
+        Result = result;
     }
 
     public DateTimeOffset StartedAt { get; }
     public DateTimeOffset? FinishedAt { get; private set; }
+
+    public JobExecutionResult? Result { get; private set; }
 
     public bool IsRunning => FinishedAt is null;
 }
