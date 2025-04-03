@@ -1,11 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using RescueTube.Core.Data.Extensions.Identity;
-using RescueTube.Core.DTO.Mappers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using RescueTube.Core.Data.Extensions.Identity;
 using RescueTube.Core.DTO.Entities.Identity;
+using RescueTube.Core.DTO.Mappers;
 using RescueTube.Core.Identity.Exceptions;
 using RescueTube.Core.Identity.Options;
 

@@ -1,8 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
-using RescueTube.Core;
-using RescueTube.Core.Identity;
 using Hangfire;
 using Hangfire.Console;
 using Hangfire.Console.Extensions;
@@ -12,12 +10,13 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using RescueTube.Core;
 using RescueTube.Core.Data;
+using RescueTube.Core.Identity;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils;
 using RescueTube.DAL.EF.MigrationUtils;
 using RescueTube.DAL.EF.Postgres;
-using RescueTube.Jobs.DAL.Postgres;
 using RescueTube.YouTube;
 using Serilog;
 using Serilog.Settings.Configuration;
@@ -57,7 +56,7 @@ builder.Services.AddHangfire(configuration => configuration
         GetHangfireConnectionString(builder))
     )
     .UseConsole()
-).AddHangfirePostgresStorageAccessor(GetHangfireConnectionString(builder));
+);
 builder.Services.AddHangfireServer(options =>
 {
     options.Queues = JobQueues.Queues;

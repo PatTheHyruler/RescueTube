@@ -1,10 +1,10 @@
 ﻿using Asp.Versioning;
-using RescueTube.Core.Identity;
-using RescueTube.Core.Identity.Exceptions;
-using RescueTube.Core.Identity.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RescueTube.Core.Identity;
+using RescueTube.Core.Identity.Exceptions;
+using RescueTube.Core.Identity.Services;
 using RescueTube.Core.Utils;
 using Swashbuckle.AspNetCore.Annotations;
 using WebApp.ApiModels;

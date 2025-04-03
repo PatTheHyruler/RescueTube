@@ -2,6 +2,7 @@
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.DataFetches;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
@@ -14,8 +15,11 @@ namespace RescueTube.YouTube.Services;
 
 public class PlaylistService : BaseYouTubeService
 {
-    public PlaylistService(IServiceProvider services, ILogger<BaseYouTubeService> logger) : base(services, logger)
+    private readonly DataFetchContext _dataFetchContext;
+
+    public PlaylistService(IServiceProvider services, ILogger<PlaylistService> logger, DataFetchContext dataFetchContext) : base(services, logger)
     {
+        _dataFetchContext = dataFetchContext;
     }
 
     private async Task<VideoData?> FetchPlaylistDataYtdlAsync(string id, CancellationToken ct = default)
@@ -29,18 +33,24 @@ public class PlaylistService : BaseYouTubeService
         return playlistResult.Data;
     }
 
-    public async Task<Playlist?> AddOrUpdatePlaylistAsync(Guid id, CancellationToken ct = default)
+    public async Task UpdatePlaylistAsync(Guid id, CancellationToken ct = default)
     {
         var idOnPlatform = await DbCtx.Playlists
-            .Where(p => p.Id == id)
+            .Where(p => p.Id == id && p.Platform == EPlatform.YouTube)
             .Select(p => p.IdOnPlatform)
             .FirstAsync(ct);
-        return await AddOrUpdatePlaylistAsync(idOnPlatform, ct);
+        if (_dataFetchContext.IsFetching(YouTubeConstants.DataFetches.YtDlp.Playlist, idOnPlatform))
+        {
+            Logger.LogInformation("Already fetching {Platform} playlist {PlaylistIdOnPlatform}, skipping duplicate fetch", EPlatform.YouTube, idOnPlatform);
+            return;
+        }
+        await AddOrUpdatePlaylistAsync(idOnPlatform, ct); // TODO: add failed data fetch
     }
 
-    public async Task<Playlist?> AddOrUpdatePlaylistAsync(string id, CancellationToken ct = default)
+    public async Task<Playlist?> AddOrUpdatePlaylistAsync(string idOnPlatform, CancellationToken ct = default)
     {
-        var playlistData = await FetchPlaylistDataYtdlAsync(id, ct);
+        using var _ = _dataFetchContext.StartDataFetch(YouTubeConstants.DataFetches.YtDlp.Playlist, idOnPlatform);
+        var playlistData = await FetchPlaylistDataYtdlAsync(idOnPlatform, ct);
         return playlistData == null
             ? null
             : await AddOrUpdatePlaylistAsync(playlistData, YouTubeConstants.FetchTypes.YtDlp.Playlist, ct);
@@ -82,10 +92,9 @@ public class PlaylistService : BaseYouTubeService
             .Select(df => df.OccurredAt)
             .OrderDescending()
             .FirstOrDefault() ?? DateTimeOffset.UtcNow;
-        await UpdatePlaylistItems(playlist, playlistData, isNew, fetchTime, ct);
+        await UpdatePlaylistItemsAsync(playlist, playlistData, isNew, fetchTime, ct);
 
-        var author = await YouTubeUow.AuthorService.AddOrGetAuthor(
-            playlistData, YouTubeConstants.FetchTypes.YtDlp.Playlist, ct);
+        var author = await YouTubeUow.AuthorService.AddOrGetAuthor(playlistData, fetchType, ct);
         playlist.Creator = author;
         playlist.CreatorId = author.Id;
 
@@ -97,7 +106,7 @@ public class PlaylistService : BaseYouTubeService
         return playlist;
     }
 
-    private async Task UpdatePlaylistItems(Playlist playlist, VideoData playlistData,
+    private async Task UpdatePlaylistItemsAsync(Playlist playlist, VideoData playlistData,
         bool isNew, DateTimeOffset fetchTime, CancellationToken ct)
     {
         var previousPlaylistItems =

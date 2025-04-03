@@ -1,13 +1,16 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using RescueTube.Core;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.EventHandlers;
-using RescueTube.YouTube.Jobs;
+using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Jobs.Registration;
 using RescueTube.YouTube.Services;
 using YoutubeDLSharp;
@@ -18,7 +21,7 @@ public static class Setup
 {
     private static async Task AddExecutePermission(string filePath)
     {
-        var process = new System.Diagnostics.Process();
+        var process = new Process();
         const string bashFileName = "/bin/bash";
 
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && File.Exists(bashFileName))
@@ -40,7 +43,7 @@ public static class Setup
 
         services.AddScoped<SubmitService>();
         services.AddScoped<VideoService>();
-        services.AddScoped<VideoDownloadService>();
+        services.AddPlatformVideoDownloadService<VideoDownloadService>(EPlatform.YouTube);
         services.AddScoped<PlaylistService>();
         services.AddScoped<AuthorService>();
         services.AddScoped<CommentService>();
@@ -50,7 +53,7 @@ public static class Setup
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
         services.AddScoped<IPlatformPresentationHandler, PresentationHandler>();
 
-        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<SubmissionAddedEventHandler>(); });
+        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<VideoAddedCommentFetchHandler>(); });
 
         services.AddScoped(s =>
         {
@@ -68,11 +71,18 @@ public static class Setup
             };
         });
 
-        services.AddScoped<DownloadVideoJob>();
-        services.AddScoped<FetchCommentsJob>();
-        services.AddScoped<HandleSubmissionJob>();
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
         services.AddHostedService<RegisterYouTubeJobsService>();
+
+        services.Configure<JobsConfiguration>(c => c.RegisterJobs(
+            new JobDefinition<FetchPlaylistDataJob>(),
+            new JobDefinition<FetchVideoDataJob>(),
+            new JobDefinition<FetchYouTubeExplodeAuthorDataJob>
+            {
+                Priority = -10,
+            },
+            new JobDefinition<FetchAuthorVideosJob>()
+        ));
     }
 
     public static void SetupYouTube(this WebApplication app)

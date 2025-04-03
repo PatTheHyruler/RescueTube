@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace RescueTube.Core.Utils.ExpressionUtils;
+﻿namespace RescueTube.Core.Utils.ExpressionUtils;
 
 public record ScopedVariable<T>(T Value)
 {

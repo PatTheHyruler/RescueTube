@@ -1,5 +1,5 @@
-using RescueTube.Core.Identity.Services;
 using Hangfire.Dashboard;
+using RescueTube.Core.Identity.Services;
 
 namespace WebApp.Auth;
 

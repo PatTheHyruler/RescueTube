@@ -1,10 +1,14 @@
-using RescueTube.Core.Utils.Validation;
 using Microsoft.Extensions.DependencyInjection;
+using RescueTube.Core.Contracts;
 using RescueTube.Core.Data.Mappers;
+using RescueTube.Core.DataFetches;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Jobs.Registration;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
+using RescueTube.Core.Utils.Validation;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core;
 
@@ -14,6 +18,13 @@ public static class BuilderExtensions
     {
         services.AddOptionsFull<AppPathOptions>(AppPathOptions.Section);
         services.AddSingleton<AppPaths>();
+
+        services.AddSingleton<JobExecutionRegistry>();
+        services.AddOptions<JobsConfiguration>();
+
+        services.AddSingleton<ServiceRegistry>();
+
+        services.AddSingleton<DataFetchContext>();
 
         services.AddScoped<ServiceUow>();
 
@@ -41,6 +52,14 @@ public static class BuilderExtensions
 
         services.AddHostedService<RegisterBllJobsService>();
 
+        return services;
+    }
+
+    public static IServiceCollection AddPlatformVideoDownloadService<TService>(this IServiceCollection services, EPlatform platform)
+        where TService : class, IPlatformVideoDownloadService
+    {
+        services.AddKeyedScoped<IPlatformVideoDownloadService, TService>(platform);
+        services.Configure<ServiceRegistry>(r => r.Register<IPlatformVideoDownloadService>(platform));
         return services;
     }
 }

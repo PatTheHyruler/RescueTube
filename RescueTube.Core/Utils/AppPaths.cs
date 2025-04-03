@@ -21,6 +21,9 @@ public class AppPaths
     public string GetVideosDirectory(EPlatform platform) =>
         Path.Combine(_options.Downloads, Videos, platform.ToString());
 
+    public string GetVideosBaseDirectory() =>
+        Path.Combine(_options.Downloads, Videos);
+
     public string GetImagesDirectory(EPlatform platform) =>
         Path.Combine(_options.Downloads, Images, platform.ToString());
 

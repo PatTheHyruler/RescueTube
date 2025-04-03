@@ -6,4 +6,14 @@ public static class LinqExtensions
     {
         return source.Where(x => x is not null).Cast<T>();
     }
+
+    public static IEnumerable<T?> AsNullable<T>(this IEnumerable<T> source) where T : struct
+    {
+        return source.Cast<T?>();
+    }
+
+    public static IEnumerable<T> TakeWhileNotCancelled<T>(this IEnumerable<T> source, CancellationToken ct)
+    {
+        return source.TakeWhile(_ => !ct.IsCancellationRequested);
+    }
 }

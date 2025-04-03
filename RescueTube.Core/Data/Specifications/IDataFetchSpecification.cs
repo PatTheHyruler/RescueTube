@@ -1,10 +1,13 @@
 ﻿using System.Linq.Expressions;
+using RescueTube.Core.DataFetches;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Data.Specifications;
 
 public interface IDataFetchSpecification
 {
-    Expression<Func<DataFetch, bool>> IsTooRecent(
-        string source, string type, DateTimeOffset successCutoff, DateTimeOffset failureCutoff);
+    public Expression<Func<Author, bool>> ShouldFetchAuthorData(DataFetchJobDefinition jobDefinition);
+    public Expression<Func<Author, bool>> AuthorIsActiveAndConfiguredForVideoArchival { get; }
+    public Expression<Func<Playlist, bool>> ShouldFetchPlaylistData(DataFetchJobDefinition jobDefinition);
+    public Expression<Func<Video, bool>> ShouldFetchVideoData(DataFetchJobDefinition jobDefinition);
 }
