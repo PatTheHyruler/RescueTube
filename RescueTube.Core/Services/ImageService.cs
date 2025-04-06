@@ -12,12 +12,14 @@ public class ImageService : BaseService
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AppPaths _appPaths;
+    private readonly TimeProvider _timeProvider;
 
     public ImageService(IServiceProvider services, ILogger<ImageService> logger, IHttpClientFactory httpClientFactory,
-        AppPaths appPaths) : base(services, logger)
+        AppPaths appPaths, TimeProvider timeProvider) : base(services, logger)
     {
         _httpClientFactory = httpClientFactory;
         _appPaths = appPaths;
+        _timeProvider = timeProvider;
     }
 
     public async Task TryUpdateResolutionFromFileAsync(Guid imageId, CancellationToken ct)
@@ -32,7 +34,7 @@ public class ImageService : BaseService
     public async Task TryUpdateResolutionFromFileAsync(Image image, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(image.LocalFilePath)) return;
-        image.ResolutionParseAttemptedAt = DateTimeOffset.UtcNow;
+        image.ResolutionParseAttemptedAt = _timeProvider.GetUtcNow();
         try
         {
             var absolutePath = _appPaths.GetAbsolutePathFromDownloads(image.LocalFilePath);
@@ -46,19 +48,7 @@ public class ImageService : BaseService
         }
     }
 
-    public async Task UpdateImage(Guid imageId, CancellationToken ct)
-    {
-        var image = await DbCtx.Images
-            .Where(e => e.Id == imageId)
-            .Include(e => e.AuthorImages)
-            .Include(e => e.VideoImages)
-            .Include(e => e.PlaylistImages)
-            .AsSingleQuery()
-            .FirstAsync(ct);
-        await UpdateImage(image, ct);
-    }
-
-    public async Task UpdateImage(Image image, CancellationToken ct)
+    public async Task DownloadImageAsync(Image image, CancellationToken ct)
     {
         if (image.Url == null) return;
         using var httpClient = _httpClientFactory.CreateClient(); // TODO: should this be a class member instead?
@@ -119,7 +109,7 @@ public class ImageService : BaseService
         var fileNameBuilder = new StringBuilder()
             .Append(image.Url?.ToFileNameSanitized(100) ?? "NULL")
             .Append('_')
-            .Append(DateTimeOffset.UtcNow.Ticks)
+            .Append(_timeProvider.GetUtcNow().Ticks)
             .Append('_')
             .Append(Guid.NewGuid().ToString().Replace("-", ""));
         if (image.Ext != null)
@@ -159,7 +149,7 @@ public class ImageService : BaseService
         };
         DbCtx.Images.Add(newImage);
 
-        var currentTime = DateTimeOffset.UtcNow;
+        var currentTime = _timeProvider.GetUtcNow();
 
         if (image.VideoImages != null)
         {

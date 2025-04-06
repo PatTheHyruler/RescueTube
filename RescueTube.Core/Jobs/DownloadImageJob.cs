@@ -1,26 +1,50 @@
-using Hangfire;
-using RescueTube.Core.Jobs.Filters;
+using Microsoft.EntityFrameworkCore;
+using RescueTube.Core.Data;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 
 namespace RescueTube.Core.Jobs;
 
-public class DownloadImageJob
+public class DownloadImageJob : IJob
 {
     private readonly ImageService _imageService;
+    private readonly IDataUow _dataUow;
 
-    public DownloadImageJob(ImageService imageService)
+    public DownloadImageJob(ImageService imageService, IDataUow dataUow)
     {
         _imageService = imageService;
+        _dataUow = dataUow;
     }
 
-    [SkipConcurrent("core:download-image:{0}")]
-    [Queue(JobQueues.LowerPriority)]
-    public async Task DownloadImage(Guid imageId, CancellationToken ct)
+    public async Task<JobExecutionResult> RunAsync(CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
-        await _imageService.UpdateImage(imageId, ct);
-        await _imageService.DataUow.SaveChangesAsync(ct);
+
+        var images = await _dataUow.Ctx.Images
+            .Where(i =>
+                    i.LocalFilePath == null
+                    && i.FailedFetchAttempts < 3
+                    && i.Url != null)
+            // TODO: Filter by entity image validity and entity settings?
+            .Include(i => i.AuthorImages)
+            .Include(i => i.VideoImages)
+            .Include(i => i.PlaylistImages)
+            .AsSingleQuery()
+            .Take(2)
+            .ToArrayAsync(ct);
+        if (images is not [var image, .. var nextImages])
+        {
+            return JobExecutionResult.NothingToProcess;
+        }
+
+        await _imageService.DownloadImageAsync(image, ct);
+
+        await _dataUow.SaveChangesAsync(ct);
         transaction.Complete();
+
+        return nextImages.Length != 0
+            ? JobExecutionResult.HasMoreToProcess
+            : JobExecutionResult.Succeeded;
     }
 }

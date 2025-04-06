@@ -44,11 +44,15 @@ public static class BuilderExtensions
 
         services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<SubmissionService>(); });
 
-        services.AddScoped<DownloadAuthorImagesJob>();
-        services.AddScoped<DownloadVideoImagesJob>();
-        services.AddScoped<DownloadImageJob>();
         services.AddScoped<SubmissionAddEntityAccessPermissionJob>();
         services.AddScoped<UpdateImagesResolutionJob>();
+        services.Configure<JobsConfiguration>(c => c.RegisterJobs(
+            new JobDefinition<DownloadImageJob>
+            {
+                Priority = -1,
+                PreferredMaxConcurrentExecutions = 10,
+            }
+        ));
 
         services.AddHostedService<RegisterBllJobsService>();
 
