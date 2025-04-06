@@ -25,14 +25,6 @@ public class RegisterBllJobsService : BackgroundService
             "enqueue-submissions-recurring",
             x => x.RunAsync(default),
             Cron.Hourly);
-        recurringJobManager.AddOrUpdate<DownloadVideoImagesJob>(
-            "download-all-not-downloaded-video-images", 
-            x => x.DownloadAllNotDownloadedVideoImages(default),
-            Cron.Daily);
-        recurringJobManager.AddOrUpdate<DownloadAuthorImagesJob>(
-            "download-all-not-downloaded-author-images",
-            x => x.DownloadAllNotDownloadedAuthorImages(default),
-            Cron.Daily);
         recurringJobManager.AddOrUpdate<DownloadVideoJob>(
             "download-non-downloaded-videos-recurring",
             x => x.DownloadNextNotDownloadedVideoAsync(CancellationToken.None),
