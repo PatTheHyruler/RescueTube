@@ -6,6 +6,8 @@ public abstract record JobDefinition
 {
     public Guid Id { get; } = Guid.NewGuid();
 
+    public string? Name { get; init; }
+
     public int PreferredMinConcurrentExecutions { get; init; } = 0;
     public int PreferredMaxConcurrentExecutions { get; init; } = 1;
 
@@ -16,6 +18,11 @@ public abstract record JobDefinition
 
 public record JobDefinition<TJob> : JobDefinition where TJob : IJob
 {
+    public JobDefinition()
+    {
+        Name = typeof(TJob).FullName;
+    }
+
     public override IJob GetJob(IServiceProvider serviceProvider)
     {
         return ActivatorUtilities.GetServiceOrCreateInstance<TJob>(serviceProvider);
