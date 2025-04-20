@@ -20,7 +20,7 @@ public class DataFetchSpecification : IDataFetchSpecification
 
     public Expression<Func<Author, bool>> ShouldFetchAuthorData(DataFetchJobDefinition jobDefinition)
     {
-        return a => ShouldFetchData<Author>(jobDefinition).Invoke(a);
+        return ShouldFetchData<Author>(jobDefinition);
     }
 
     public Expression<Func<Playlist, bool>> ShouldFetchPlaylistData(DataFetchJobDefinition jobDefinition)
