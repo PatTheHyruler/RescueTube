@@ -129,7 +129,7 @@ public class AuthorService : BaseYouTubeService
             case { ArchivalSettings: null }:
                 Logger.LogWarning("ArchivalSettings not loaded for author {AuthorId}", author.Id);
                 return false;
-            case { ArchivalSettings.Active: false }:
+            case { ArchivalSettings.IsEnabledForArchival: false }:
                 Logger.LogWarning("Author {AuthorId} not enabled for archival", author.Id);
                 return false;
             case { ArchivalSettings.ArchiveVideos: false }:

@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
-using Asp.Versioning.ApiExplorer;
 using Hangfire;
 using Hangfire.Console;
 using Hangfire.Console.Extensions;
@@ -23,6 +22,7 @@ using Serilog.Settings.Configuration;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using WebApp.ApiModels;
 using WebApp.Auth;
+using WebApp.Endpoints;
 using WebApp.Utils;
 using WebApp.Utils.Logging;
 
@@ -68,6 +68,8 @@ builder.Services.AddDbPersistenceEfPostgres(builder.Configuration);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options => JsonUtils.ConfigureJsonSerializerOptions(options.JsonSerializerOptions));
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options => JsonUtils.ConfigureJsonSerializerOptions(options.SerializerOptions));
+
 const string spaDirectory = "ClientApp";
 builder.Services.AddSpaStaticFiles(config => { config.RootPath = spaDirectory; });
 
@@ -156,18 +158,6 @@ try
             });
         });
     });
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
-        {
-            var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
-            foreach (var description in provider.ApiVersionDescriptions)
-            {
-                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
-            }
-        });
-    }
 
     var imagesDirectory = app.Services.GetRequiredService<AppPaths>().GetImagesDirectoryAbsolute();
     var imagesDirectoryPath = Path.Combine(app.Environment.ContentRootPath, imagesDirectory);
@@ -221,7 +211,24 @@ try
         });
     });
 
+    var versionedApiBuilder = app.NewVersionedApi();
+    var baseVersionedApi = versionedApiBuilder.MapGroup("api/v{version:apiVersion}");
+
+    baseVersionedApi.MapAuthorEndpoints();
+
     app.MapControllers();
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(options =>
+        {
+            foreach (var description in app.DescribeApiVersions())
+            {
+                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
+            }
+        });
+    }
 
     app.Run();
 }

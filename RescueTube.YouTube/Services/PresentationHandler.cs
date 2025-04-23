@@ -36,6 +36,11 @@ public class PresentationHandler : IPlatformPresentationHandler
         }
     }
 
+    public bool CanHandle(AuthorSimple author)
+    {
+        return author.Platform == EPlatform.YouTube;
+    }
+
     public void Handle(AuthorSimple author)
     {
         author.UrlOnPlatform = Url.ToAuthorUrl(author.IdOnPlatform);

@@ -35,7 +35,7 @@ public class DataFetchSpecification : IDataFetchSpecification
 
     public Expression<Func<Author, bool>> AuthorIsActiveAndConfiguredForVideoArchival => a =>
         a.ArchivalSettingsId != null
-        && a.ArchivalSettings!.Active
+        && a.ArchivalSettings!.IsEnabledForArchival
         && a.ArchivalSettings!.ArchiveVideos;
 
     private Expression<Func<TEntity, bool>> ShouldFetchData<TEntity>(DataFetchJobDefinition jobDefinition)

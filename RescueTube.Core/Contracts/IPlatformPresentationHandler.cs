@@ -9,4 +9,7 @@ public interface IPlatformPresentationHandler
 
     public bool CanHandle(PlaylistDto playlist);
     public void Handle(PlaylistDto playlist);
+
+    public bool CanHandle(AuthorSimple author);
+    public void Handle(AuthorSimple author);
 }
