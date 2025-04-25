@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
+using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using WebApp.ApiModels;
@@ -22,6 +23,7 @@ public static class AuthorEndpoints
             .HasApiVersion(1);
 
         authorsGroup.MapPut("{authorId:guid}/archival-settings", UpsertAuthorArchivalSettingsAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
     }
 

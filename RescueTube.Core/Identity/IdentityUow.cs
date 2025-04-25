@@ -32,5 +32,5 @@ public sealed class IdentityUow
     private TokenService? _tokenService;
     public TokenService TokenService => _tokenService ??= _services.GetRequiredService<TokenService>();
 
-    public Task SaveChangesAsync() => DataUow.SaveChangesAsync();
+    public Task SaveChangesAsync(CancellationToken ct = default) => DataUow.SaveChangesAsync(ct);
 }

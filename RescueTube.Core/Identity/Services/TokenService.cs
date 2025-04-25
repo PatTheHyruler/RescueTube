@@ -152,8 +152,9 @@ public class TokenService
     /// and to authorize the refresh token's deletion.
     /// </param>
     /// <param name="refreshToken">The refresh token to be deleted.</param>
+    /// <param name="ct"></param>
     /// <exception cref="InvalidJwtException">The provided JWT is invalid.</exception>
-    public async Task DeleteRefreshTokenAsync(string jwt, string refreshToken)
+    public async Task DeleteRefreshTokenAsync(string jwt, string refreshToken, CancellationToken ct)
     {
         ClaimsPrincipal principal;
         try
@@ -172,7 +173,7 @@ public class TokenService
         var jwtHash = HashJwt(jwt);
         await _identityUow.DbCtx.RefreshTokens
             .Filter(userId, refreshToken, jwtHash)
-            .ExecuteDeleteAsync();
+            .ExecuteDeleteAsync(ct);
     }
 
     public async Task DeleteExpiredRefreshTokensAsync()

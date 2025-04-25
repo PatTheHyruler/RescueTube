@@ -57,10 +57,14 @@ builder.Services.AddHangfire(configuration => configuration
     )
     .UseConsole()
 );
-builder.Services.AddHangfireServer(options =>
+var shouldDisableBackgroundJobs = builder.Configuration.GetValue<bool?>("DisableBackgroundJobs") ?? false;
+if (!shouldDisableBackgroundJobs)
 {
-    options.Queues = JobQueues.Queues;
-});
+    builder.Services.AddHangfireServer(options =>
+    {
+        options.Queues = JobQueues.Queues;
+    });
+}
 builder.Services.AddHangfireConsoleExtensions();
 builder.Services.AddSingleton<IDashboardAsyncAuthorizationFilter, HangfireDashboardAuthorizationFilter>();
 
@@ -211,10 +215,11 @@ try
         });
     });
 
-    var versionedApiBuilder = app.NewVersionedApi();
+    var versionedApiBuilder = app.NewVersionedApi().RequireAuthorization();
     var baseVersionedApi = versionedApiBuilder.MapGroup("api/v{version:apiVersion}");
 
     baseVersionedApi.MapAuthorEndpoints();
+    baseVersionedApi.MapAccountEndpoints();
 
     app.MapControllers();
 
@@ -238,7 +243,7 @@ catch (Exception e)
     {
         await using var scope = app.Services.CreateAsyncScope();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(e, "An error occured while running the application.");
+        logger.LogError(e, "An error occured while running the application");
         await Log.CloseAndFlushAsync();
     }
     catch (Exception logException)
