@@ -35,13 +35,13 @@ public class SubmissionService : BaseService
     }
 
     /// <exception cref="UnrecognizedUrlException">URL was not recognized and can't be archived.</exception>
-    public async Task<Submission> SubmitGenericLink(
+    public async Task<Submission> SubmitGenericLinkAsync(
         string url, ClaimsPrincipal user, CancellationToken ct = default)
     {
-        return await SubmitGenericLink(url, user.GetUserId(), IsAllowedToAutoSubmit(user), ct);
+        return await SubmitGenericLinkAsync(url, user.GetUserId(), IsAllowedToAutoSubmit(user), ct);
     }
 
-    private async Task<Submission> SubmitGenericLink(
+    private async Task<Submission> SubmitGenericLinkAsync(
         string url, Guid submitterId, bool autoSubmit, CancellationToken ct = default)
     {
         foreach (var submissionHandler in SubmissionHandlers)

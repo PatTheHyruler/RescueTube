@@ -224,6 +224,7 @@ try
     baseVersionedApi.MapJobEndpoints();
     baseVersionedApi.MapOptionsEndpoints();
     baseVersionedApi.MapStatisticsEndpoints();
+    baseVersionedApi.MapSubmissionEndpoints();
 
     app.MapControllers();
 
