@@ -222,6 +222,7 @@ try
     baseVersionedApi.MapAccountEndpoints();
     baseVersionedApi.MapCommentEndpoints();
     baseVersionedApi.MapJobEndpoints();
+    baseVersionedApi.MapOptionsEndpoints();
 
     app.MapControllers();
 
