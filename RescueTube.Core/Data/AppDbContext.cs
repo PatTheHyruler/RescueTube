@@ -19,6 +19,7 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     public DbSet<AuthorHistory> AuthorHistories => Set<AuthorHistory>();
     public DbSet<AuthorStatisticSnapshot> AuthorStatisticSnapshots => Set<AuthorStatisticSnapshot>();
     public DbSet<AuthorImage> AuthorImages => Set<AuthorImage>();
+    public DbSet<AuthorArchivalSettings> AuthorArchivalSettings => Set<AuthorArchivalSettings>();
 
     public DbSet<Image> Images => Set<Image>();
 

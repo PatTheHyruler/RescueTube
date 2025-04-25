@@ -31,7 +31,6 @@ public class EntityMapper
         }
     }
 
-
     public static Expression<Func<Author, AuthorSimple>> ToAuthorSimple => author => new AuthorSimple
     {
         Id = author.Id,

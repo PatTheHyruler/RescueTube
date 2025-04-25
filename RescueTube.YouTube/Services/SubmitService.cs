@@ -107,7 +107,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         }
 
         addedOrExistingAuthor.ArchivalSettings =
-            options ?? AuthorArchivalSettings.ArchivedDefault(); // TODO: Better logic for this
+            options ?? AuthorArchivalSettings.CreateDefaultArchivedAuthorSettings(); // TODO: Better logic for this
         DbCtx.Add(addedOrExistingAuthor.ArchivalSettings);
 
         return addedOrExistingAuthor;

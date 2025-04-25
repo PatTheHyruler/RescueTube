@@ -149,4 +149,17 @@ public static class ApiMapper
             Count = src.Count,
         };
     }
+
+    public static AuthorArchivalSettingsDtoV1 MapToAuthorArchivalSettingsDtoV1(this AuthorArchivalSettings src, Guid authorId)
+    {
+        return new()
+        {
+            Id = src.Id,
+            AuthorId = authorId,
+            IsEnabledForArchival = src.IsEnabledForArchival,
+            ArchiveClips = src.ArchiveClips,
+            ArchivePlaylists = src.ArchivePlaylists,
+            ArchiveVideos = src.ArchiveVideos,
+        };
+    }
 }
