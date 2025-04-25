@@ -220,6 +220,7 @@ try
 
     baseVersionedApi.MapAuthorEndpoints();
     baseVersionedApi.MapAccountEndpoints();
+    baseVersionedApi.MapCommentEndpoints();
 
     app.MapControllers();
 
