@@ -223,6 +223,7 @@ try
     baseVersionedApi.MapCommentEndpoints();
     baseVersionedApi.MapJobEndpoints();
     baseVersionedApi.MapOptionsEndpoints();
+    baseVersionedApi.MapStatisticsEndpoints();
 
     app.MapControllers();
 
