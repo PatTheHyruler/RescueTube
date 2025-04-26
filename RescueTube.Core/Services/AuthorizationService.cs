@@ -64,7 +64,7 @@ public class AuthorizationService : BaseService
         return user.IsInRole(RoleNames.Admin) || user.IsInRole(RoleNames.SuperAdmin);
     }
 
-    public async Task<bool> IsVideoAccessAllowed(Guid videoId, ClaimsPrincipal? user = null)
+    public async Task<bool> IsVideoAccessAllowedAsync(Guid videoId, ClaimsPrincipal? user = null, CancellationToken ct = default)
     {
         if (IsAllowedToAccessAnyContentByRole(user))
         {
@@ -75,6 +75,6 @@ public class AuthorizationService : BaseService
         var videos = DbCtx.Videos
             .Where(v => v.Id == videoId)
             .AsExpandable().Where(DataUow.Permissions.IsUserAllowedToAccessVideoOrVideoIsPublic(userId, false));
-        return await videos.AnyAsync();
+        return await videos.AnyAsync(ct);
     }
 }

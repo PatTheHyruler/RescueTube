@@ -1,26 +1,20 @@
-﻿using Asp.Versioning;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core;
 using RescueTube.Core.Exceptions;
 using RescueTube.Core.Utils;
-using Swashbuckle.AspNetCore.Annotations;
 using WebApp.ApiModels;
 
-namespace WebApp.ApiControllers;
+namespace WebApp.Endpoints;
 
-[ApiVersion("1.0")]
-[ApiController]
-[Route("api/v{version:apiVersion}/submissions/[action]")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-public class SubmissionController : ControllerBase
+public static class SubmissionEndpoints
 {
-    private readonly ServiceUow _serviceUow;
-
-    public SubmissionController(ServiceUow serviceUow)
+    public static void MapSubmissionEndpoints(this IEndpointRouteBuilder app)
     {
-        _serviceUow = serviceUow;
+        var optionsGroup = app.MapGroup("submissions").WithTags("Submissions");
+
+        optionsGroup.MapPost("create", CreateSubmissionAsync).HasApiVersion(1);
     }
 
     /// <summary>
@@ -29,28 +23,28 @@ public class SubmissionController : ControllerBase
     /// <returns>Details about the created submission, or error details if submission failed.</returns>
     /// <response code="200">Submission created successfully.</response>
     /// <response code="400">Submitted URL not recognized as a supported URL for archiving.</response>
-    [SwaggerResponse(StatusCodes.Status200OK)]
-    [SwaggerResponse(StatusCodes.Status400BadRequest)]
-    [HttpPost]
-    public async Task<ActionResult<LinkSubmissionResponseDtoV1>> Create([FromBody] LinkSubmissionRequestDtoV1 input, CancellationToken ct = default)
+    private static async Task<Results<Ok<LinkSubmissionResponseDtoV1>, BadRequest<ErrorResponseDto>>> CreateSubmissionAsync(
+        [FromBody] LinkSubmissionRequestDtoV1 input, [FromServices] ServiceUow serviceUow,
+        ClaimsPrincipal user, CancellationToken ct)
     {
         try
         {
             using var transaction = TransactionUtils.NewTransactionScope();
-            var submission = await _serviceUow.SubmissionService.SubmitGenericLink(input.Url, User, ct);
-            await _serviceUow.SaveChangesAsync(ct);
+            var submission = await serviceUow.SubmissionService.SubmitGenericLinkAsync(input.Url, user, ct);
+            await serviceUow.SaveChangesAsync(ct);
             transaction.Complete();
-            return new LinkSubmissionResponseDtoV1
+
+            return TypedResults.Ok(new LinkSubmissionResponseDtoV1
             {
                 SubmissionId = submission.Id,
                 Type = submission.EntityType,
                 Platform = submission.Platform,
                 IdOnPlatform = submission.IdOnPlatform,
-            };
+            });
         }
         catch (UnrecognizedUrlException e)
         {
-            return BadRequest(new ErrorResponseDto
+            return TypedResults.BadRequest(new ErrorResponseDto
             {
                 ErrorType = EErrorType.UnrecognizedUrl,
                 Message = e.Message,

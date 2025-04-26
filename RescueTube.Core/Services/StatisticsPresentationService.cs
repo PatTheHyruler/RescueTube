@@ -13,7 +13,7 @@ public class StatisticsPresentationService
         _dbCtx = dbCtx;
     }
 
-    public async Task<List<VideoDownloadStatisticByPlatformDto>> GetVideoDownloadStatisticsAsync()
+    public async Task<VideoDownloadStatisticByPlatformDto[]> GetVideoDownloadStatisticsAsync(CancellationToken ct)
     {
         var query = _dbCtx.Videos
             .Select(v => new
@@ -25,7 +25,7 @@ public class StatisticsPresentationService
             .Select(g => new VideoDownloadStatisticByPlatformDto(
                 g.Key.Platform, g.Key.HasVideoFile, g.Count()
             ));
-        return await query.ToListAsync();
+        return await query.ToArrayAsync(ct);
     }
 
     public record VideoDownloadStatisticByPlatformDto(EPlatform Platform, bool HasVideoFile, int Count);

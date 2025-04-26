@@ -1,77 +1,88 @@
-﻿using Asp.Versioning;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Identity.Exceptions;
 using RescueTube.Core.Identity.Services;
 using RescueTube.Core.Utils;
-using Swashbuckle.AspNetCore.Annotations;
 using WebApp.ApiModels;
 using WebApp.ApiModels.Auth;
 using WebApp.Auth;
-using WebApp.Utils;
 
-namespace WebApp.ApiControllers;
+namespace WebApp.Endpoints;
 
-/// <summary>
-/// API controller for user account management endpoints
-/// </summary>
-[ApiVersion("1.0")]
-[ApiController]
-[Route("api/v{version:apiVersion}/[controller]/[action]")]
-public class AccountController : ControllerBase
+public static class AccountEndpoints
 {
-    private readonly IdentityUow _identityUow;
-
-    public AccountController(IdentityUow identityUow)
+    public static void MapAccountEndpoints(this IEndpointRouteBuilder app)
     {
-        _identityUow = identityUow;
+        var accountGroup = app.MapGroup("account").WithTags("Account");
+
+        accountGroup.MapPost("register", RegisterAccountAsync)
+            .AllowAnonymous()
+            .HasApiVersion(1);
+
+        accountGroup.MapPost("login", LoginAsync)
+            .AllowAnonymous()
+            .HasApiVersion(1);
+
+        accountGroup.MapPost("RefreshToken", RefreshTokenAsync)
+            .RequireAuthorization()
+            .HasApiVersion(1);
+
+        accountGroup.MapPost("logout", LogoutAsync)
+            .RequireAuthorization()
+            .HasApiVersion(1);
+
+        accountGroup.MapGet("me", GetMeAsync)
+            .RequireAuthorization()
+            .HasApiVersion(1);
+
+        accountGroup.MapPost("HangfireToken", CreateHangfireToken)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
     }
 
     /// <summary>
     /// Register a new user
     /// </summary>
     /// <param name="registrationData">Required data for registering a new user.</param>
+    /// <param name="identityUow"></param>
+    /// <param name="ct"></param>
     /// <returns>New JWT and refresh token (with expiration date) for the registered account, if registration doesn't require further approval.</returns>
     /// <response code="200">The registration was successful.</response>
     /// <response code="400">User with provided username is already registered or provided registration data was invalid.</response>
-    /// <response code="202">The registration was successful, but must be approved by an administrator before the account can be used.</response>
-    [SwaggerErrorResponse(StatusCodes.Status400BadRequest)]
-    [SwaggerResponse(StatusCodes.Status202Accepted)]
-    [SwaggerResponse(StatusCodes.Status200OK, null, typeof(JwtResponseDtoV1))]
-    [HttpPost]
-    public async Task<ActionResult<JwtResponseDtoV1>> Register([FromBody] RegisterDtoV1 registrationData)
+    private static async Task<Results<Ok<JwtResponseDtoV1>, BadRequest<ErrorResponseDto>>> RegisterAccountAsync(
+        [FromBody] RegisterDtoV1 registrationData, [FromServices] IdentityUow identityUow, CancellationToken ct)
     {
         try
         {
             using (var transaction = TransactionUtils.NewTransactionScope())
             {
-                await _identityUow.UserService.RegisterUserAsync(
-                    registrationData.Username,
-                    registrationData.Password);
-                await _identityUow.SaveChangesAsync();
+                await identityUow.UserService.RegisterUserAsync(
+                    username: registrationData.Username,
+                    password: registrationData.Password);
+                await identityUow.SaveChangesAsync(ct);
                 transaction.Complete();
             }
 
             using (var transaction = TransactionUtils.NewTransactionScope())
             {
                 var jwtResult =
-                    await _identityUow.UserService.SignInJwtAsync(registrationData.Username, registrationData.Password);
-                await _identityUow.SaveChangesAsync();
+                    await identityUow.UserService.SignInJwtAsync(registrationData.Username, registrationData.Password);
+                await identityUow.SaveChangesAsync(ct);
                 transaction.Complete();
 
-                return new JwtResponseDtoV1
+                return TypedResults.Ok(new JwtResponseDtoV1
                 {
                     Jwt = jwtResult.Jwt,
                     RefreshToken = jwtResult.RefreshToken.Token,
                     RefreshTokenExpiresAt = jwtResult.RefreshToken.ExpiresAt,
-                };
+                });
             }
         }
         catch (IdentityOperationFailedException e)
         {
-            return BadRequest(new ErrorResponseDto
+            return TypedResults.BadRequest(new ErrorResponseDto
             {
                 ErrorType = EErrorType.InvalidRegistrationData,
                 Message = "Invalid registration data",
@@ -85,7 +96,7 @@ public class AccountController : ControllerBase
         }
         catch (RegistrationDisabledException)
         {
-            return BadRequest(new ErrorResponseDto
+            return TypedResults.BadRequest(new ErrorResponseDto
             {
                 ErrorType = EErrorType.RegistrationDisabled,
                 Message = "Registering new accounts is currently disabled",
@@ -97,53 +108,48 @@ public class AccountController : ControllerBase
     /// Log in as an existing user, using password authentication
     /// </summary>
     /// <param name="loginData">Required data for logging in</param>
+    /// <param name="identityUow"></param>
+    /// <param name="ct"></param>
     /// <returns>New JWT and refresh token (with expiration date), if login was successful.</returns>
     /// <response code="200">Login was successful.</response>
-    /// <response code="400">Username or password was invalid.</response>
-    /// <response code="401">Login isn't allowed, because the user account hasn't been approved yet.</response>
-    [SwaggerErrorResponse(StatusCodes.Status400BadRequest)]
-    [SwaggerErrorResponse(StatusCodes.Status404NotFound)]
-    [SwaggerResponse(StatusCodes.Status200OK, null, typeof(JwtResponseDtoV1))]
-    [HttpPost]
-    public async Task<ActionResult<JwtResponseDtoV1>> Login([FromBody] LoginDtoV1 loginData)
+    /// <response code="400">Username or password was invalid, or user account hasn't been approved yet.</response>
+    private static async Task<Results<Ok<JwtResponseDtoV1>, BadRequest<ErrorResponseDto>>> LoginAsync(
+        [FromBody] LoginDtoV1 loginData, [FromServices] IdentityUow identityUow, CancellationToken ct)
     {
         try
         {
             using var transaction = TransactionUtils.NewTransactionScope();
-            var jwtResult = await _identityUow.UserService.SignInJwtAsync(loginData.Username, loginData.Password);
-            await _identityUow.SaveChangesAsync();
+            var jwtResult = await identityUow.UserService.SignInJwtAsync(loginData.Username, loginData.Password);
+            await identityUow.SaveChangesAsync(ct);
             transaction.Complete();
-            return new JwtResponseDtoV1
+
+            return TypedResults.Ok(new JwtResponseDtoV1
             {
                 Jwt = jwtResult.Jwt,
                 RefreshToken = jwtResult.RefreshToken.Token,
                 RefreshTokenExpiresAt = jwtResult.RefreshToken.ExpiresAt,
-            };
+            });
         }
-        catch (Exception e)
+        catch (UserNotFoundException)
         {
-            ActionResult? result = e switch
+            return TypedResults.BadRequest(new ErrorResponseDto
             {
-                UserNotFoundException => BadRequest(new ErrorResponseDto
-                {
-                    ErrorType = EErrorType.InvalidLoginCredentials,
-                }),
-                WrongPasswordException => BadRequest(new ErrorResponseDto
-                {
-                    ErrorType = EErrorType.InvalidLoginCredentials,
-                }),
-                UserNotApprovedException => Unauthorized(new ErrorResponseDto
-                {
-                    ErrorType = EErrorType.UserNotApproved,
-                }),
-                _ => null,
-            };
-            if (result != null)
+                ErrorType = EErrorType.InvalidLoginCredentials,
+            });
+        }
+        catch (WrongPasswordException)
+        {
+            return TypedResults.BadRequest(new ErrorResponseDto
             {
-                return result;
-            }
-
-            throw;
+                ErrorType = EErrorType.InvalidLoginCredentials,
+            });
+        }
+        catch (UserNotApprovedException)
+        {
+            return TypedResults.BadRequest(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.UserNotApproved,
+            });
         }
     }
 
@@ -151,40 +157,41 @@ public class AccountController : ControllerBase
     /// Get a new JWT and refresh token, using existing JWT and refresh token.
     /// </summary>
     /// <param name="refreshTokenModel">Tokens to refresh</param>
+    /// <param name="identityUow"></param>
+    /// <param name="ct"></param>
     /// <returns>Refreshed JWT and refresh token (with expiration date), if refreshing was successful.</returns>
     /// <response code="200">Token refresh was successful.</response>
     /// <response code="400">Provided token/tokens was/were invalid.</response>
-    [SwaggerErrorResponse(StatusCodes.Status400BadRequest)]
-    [SwaggerErrorResponse(StatusCodes.Status404NotFound)]
-    [SwaggerResponse(StatusCodes.Status200OK, null, typeof(JwtResponseDtoV1))]
-    [HttpPost]
-    public async Task<ActionResult<JwtResponseDtoV1>> RefreshToken(
-        [FromBody] RefreshTokenRequestDtoV1 refreshTokenModel)
+    private static async Task<Results<Ok<JwtResponseDtoV1>, BadRequest<ErrorResponseDto>>> RefreshTokenAsync(
+        [FromBody] RefreshTokenRequestDtoV1 refreshTokenModel,
+        [FromServices] IdentityUow identityUow, CancellationToken ct)
     {
         try
         {
             using var transaction = TransactionUtils.NewTransactionScope();
-            var jwtResult = await _identityUow.TokenService.RefreshTokenAsync(refreshTokenModel.Jwt,
-                refreshTokenModel.RefreshToken);
-            await _identityUow.SaveChangesAsync();
+            var jwtResult = await identityUow.TokenService.RefreshTokenAsync(
+                jwt: refreshTokenModel.Jwt,
+                refreshToken: refreshTokenModel.RefreshToken);
+            await identityUow.SaveChangesAsync(ct);
             transaction.Complete();
-            return new JwtResponseDtoV1
+
+            return TypedResults.Ok(new JwtResponseDtoV1
             {
                 Jwt = jwtResult.Jwt,
                 RefreshToken = jwtResult.RefreshToken.Token,
                 RefreshTokenExpiresAt = jwtResult.RefreshToken.ExpiresAt,
-            };
+            });
         }
         catch (InvalidJwtException)
         {
-            return BadRequest(new ErrorResponseDto
+            return TypedResults.BadRequest(new ErrorResponseDto
             {
                 ErrorType = EErrorType.InvalidJwt,
             });
         }
         catch (InvalidRefreshTokenException)
         {
-            return BadRequest(new ErrorResponseDto
+            return TypedResults.BadRequest(new ErrorResponseDto
             {
                 ErrorType = EErrorType.InvalidRefreshToken,
                 Message = "Invalid refresh token (probably expired)",
@@ -196,25 +203,27 @@ public class AccountController : ControllerBase
     /// Log out user by deleting provided refresh token.
     /// User access will be refused when JWT expires.
     /// </summary>
-    /// <param name="logout">The refresh token to delete.</param>
+    /// <param name="logoutDto">The refresh token to delete.</param>
+    /// <param name="identityUow"></param>
+    /// <param name="ct"></param>
     /// <response code="200">Refresh token deleted successfully.</response>
     /// <response code="400">Invalid JWT provided.</response>
-    [SwaggerErrorResponse(StatusCodes.Status400BadRequest)]
-    [HttpPost]
-    public async Task<ActionResult> Logout(
-        [FromBody] LogoutDtoV1 logout)
+    private static async Task<Results<Ok, BadRequest<ErrorResponseDto>>> LogoutAsync(
+        [FromBody] LogoutDtoV1 logoutDto,
+        [FromServices] IdentityUow identityUow, CancellationToken ct)
     {
         try
         {
             using var transaction = TransactionUtils.NewTransactionScope();
-            await _identityUow.TokenService.DeleteRefreshTokenAsync(logout.Jwt, logout.RefreshToken);
-            await _identityUow.SaveChangesAsync();
+            await identityUow.TokenService.DeleteRefreshTokenAsync(
+                jwt: logoutDto.Jwt, refreshToken: logoutDto.RefreshToken, ct);
+            await identityUow.SaveChangesAsync(ct);
             transaction.Complete();
-            return Ok();
+            return TypedResults.Ok();
         }
         catch (InvalidJwtException)
         {
-            return BadRequest(new ErrorResponseDto
+            return TypedResults.BadRequest(new ErrorResponseDto
             {
                 ErrorType = EErrorType.InvalidJwt,
                 Message = "Provided JWT was invalid",
@@ -227,31 +236,28 @@ public class AccountController : ControllerBase
     /// </summary>
     /// <response code="200">User information fetched successfully</response>
     /// <response code="404">User not found</response>
-    [SwaggerErrorResponse(StatusCodes.Status404NotFound)]
-    [SwaggerResponse(StatusCodes.Status200OK, null, typeof(MeResponseDtoV1))]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [HttpGet]
-    public async Task<ActionResult<MeResponseDtoV1>> Me()
+    private static async Task<Results<Ok<MeResponseDtoV1>, NotFound<ErrorResponseDto>>> GetMeAsync(
+        [FromServices] IdentityUow identityUow, HttpContext httpContext, CancellationToken ct)
     {
-        var userNotFoundResult = NotFound(new ErrorResponseDto
+        var userNotFoundResult = TypedResults.NotFound(new ErrorResponseDto
         {
             ErrorType = EErrorType.EntityNotFound,
             Message = "User matching authenticated user not found",
         });
-        
-        var userId = HttpContext.User.GetUserIdIfExists();
+
+        var userId = httpContext.User.GetUserIdIfExists();
         if (userId == null)
         {
             return userNotFoundResult;
         }
 
-        var user = await _identityUow.UserService.GetUserWithRolesAsync(userId.Value);
+        var user = await identityUow.UserService.GetUserWithRolesAsync(userId.Value, ct);
         if (user == null)
         {
             return userNotFoundResult;
         }
 
-        return new MeResponseDtoV1
+        return TypedResults.Ok(new MeResponseDtoV1
         {
             User = new UserDtoV1
             {
@@ -264,20 +270,18 @@ public class AccountController : ControllerBase
                     Id = ur.Role!.Id,
                     Name = ur.Role!.Name!,
                     NormalizedName = ur.Role!.NormalizedName!,
-                })
-            }
-        };
+                }),
+            },
+        });
     }
 
     /// <summary>
     /// Get a JWT token that can be passed to the Hangfire dashboard to authenticate.
     /// </summary>
     /// <returns>The JWT string.</returns>
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = RoleNames.AdminOrSuperAdmin)]
-    [HttpPost]
-    public ActionResult<string> HangfireToken()
+    private static Ok<string> CreateHangfireToken([FromServices] IdentityUow identityUow, ClaimsPrincipal user)
     {
-        var jwt = _identityUow.TokenService.GenerateJwt(User, expiresInSeconds: 60, RescueTubeIdentity.HangfireJwtSuffix);
-        return Ok(jwt);
+        return TypedResults.Ok(
+            identityUow.TokenService.GenerateJwt(user, expiresInSeconds: 60, RescueTubeIdentity.HangfireJwtSuffix));
     }
 }

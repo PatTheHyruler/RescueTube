@@ -25,7 +25,8 @@ public class VideoPresentationService : BaseService
         string? authorQuery, ICollection<Guid>? categoryIds,
         ClaimsPrincipal user, Guid? userAuthorId,
         IPaginationQuery paginationQuery,
-        EVideoSortingOptions sortingOptions, bool descending)
+        EVideoSortingOptions sortingOptions, bool descending,
+        CancellationToken ct)
     {
         var userId = user.GetUserIdIfExists();
         var accessAllowed = AuthorizationService.IsAllowedToAccessAnyContentByRole(user);
@@ -42,7 +43,7 @@ public class VideoPresentationService : BaseService
             .Paginate(paginationQuery)
             .Select(_mapper.ToVideoSimple)
             .AsSplitQuery()
-            .ToListAsync();
+            .ToListAsync(ct);
         MakePresentable(videos);
 
         return new PaginationResponse<List<VideoSimple>>
@@ -52,22 +53,22 @@ public class VideoPresentationService : BaseService
         };
     }
 
-    public async Task<VideoSimple?> GetVideoSimple(Guid videoId)
+    public async Task<VideoSimple?> GetVideoSimpleAsync(Guid videoId, CancellationToken ct)
     {
         var video = await DbCtx.Videos
             .Where(v => v.Id == videoId)
             .Select(_mapper.ToVideoSimple)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(ct);
         MakePresentable(video);
         return video;
     }
 
-    public async Task<VideoFile?> GetVideoFileAsync(Guid videoId)
+    public async Task<VideoFile?> GetVideoFileAsync(Guid videoId, CancellationToken ct = default)
     {
         return await DbCtx.VideoFiles
             .Where(e => e.VideoId == videoId)
             .OrderByDescending(e => e.ValidSince)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(ct);
     }
 
     private void MakePresentable(IEnumerable<VideoSimple> videos)

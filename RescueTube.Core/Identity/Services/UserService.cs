@@ -103,13 +103,13 @@ public class UserService
         };
     }
 
-    public async Task<User?> GetUserWithRolesAsync(Guid userId)
+    public async Task<User?> GetUserWithRolesAsync(Guid userId, CancellationToken ct = default)
     {
         return await _identityUow.DbCtx.Users
             .Where(u => u.Id == userId)
             .Include(u => u.UserRoles!)
             .ThenInclude(ur => ur.Role)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken: ct);
     }
 
     public UserService(IOptionsSnapshot<RegistrationOptions> registrationOptions, IdentityUow identityUow)

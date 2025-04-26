@@ -1,6 +1,8 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -14,6 +16,7 @@ using RescueTube.Core.Identity.Options;
 using RescueTube.Core.Identity.Services;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Entities.Identity;
+using JwtBearerOptions = RescueTube.Core.Identity.Options.JwtBearerOptions;
 
 namespace RescueTube.Core.Identity;
 
@@ -46,13 +49,20 @@ public static class SetupExtensions
 
         services.AddScoped<SignInManager<User>>();
 
-        services.AddAuthentication(IdentityConstants.ApplicationScheme)
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddIdentityCookiesCustom(services, configuration)
             .AddJwtBearerCustom(services, configuration);
 
         builder.Services.AddSeeding();
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            var requireAuth = new AuthorizationPolicyBuilder()
+                .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+                .RequireAuthenticatedUser()
+                .Build();
+            options.DefaultPolicy = requireAuth;
+        });
 
         services.AddIdentityUowAndServices();
 
