@@ -31,7 +31,7 @@ public static class CommentEndpoints
         [FromServices] CommentService commentService, [FromServices] AuthorizationService authorizationService,
         HttpContext httpContext, CancellationToken ct)
     {
-        if (!await authorizationService.IsVideoAccessAllowed(videoId, httpContext.User))
+        if (!await authorizationService.IsVideoAccessAllowedAsync(videoId, httpContext.User, ct))
         {
             return TypedResults.Forbid();
         }

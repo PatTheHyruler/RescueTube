@@ -9,11 +9,11 @@ namespace WebApp.Endpoints;
 
 public static class VideoEndpoints
 {
-    public static void MapVideosEndpoints(this IEndpointRouteBuilder app)
+    public static void MapVideoEndpoints(this IEndpointRouteBuilder app)
     {
         var videosGroup = app.MapGroup("videos").WithTags("Videos");
 
-        videosGroup.MapGet("search", SearchVideosAsync).HasApiVersion(1);
+        videosGroup.MapPost("search", SearchVideosAsync).HasApiVersion(1);
         videosGroup.MapGet("{videoId:guid}", GetVideoAsync)
             .AllowAnonymous()
             .HasApiVersion(1);
@@ -48,7 +48,7 @@ public static class VideoEndpoints
         HttpContext httpContext,
         CancellationToken ct)
     {
-        if (!await authorizationService.IsVideoAccessAllowed(videoId, httpContext.User))
+        if (!await authorizationService.IsVideoAccessAllowedAsync(videoId, httpContext.User, ct))
         {
             return TypedResults.Forbid();
         }

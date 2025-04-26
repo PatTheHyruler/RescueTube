@@ -63,12 +63,12 @@ public class VideoPresentationService : BaseService
         return video;
     }
 
-    public async Task<VideoFile?> GetVideoFileAsync(Guid videoId)
+    public async Task<VideoFile?> GetVideoFileAsync(Guid videoId, CancellationToken ct = default)
     {
         return await DbCtx.VideoFiles
             .Where(e => e.VideoId == videoId)
             .OrderByDescending(e => e.ValidSince)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(ct);
     }
 
     private void MakePresentable(IEnumerable<VideoSimple> videos)
