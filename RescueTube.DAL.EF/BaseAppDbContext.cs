@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.DAL.EF.Converters;
+using RescueTube.Domain;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.DAL.EF;
@@ -43,5 +44,10 @@ public abstract class BaseAppDbContext : AppDbContext
 
         configurationBuilder.Properties<DateTimeOffset>()
             .HaveConversion<DateTimeOffsetToUtcConverter>();
+
+        configurationBuilder.Properties<DataSize>()
+            .HaveConversion<DataSizeToLongConverter>();
+
+        configurationBuilder.Conventions.Add(_ => new TablePerHierarchyColumnNamingConvention());
     }
 }

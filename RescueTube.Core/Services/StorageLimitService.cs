@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using RescueTube.Core.Constants;
 using RescueTube.Core.Utils;
+using RescueTube.Domain;
 
 namespace RescueTube.Core.Services;
 
@@ -7,11 +9,13 @@ public class StorageLimitService
 {
     private readonly AppPaths _appPaths;
     private readonly ILogger<StorageLimitService> _logger;
+    private readonly SettingService _settingService;
 
-    public StorageLimitService(AppPaths appPaths, ILogger<StorageLimitService> logger)
+    public StorageLimitService(AppPaths appPaths, ILogger<StorageLimitService> logger, SettingService settingService)
     {
         _appPaths = appPaths;
         _logger = logger;
+        _settingService = settingService;
     }
 
     private static async Task WaitForDriveToBeReady(DriveInfo di, CancellationToken ct = default)
@@ -37,18 +41,18 @@ public class StorageLimitService
 
     public async Task<bool> IsVideoDownloadForbiddenAsync(CancellationToken ct)
     {
-        // TODO: Allow configuring this. Globally, per platform, per video type, per author???
-        const long minFreeSpace = 400L * 1024 * 1024 * 1024;
-
-        // TODO: Allow caching this maybe?
+        // TODO: Cache these maybe?
+        var minFreeSpace = await _settingService.GetValueAsync(SettingDefinitions.MinFreeSpaceForVideoDownload, ct)
+                           ?? SettingDefinitions.MinFreeSpaceForVideoDownload.DefaultValue;
         var driveInfo = new DriveInfo(_appPaths.GetAbsolutePathFromContentRoot(_appPaths.GetVideosBaseDirectory()));
 
         await WaitForDriveToBeReady(driveInfo, ct);
+        var availableFreeSpace = DataSize.FromBytes(driveInfo.AvailableFreeSpace);
 
         _logger.LogInformation(
             "Available free space: {AvailableFreeSpace}, minimum required: {MinimumRequiredFreeSpace}",
-            DataFormatUtils.GetHumanReadableFormat(driveInfo.AvailableFreeSpace),
-            DataFormatUtils.GetHumanReadableFormat(minFreeSpace));
-        return driveInfo.AvailableFreeSpace < minFreeSpace;
+            availableFreeSpace,
+            minFreeSpace);
+        return availableFreeSpace < minFreeSpace;
     }
 }

@@ -44,7 +44,12 @@ public enum EErrorType
     /// </summary>
     UnrecognizedUrl,
     /// <summary>
-    /// Submitted identifier did not resolve to an archivable entity
+    /// Submitted identifier did not resolve to an archivable entity.
     /// </summary>
     SubmissionEntityNotFound,
+
+    /// <summary>
+    /// Setting key not found.
+    /// </summary>
+    SettingKeyNotFound,
 }
