@@ -2,26 +2,25 @@
 
 namespace RescueTube.Core.Utils;
 
-public record Result<TValue, TError>
+public record Result<TValue, TError> : IResult<TValue, TError>
 {
-    public readonly TValue? Value;
-    public readonly TError? Error;
-    private readonly bool _success;
+    public TValue? Value { get; }
+    public TError? Error { get; }
 
     [MemberNotNullWhen(true, nameof(Value))]
     [MemberNotNullWhen(false, nameof(Error))]
-    public bool Success => _success;
+    public bool Success { get; }
 
     public Result(TValue value)
     {
         Value = value;
-        _success = true;
+        Success = true;
     }
 
     public Result(TError error)
     {
         Error = error;
-        _success = true;
+        Success = true;
     }
 
     public static implicit operator Result<TValue, TError>(TValue value) => new(value);
@@ -32,4 +31,14 @@ public record Result<TValue, TError>
         v = Value;
         e = Error;
     }
+}
+
+public interface IResult<out TValue, out TError>
+{
+    public TValue? Value { get; }
+    public TError? Error { get; }
+
+    [MemberNotNullWhen(true, nameof(Value))]
+    [MemberNotNullWhen(false, nameof(Error))]
+    public bool Success { get; }
 }

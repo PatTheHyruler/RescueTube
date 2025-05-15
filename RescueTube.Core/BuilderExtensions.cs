@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using RescueTube.Core.Constants;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data.Mappers;
 using RescueTube.Core.DataFetches;
@@ -38,6 +39,10 @@ public static class BuilderExtensions
         services.AddScoped<CommentService>();
         services.AddScoped<StatusChangeService>();
         services.AddScoped<StatisticsPresentationService>();
+
+        services.AddScoped<SettingService>();
+        services.AddOptions<SettingRegistry>();
+        services.Configure<SettingRegistry>(x => x.RegisterDefinitions(SettingDefinitions.AllDefinitions));
 
         services.AddScoped<StorageLimitService>();
 

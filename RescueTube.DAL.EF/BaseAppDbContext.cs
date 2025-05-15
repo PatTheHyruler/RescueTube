@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.DAL.EF.Converters;
+using RescueTube.Domain;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.DAL.EF;
@@ -14,6 +15,12 @@ public abstract class BaseAppDbContext : AppDbContext
     protected BaseAppDbContext(DbContextOptions options, IOptions<DbLoggingOptions> dbLoggingOptions,
         ILoggerFactory? loggerFactory = null) : base(options, dbLoggingOptions, loggerFactory)
     {
+    }
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+        builder.ApplyConfigurationsFromAssembly(typeof(BaseAppDbContext).Assembly);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -43,5 +50,10 @@ public abstract class BaseAppDbContext : AppDbContext
 
         configurationBuilder.Properties<DateTimeOffset>()
             .HaveConversion<DateTimeOffsetToUtcConverter>();
+
+        configurationBuilder.Properties<DataSize>()
+            .HaveConversion<DataSizeToLongConverter>();
+
+        configurationBuilder.Conventions.Add(_ => new TablePerHierarchyColumnNamingConvention());
     }
 }

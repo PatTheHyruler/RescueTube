@@ -18,6 +18,10 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
 
     public void Configure(SwaggerGenOptions options)
     {
+        options.UseOneOfForPolymorphism();
+        options.UseAllOfForInheritance();
+        options.UseAllOfToExtendReferenceSchemas();
+
         foreach (var description in _descriptionProvider.ApiVersionDescriptions)
         {
             options.SwaggerDoc(
@@ -31,8 +35,24 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
             );
         }
 
-        // Use FQN for DTO descriptions
-        options.CustomSchemaIds(t => t.FullName);
+        options.CustomSchemaIds(type =>
+        {
+            if (type.IsGenericTypeParameter)
+            {
+                return $"{type.Name}__for_{GetTypeName(type.DeclaringType)}";
+            }
+            return GetTypeName(type);
+
+            static string? GetTypeName(Type? type)
+            {
+                return type?.FullName?.Replace('+', '.');
+            }
+        });
+
+        options.SelectSubTypesUsing(baseType =>
+        {
+            return baseType.Assembly.GetTypes().Where(x => x.IsSubclassOf(baseType) && !x.IsAbstract);
+        });
 
         // Include XML comments
         var xmlFiles = new[]
@@ -57,13 +77,13 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
             {
                 Id = JwtBearerDefaults.AuthenticationScheme,
                 Type = ReferenceType.SecurityScheme,
-            }
+            },
         };
         options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, jwtSecurityScheme);
 
         options.AddSecurityRequirement(new OpenApiSecurityRequirement
         {
-            { jwtSecurityScheme, Array.Empty<string>() }
+            { jwtSecurityScheme, [] },
         });
     }
 }

@@ -52,6 +52,12 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
 
     public DbSet<DataFetch> DataFetches => Set<DataFetch>();
 
+    public DbSet<Setting> Settings => Set<Setting>();
+    public DbSet<Setting.Long> LongSettings => Set<Setting.Long>();
+    public DbSet<Setting.Bool> BoolSettings => Set<Setting.Bool>();
+    public DbSet<Setting.String> StringSettings => Set<Setting.String>();
+    public DbSet<Setting.DataSize> DataSizeSettings => Set<Setting.DataSize>();
+
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
 
@@ -90,6 +96,9 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
         builder.Entity<Author>()
             .HasIndex(e => e.ArchivalSettingsId)
             .IsUnique();
+
+        builder.Entity<Setting>()
+            .HasDiscriminator<string>("SettingType");
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
