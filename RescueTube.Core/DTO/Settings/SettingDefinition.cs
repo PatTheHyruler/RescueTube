@@ -1,6 +1,6 @@
 namespace RescueTube.Core.DTO.Settings;
 
-public abstract record SettingDefinition(string Key) : ISettingDefinition
+public abstract record SettingDefinition(string Key)
 {
     public record Long(string Key) : SettingDefinitionForStruct<long>(Key)
     {

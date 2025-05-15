@@ -45,7 +45,7 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
 
             static string? GetTypeName(Type? type)
             {
-                return type?.FullName;
+                return type?.FullName?.Replace('+', '.');
             }
         });
 

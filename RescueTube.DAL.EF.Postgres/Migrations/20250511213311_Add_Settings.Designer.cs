@@ -12,7 +12,7 @@ using RescueTube.DAL.EF.Postgres;
 namespace RescueTube.DAL.EF.Postgres.Migrations
 {
     [DbContext(typeof(PostgresAppDbContext))]
-    [Migration("20250503123352_Add_Settings")]
+    [Migration("20250511213311_Add_Settings")]
     partial class Add_Settings
     {
         /// <inheritdoc />
@@ -1008,6 +1008,9 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
                         .HasColumnType("character varying(8)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
 
                     b.ToTable("Settings");
 

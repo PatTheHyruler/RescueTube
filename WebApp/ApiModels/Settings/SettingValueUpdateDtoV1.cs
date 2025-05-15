@@ -10,8 +10,8 @@ public abstract record SettingValueUpdateDtoV1
 {
     public required string Key { get; init; }
 
-    public sealed record Long(long Value) : SettingValueUpdateDtoV1;
-    public sealed record Bool(bool Value) : SettingValueUpdateDtoV1;
-    public sealed record String(string Value) : SettingValueUpdateDtoV1;
-    public sealed record DataSizeBytes(long Value) : SettingValueUpdateDtoV1;
+    public sealed record Long(long? Value) : SettingValueUpdateDtoV1;
+    public sealed record Bool(bool? Value) : SettingValueUpdateDtoV1;
+    public sealed record String(string? Value) : SettingValueUpdateDtoV1;
+    public sealed record DataSizeBytes(long? Value) : SettingValueUpdateDtoV1;
 }

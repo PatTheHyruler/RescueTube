@@ -19,4 +19,10 @@ public static partial class SettingMapper
     [MapDerivedType<SettingDefinition.DataSize, SettingDefinitionDtoV1.DataSizeBytes>]
     [MapProperty(nameof(SettingDefinition.Long.OptionalDefaultValue), nameof(SettingDefinitionDtoV1.Long.DefaultValue))]
     private static partial SettingDefinitionDtoV1 MapToSettingDefinitionDtoV1(this SettingDefinition settingDefinition);
+
+    [MapDerivedType<SettingValueUpdateDtoV1.Long, SettingValueUpdateDto.Long>]
+    [MapDerivedType<SettingValueUpdateDtoV1.Bool, SettingValueUpdateDto.Bool>]
+    [MapDerivedType<SettingValueUpdateDtoV1.String, SettingValueUpdateDto.String>]
+    [MapDerivedType<SettingValueUpdateDtoV1.DataSizeBytes, SettingValueUpdateDto.DataSize>]
+    public static partial SettingValueUpdateDto MapToCoreSettingValueUpdateDto(this SettingValueUpdateDtoV1 dto);
 }

@@ -1,8 +1,8 @@
+using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Data;
 using RescueTube.Core.DTO.Settings;
-using RescueTube.Core.Errors;
 using RescueTube.Core.Utils;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;
@@ -21,7 +21,7 @@ public class SettingService
     }
 
     private static async Task<T?> GetStructValueAsync<T>(
-        IQueryable<Setting<T>> query, ISettingDefinition<T> settingDefinition, CancellationToken ct) where T : struct
+        IQueryable<Setting<T>> query, SettingDefinition<T> settingDefinition, CancellationToken ct) where T : struct
     {
         return await query
             .Where(x => x.Key == settingDefinition.Key)
@@ -71,7 +71,7 @@ public class SettingService
             .ToArray();
     }
 
-    private static SettingValue MapToSettingValue(ISettingDefinition settingDefinition, IEnumerable<Setting> settings)
+    private static SettingValue MapToSettingValue(SettingDefinition settingDefinition, IEnumerable<Setting> settings)
     {
         return settingDefinition switch
         {
@@ -88,67 +88,85 @@ public class SettingService
             .FirstOrDefault();
     }
 
-    public Task<Result<Setting.Long, SettingDefinitionNotFoundError>> SetValueAsync(string key, long value, CancellationToken ct)
+    public enum SettingUpdateResult
     {
-        return SetValueAsync<long, Setting.Long, SettingDefinition.Long>(key, value, static (key, value) => new()
-        {
-            Key = key,
-            Value = value,
-        }, ct);
+        Success,
+        DefinitionNotFound,
+        DefinitionTypeMismatch,
     }
 
-    public Task<Result<Setting.Bool, SettingDefinitionNotFoundError>> SetValueAsync(string key, bool value, CancellationToken ct)
+    public async Task<IReadOnlyDictionary<string, SettingUpdateResult>> UpdateSettingsAsync(IEnumerable<SettingValueUpdateDto> settingValues, CancellationToken ct)
     {
-        return SetValueAsync<bool, Setting.Bool, SettingDefinition.Bool>(key, value, static (key, value) => new()
-        {
-            Key = key,
-            Value = value,
-        }, ct);
-    }
+        var definitionsWithUpdates = settingValues
+            .GroupJoin(
+                _settingRegistry.SettingDefinitions,
+                x => x.Key,
+                x => x.Key,
+                (update, definitions) => (Update: update, Definition: definitions.SingleOrDefault()))
+            .ToArray();
+        var keys = definitionsWithUpdates.Select(x => x.Update.Key);
+        var settings = await _dataUow.Ctx.Settings
+            .Where(x => keys.Contains(x.Key))
+            .ToArrayAsync(ct);
 
-    public Task<Result<Setting.String, SettingDefinitionNotFoundError>> SetValueAsync(string key, string value, CancellationToken ct)
-    {
-        return SetValueAsync<string, Setting.String, SettingDefinition.String>(key, value, static (key, value) => new()
+        var results = new Dictionary<string, SettingUpdateResult>(definitionsWithUpdates.Length);
+        foreach (var (baseUpdateDto, definition) in definitionsWithUpdates)
         {
-            Key = key,
-            Value = value,
-        }, ct);
-    }
-
-    public Task<Result<Setting.DataSize, SettingDefinitionNotFoundError>> SetValueAsync(string key, DataSize value, CancellationToken ct)
-    {
-        return SetValueAsync<DataSize, Setting.DataSize, SettingDefinition.DataSize>(key, value, static (key, value) => new()
-        {
-            Key = key,
-            Value = value,
-        }, ct);
-    }
-
-    private async Task<Result<TSetting, SettingDefinitionNotFoundError>> SetValueAsync<TValue, TSetting, TSettingDefinition>(string key, TValue value,
-        Func<string, TValue, TSetting> createSetting, CancellationToken ct)
-        where TSetting : Setting<TValue>
-        where TSettingDefinition : SettingDefinition<TValue>
-    {
-        var definition = _settingRegistry.SettingDefinitions
-            .OfType<TSettingDefinition>()
-            .FirstOrDefault(x => x.Key == key);
-        if (definition is null)
-        {
-            return new SettingDefinitionNotFoundError(key, typeof(TSetting));
+            var result = baseUpdateDto switch
+            {
+                SettingValueUpdateDto.Long updateDto => HandleSettingUpdate<Setting.Long, SettingValueUpdateDto.Long, SettingDefinition.Long, long>(updateDto, definition),
+                SettingValueUpdateDto.Bool updateDto => HandleSettingUpdate<Setting.Bool, SettingValueUpdateDto.Bool, SettingDefinition.Bool, bool>(updateDto, definition),
+                SettingValueUpdateDto.String updateDto => HandleSettingUpdate<Setting.String, SettingValueUpdateDto.String, SettingDefinition.String, string>(updateDto, definition),
+                SettingValueUpdateDto.DataSize updateDto => HandleSettingUpdate<Setting.DataSize, SettingValueUpdateDto.DataSize, SettingDefinition.DataSize, DataSize>(updateDto, definition),
+                _ => throw new SwitchExpressionException(baseUpdateDto),
+            };
+            results[baseUpdateDto.Key] = result;
         }
 
-        var dbSet = _dataUow.Ctx.Set<TSetting>();
-        var setting = await dbSet.FirstOrDefaultAsync(x => x.Key == key, ct);
-        if (setting is null)
-        {
-            setting = createSetting(key, value);
-            dbSet.Add(setting);
-        }
-        else
-        {
-            setting.Value = value;
-        }
+        return results;
 
-        return setting;
+        SettingUpdateResult HandleSettingUpdate<TSetting, TUpdateDto, TDefinition, T>(
+            TUpdateDto updateDto,
+            SettingDefinition? baseDefinition)
+            where TSetting : Setting<T>, ICreatableSetting<TSetting, T>
+            where TUpdateDto : SettingValueUpdateDto, ISettingValueUpdateDto<T?>
+            where TDefinition : SettingDefinition<T>
+        {
+            if (baseDefinition is null)
+            {
+                return SettingUpdateResult.DefinitionNotFound;
+            }
+
+            if (baseDefinition is not TDefinition definition)
+            {
+                return SettingUpdateResult.DefinitionTypeMismatch;
+            }
+
+            var baseSettingEntity = settings.SingleOrDefault(x => x.Key == definition.Key);
+            if (!updateDto.HasValue)
+            {
+                if (baseSettingEntity is not null)
+                {
+                    _dataUow.Ctx.Settings.Remove(baseSettingEntity);
+                }
+
+                return SettingUpdateResult.Success;
+            }
+
+            if (baseSettingEntity is TSetting settingEntity)
+            {
+                settingEntity.Value = updateDto.Value;
+                return SettingUpdateResult.Success;
+            }
+
+            // Setting entity exists but has wrong type - remove it before creating new entity
+            if (baseSettingEntity is not null)
+            {
+                _dataUow.Ctx.Settings.Remove(baseSettingEntity);
+            }
+
+            _dataUow.Ctx.Settings.Add(TSetting.Create(key: definition.Key, value: updateDto.Value));
+            return SettingUpdateResult.Success;
+        }
     }
 }

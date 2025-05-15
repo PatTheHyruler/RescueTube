@@ -2,13 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace WebApp.ApiModels.Settings;
 
-/// <summary>
-/// Swagger for this looks horrible because of
-/// <see cref="SettingValueStructDtoV1{TValue,TSettingDefinition}"/>
-/// and <see cref="SettingValueClassDtoV1{TValue,TSettingDefinition}"/>.
-/// <br/>
-/// Oh, well.
-/// </summary>
 [JsonDerivedType(typeof(Long), nameof(Long))]
 [JsonDerivedType(typeof(Bool), nameof(Bool))]
 [JsonDerivedType(typeof(String), nameof(String))]

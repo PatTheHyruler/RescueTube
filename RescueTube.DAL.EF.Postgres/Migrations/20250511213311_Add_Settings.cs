@@ -27,6 +27,12 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
                 {
                     table.PrimaryKey("PK_Settings", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Settings_Key",
+                table: "Settings",
+                column: "Key",
+                unique: true);
         }
 
         /// <inheritdoc />

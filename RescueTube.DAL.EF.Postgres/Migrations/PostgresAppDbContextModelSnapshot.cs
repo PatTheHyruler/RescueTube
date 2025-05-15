@@ -1006,6 +1006,9 @@ namespace DAL.EF.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Key")
+                        .IsUnique();
+
                     b.ToTable("Settings");
 
                     b.HasDiscriminator<string>("SettingType").HasValue("Setting");

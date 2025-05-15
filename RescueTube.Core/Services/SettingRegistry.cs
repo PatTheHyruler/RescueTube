@@ -4,10 +4,10 @@ namespace RescueTube.Core.Services;
 
 public class SettingRegistry
 {
-    private readonly HashSet<ISettingDefinition> _settingDefinitions = [];
-    public IReadOnlySet<ISettingDefinition> SettingDefinitions => _settingDefinitions;
+    private readonly HashSet<SettingDefinition> _settingDefinitions = [];
+    public IReadOnlySet<SettingDefinition> SettingDefinitions => _settingDefinitions;
 
-    public void RegisterDefinitions(params IEnumerable<ISettingDefinition> settingDefinitions)
+    public void RegisterDefinitions(params IEnumerable<SettingDefinition> settingDefinitions)
     {
         foreach (var settingDefinition in settingDefinitions)
         {
