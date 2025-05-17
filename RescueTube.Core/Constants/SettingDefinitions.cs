@@ -9,7 +9,7 @@ public static class SettingDefinitions
     public static readonly SettingDefinition.DataSize.WithDefault MinFreeSpaceForVideoDownload =
         new("MinFreeSpaceForVideoDownload", DataSize.FromGibibytes(400));
 
-    public static readonly FrozenSet<ISettingDefinition> AllDefinitions = [
+    public static readonly FrozenSet<SettingDefinition> AllDefinitions = [
         MinFreeSpaceForVideoDownload,
     ];
 }
