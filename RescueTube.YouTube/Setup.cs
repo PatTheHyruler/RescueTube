@@ -85,12 +85,7 @@ public static class Setup
         ));
     }
 
-    public static void SetupYouTube(this WebApplication app)
-    {
-        app.SetupYouTubeAsync().GetAwaiter().GetResult();
-    }
-
-    private static async Task SetupYouTubeAsync(this WebApplication app)
+    public static async Task SetupYouTubeAsync(this WebApplication app)
     {
         var appBuilder = app as IApplicationBuilder;
         await using var scope = appBuilder.ApplicationServices.GetRequiredService<IServiceScopeFactory>()

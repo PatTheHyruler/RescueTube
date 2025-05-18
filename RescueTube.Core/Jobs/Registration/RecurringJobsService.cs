@@ -17,7 +17,7 @@ public class RecurringJobsService
         _hangfireRecurringJobRegistry = hangfireRecurringJobRegistry.Value;
     }
 
-    public void CreateRecurringJobs()
+    public void RemoveAllRecurringJobs()
     {
         using var storageConnection = _recurringJobManager.Storage.GetConnection();
         using var jobLock = AcquireRecurringJobLock(storageConnection);
@@ -27,6 +27,12 @@ public class RecurringJobsService
         {
             _recurringJobManager.RemoveIfExists(recurringJob.Id);
         }
+    }
+
+    public void CreateRecurringJobs()
+    {
+        using var storageConnection = _recurringJobManager.Storage.GetConnection();
+        using var jobLock = AcquireRecurringJobLock(storageConnection);
 
         foreach (var jobRegistration in _hangfireRecurringJobRegistry.RegisteredJobs)
         {
