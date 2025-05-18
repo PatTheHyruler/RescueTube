@@ -10,8 +10,8 @@ using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.EventHandlers;
+using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.DataFetch;
-using RescueTube.YouTube.Jobs.Registration;
 using RescueTube.YouTube.Services;
 using YoutubeDLSharp;
 
@@ -72,7 +72,7 @@ public static class Setup
         });
 
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
-        services.AddHostedService<RegisterYouTubeJobsService>();
+        services.RegisterYouTubeRecurringJobs();
 
         services.Configure<JobsConfiguration>(c => c.RegisterJobs(
             new JobDefinition<FetchPlaylistDataJob>(),

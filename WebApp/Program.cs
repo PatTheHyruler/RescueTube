@@ -57,14 +57,10 @@ builder.Services.AddHangfire(configuration => configuration
     )
     .UseConsole()
 );
-var shouldDisableBackgroundJobs = builder.Configuration.GetValue<bool?>("DisableBackgroundJobs") ?? false;
-if (!shouldDisableBackgroundJobs)
+builder.Services.AddHangfireServer(options =>
 {
-    builder.Services.AddHangfireServer(options =>
-    {
-        options.Queues = JobQueues.Queues;
-    });
-}
+    options.Queues = JobQueues.Queues;
+});
 builder.Services.AddHangfireConsoleExtensions();
 builder.Services.AddSingleton<IDashboardAsyncAuthorizationFilter, HangfireDashboardAuthorizationFilter>();
 

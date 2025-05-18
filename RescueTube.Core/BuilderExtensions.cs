@@ -60,7 +60,11 @@ public static class BuilderExtensions
             }
         ));
 
-        services.AddHostedService<RegisterBllJobsService>();
+        services.AddOptions<HangfireRecurringJobRegistry>();
+        services.RegisterBllRecurringJobs();
+
+        services.AddScoped<RecurringJobsService>();
+        services.AddHostedService<RegisterRecurringJobsService>();
 
         return services;
     }
