@@ -24,8 +24,6 @@ public class AllArchivalDisabledEventHandler : INotificationHandler<SettingChang
             return;
         }
 
-        // TODO: check old value, don't act if unchanged
-
 #pragma warning disable CS8524 // The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value.
         var newValue = (setting.Value, notification.Type) switch
 #pragma warning restore CS8524 // The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value.

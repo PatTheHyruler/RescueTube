@@ -135,6 +135,7 @@ public class SettingService
             where TSetting : Setting<T>, ICreatableSetting<TSetting, T>
             where TUpdateDto : SettingValueUpdateDto, ISettingValueUpdateDto<T?>
             where TDefinition : SettingDefinition<T>
+            where T : IEquatable<T>
         {
             if (baseDefinition is null)
             {
@@ -152,7 +153,7 @@ public class SettingService
                 if (baseSettingEntity is not null)
                 {
                     _dataUow.Ctx.Settings.Remove(baseSettingEntity);
-                    await _mediator.Publish(new SettingChangingEvent(baseSettingEntity, SettingChangingEvent.ChangeType.Removed), ct);
+                    await _mediator.Publish(SettingChangingEvent.Removed(baseSettingEntity), ct);
                 }
 
                 return SettingUpdateResult.Success;
@@ -160,8 +161,11 @@ public class SettingService
 
             if (baseSettingEntity is TSetting settingEntity)
             {
+                if (!settingEntity.Value.Equals(updateDto.Value))
+                {
+                    await _mediator.Publish(SettingChangingEvent.Updated(settingEntity), ct);
+                }
                 settingEntity.Value = updateDto.Value;
-                await _mediator.Publish(new SettingChangingEvent(settingEntity, SettingChangingEvent.ChangeType.Updated), ct);
                 return SettingUpdateResult.Success;
             }
 
@@ -173,7 +177,7 @@ public class SettingService
 
             var newSetting = TSetting.Create(key: definition.Key, value: updateDto.Value);
             _dataUow.Ctx.Settings.Add(newSetting);
-            await _mediator.Publish(new SettingChangingEvent(newSetting, SettingChangingEvent.ChangeType.Added), ct);
+            await _mediator.Publish(SettingChangingEvent.Added(newSetting), ct);
             return SettingUpdateResult.Success;
         }
     }
