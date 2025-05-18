@@ -15,6 +15,7 @@ public class HangfireRecurringJobRegistry
         bool isArchivalJob = true)
     {
         _registeredJobs.Add(new HangfireJobRegistration(
+            RecurringJobId: recurringJobId,
             RegistrationAction: x => x.AddOrUpdate(
                 recurringJobId: recurringJobId,
                 methodCall: methodCall,
@@ -29,6 +30,7 @@ public class HangfireRecurringJobRegistry
         bool isArchivalJob = true)
     {
         _registeredJobs.Add(new HangfireJobRegistration(
+            RecurringJobId: recurringJobId,
             RegistrationAction: x => x.AddOrUpdate(
                 recurringJobId: recurringJobId,
                 methodCall: methodCall,
@@ -37,6 +39,7 @@ public class HangfireRecurringJobRegistry
     }
 
     public readonly record struct HangfireJobRegistration(
+        string RecurringJobId,
         Action<IRecurringJobManagerV2> RegistrationAction,
         bool IsArchivalJob);
 }

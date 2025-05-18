@@ -17,6 +17,6 @@ public class RegisterRecurringJobsService : BackgroundService
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
         var recurringJobsService = scope.ServiceProvider.GetRequiredService<RecurringJobsService>();
 
-        recurringJobsService.RegisterRecurringJobs();
+        recurringJobsService.CreateRecurringJobs();
     }
 }

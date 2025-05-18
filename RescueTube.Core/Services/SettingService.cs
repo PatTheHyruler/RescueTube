@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Data;
 using RescueTube.Core.DTO.Settings;
+using RescueTube.Core.Events;
 using RescueTube.Core.Utils;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;
@@ -13,10 +15,12 @@ public class SettingService
 {
     private readonly IDataUow _dataUow;
     private readonly SettingRegistry _settingRegistry;
+    private readonly IMediator _mediator;
 
-    public SettingService(IDataUow dataUow, IOptions<SettingRegistry> settingRegistry)
+    public SettingService(IDataUow dataUow, IOptions<SettingRegistry> settingRegistry, IMediator mediator)
     {
         _dataUow = dataUow;
+        _mediator = mediator;
         _settingRegistry = settingRegistry.Value;
     }
 
@@ -114,10 +118,10 @@ public class SettingService
         {
             var result = baseUpdateDto switch
             {
-                SettingValueUpdateDto.Long updateDto => HandleSettingUpdate<Setting.Long, SettingValueUpdateDto.Long, SettingDefinition.Long, long>(updateDto, definition),
-                SettingValueUpdateDto.Bool updateDto => HandleSettingUpdate<Setting.Bool, SettingValueUpdateDto.Bool, SettingDefinition.Bool, bool>(updateDto, definition),
-                SettingValueUpdateDto.String updateDto => HandleSettingUpdate<Setting.String, SettingValueUpdateDto.String, SettingDefinition.String, string>(updateDto, definition),
-                SettingValueUpdateDto.DataSize updateDto => HandleSettingUpdate<Setting.DataSize, SettingValueUpdateDto.DataSize, SettingDefinition.DataSize, DataSize>(updateDto, definition),
+                SettingValueUpdateDto.Long updateDto => await HandleSettingUpdateAsync<Setting.Long, SettingValueUpdateDto.Long, SettingDefinition.Long, long>(updateDto, definition),
+                SettingValueUpdateDto.Bool updateDto => await HandleSettingUpdateAsync<Setting.Bool, SettingValueUpdateDto.Bool, SettingDefinition.Bool, bool>(updateDto, definition),
+                SettingValueUpdateDto.String updateDto => await HandleSettingUpdateAsync<Setting.String, SettingValueUpdateDto.String, SettingDefinition.String, string>(updateDto, definition),
+                SettingValueUpdateDto.DataSize updateDto => await HandleSettingUpdateAsync<Setting.DataSize, SettingValueUpdateDto.DataSize, SettingDefinition.DataSize, DataSize>(updateDto, definition),
                 _ => throw new SwitchExpressionException(baseUpdateDto),
             };
             results[baseUpdateDto.Key] = result;
@@ -125,7 +129,7 @@ public class SettingService
 
         return results;
 
-        SettingUpdateResult HandleSettingUpdate<TSetting, TUpdateDto, TDefinition, T>(
+        async Task<SettingUpdateResult> HandleSettingUpdateAsync<TSetting, TUpdateDto, TDefinition, T>(
             TUpdateDto updateDto,
             SettingDefinition? baseDefinition)
             where TSetting : Setting<T>, ICreatableSetting<TSetting, T>
@@ -148,6 +152,7 @@ public class SettingService
                 if (baseSettingEntity is not null)
                 {
                     _dataUow.Ctx.Settings.Remove(baseSettingEntity);
+                    await _mediator.Publish(new SettingChangingEvent(baseSettingEntity, SettingChangingEvent.ChangeType.Removed), ct);
                 }
 
                 return SettingUpdateResult.Success;
@@ -156,6 +161,7 @@ public class SettingService
             if (baseSettingEntity is TSetting settingEntity)
             {
                 settingEntity.Value = updateDto.Value;
+                await _mediator.Publish(new SettingChangingEvent(settingEntity, SettingChangingEvent.ChangeType.Updated), ct);
                 return SettingUpdateResult.Success;
             }
 
@@ -165,7 +171,9 @@ public class SettingService
                 _dataUow.Ctx.Settings.Remove(baseSettingEntity);
             }
 
-            _dataUow.Ctx.Settings.Add(TSetting.Create(key: definition.Key, value: updateDto.Value));
+            var newSetting = TSetting.Create(key: definition.Key, value: updateDto.Value);
+            _dataUow.Ctx.Settings.Add(newSetting);
+            await _mediator.Publish(new SettingChangingEvent(newSetting, SettingChangingEvent.ChangeType.Added), ct);
             return SettingUpdateResult.Success;
         }
     }
