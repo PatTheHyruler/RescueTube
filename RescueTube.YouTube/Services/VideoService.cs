@@ -73,6 +73,7 @@ public class VideoService : BaseYouTubeService
             .ThenInclude(t => t!.Translations)
             .Include(v => v.Description)
             .ThenInclude(t => t!.Translations)
+            .Include(v => v.ArchivalSettings)
             .Include(v => v.VideoTags)
             .Include(v => v.VideoStatisticSnapshots)
             .Include(v => v.Captions)
@@ -83,7 +84,11 @@ public class VideoService : BaseYouTubeService
             .AsSplitQuery()
             .FirstOrDefaultAsync(cancellationToken: ct);
         var isNew = video == null;
-        video ??= new Video { IdOnPlatform = videoData.ID };
+        video ??= new Video
+        {
+            IdOnPlatform = videoData.ID,
+            ArchivalSettings = VideoArchivalSettings.CreateDefaultArchivedVideoSettings(),
+        };
         var newVideoData = videoData.ToDomainVideo(fetchType);
         ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew,
             EntityUpdateService.EImageUpdateOptions.OnlyAdd);

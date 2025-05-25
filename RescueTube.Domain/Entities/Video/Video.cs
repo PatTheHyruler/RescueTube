@@ -52,6 +52,8 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
 
     public DateTimeOffset AddedToArchiveAt { get; set; }
 
+    public VideoArchivalSettings ArchivalSettings { get; set; } = VideoArchivalSettings.CreateDefaultArchivedVideoSettings();
+
     public ICollection<DataFetch>? DataFetches { get; set; }
 
     public ICollection<VideoAuthor>? VideoAuthors { get; set; }

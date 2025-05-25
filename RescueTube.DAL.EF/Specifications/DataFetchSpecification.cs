@@ -28,33 +28,55 @@ public class DataFetchSpecification : IDataFetchSpecification
         return ShouldFetchData<Playlist>(jobDefinition);
     }
 
-    public Expression<Func<Video, bool>> ShouldFetchVideoData(DataFetchJobDefinition jobDefinition)
+    public Expression<Func<Video, bool>> ShouldFetchVideoData(
+        DataFetchJobDefinition jobDefinition, Expression<Func<Video, bool>> allowRegularFetchesPredicate)
     {
-        return ShouldFetchData<Video>(jobDefinition);
+        return IsDataFetchAllowed<Video>(jobDefinition).And(
+            allowRegularFetchesPredicate.And(HasNoTooRecentDataFetches<Video>(jobDefinition))
+                .Or(HasNoSuccessDataFetchesAndNotBlockedByFailure<Video>(jobDefinition)));
     }
-
-    public Expression<Func<Author, bool>> AuthorIsActiveAndConfiguredForVideoArchival => a =>
-        a.ArchivalSettingsId != null
-        && a.ArchivalSettings!.IsEnabledForArchival
-        && a.ArchivalSettings!.ArchiveVideos;
 
     private Expression<Func<TEntity, bool>> ShouldFetchData<TEntity>(DataFetchJobDefinition jobDefinition)
         where TEntity : IIdDatabaseEntity, IPlatformEntity, IFetchable
     {
+        return IsDataFetchAllowed<TEntity>(jobDefinition)
+            .And(HasNoTooRecentDataFetches<TEntity>(jobDefinition));
+    }
+
+    private Expression<Func<TEntity, bool>> IsDataFetchAllowed<TEntity>(DataFetchJobDefinition jobDefinition)
+        where TEntity : IPlatformEntity
+    {
         var currentlyProcessingIdsOnPlatform = _dataFetchContext.GetCurrentlyFetchingEntityIdsOnPlatform(jobDefinition.DataFetchDefinition)
             .AsEnumerable();
+        return e =>
+            e.Platform == jobDefinition.DataFetchDefinition.Platform
+            && !currentlyProcessingIdsOnPlatform.Contains(e.IdOnPlatform);
+    }
+
+    private Expression<Func<TEntity, bool>> HasNoTooRecentDataFetches<TEntity>(DataFetchJobDefinition jobDefinition)
+        where TEntity : IFetchable
+    {
         var now = _timeProvider.GetUtcNow();
         var successCutoff = now.Subtract(jobDefinition.SuccessCutoffOffset);
         var failureCutoff = now.Subtract(jobDefinition.FailureCutoffOffset);
-        return e =>
-            e.Platform == jobDefinition.DataFetchDefinition.Platform
-            && !currentlyProcessingIdsOnPlatform.Contains(e.IdOnPlatform)
-            && !e.DataFetches!.Any(d => IsTooRecent(
-                jobDefinition.DataFetchDefinition.Source,
-                jobDefinition.DataFetchDefinition.Type,
-                successCutoff,
-                failureCutoff
-            ).Invoke(d));
+        return e => !e.DataFetches!.Any(d => IsTooRecent(
+            jobDefinition.DataFetchDefinition.Source,
+            jobDefinition.DataFetchDefinition.Type,
+            successCutoff,
+            failureCutoff).Invoke(d));
+    }
+
+    private Expression<Func<TEntity, bool>> HasNoSuccessDataFetchesAndNotBlockedByFailure<TEntity>(DataFetchJobDefinition jobDefinition)
+        where TEntity : IFetchable
+    {
+        var now = _timeProvider.GetUtcNow();
+        var successCutoff = DateTimeOffset.MinValue;
+        var failureCutoff = now.Subtract(jobDefinition.FailureCutoffOffset);
+        return e => !e.DataFetches!.Any(d => IsTooRecent(
+            jobDefinition.DataFetchDefinition.Source,
+            jobDefinition.DataFetchDefinition.Type,
+            successCutoff,
+            failureCutoff).Invoke(d));
     }
 
     private static Expression<Func<DataFetch, bool>> IsTooRecent(

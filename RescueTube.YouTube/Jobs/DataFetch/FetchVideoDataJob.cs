@@ -27,7 +27,8 @@ public class FetchVideoDataJob : EntityDataFetchJobBase<Video>
     };
 
     protected override Expression<Func<Video, bool>> FilterExpression =>
-        DataUow.DataFetches.ShouldFetchVideoData(JobDefinition);
+        DataUow.DataFetches.ShouldFetchVideoData(JobDefinition, v =>
+            v.ArchivalSettings.ShouldRegularlyFetchVideoData);
 
     protected override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
