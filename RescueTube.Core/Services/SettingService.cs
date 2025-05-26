@@ -161,11 +161,12 @@ public class SettingService
 
             if (baseSettingEntity is TSetting settingEntity)
             {
-                if (!settingEntity.Value.Equals(updateDto.Value))
+                var previousValue = settingEntity.Value;
+                settingEntity.Value = updateDto.Value;
+                if (!previousValue.Equals(updateDto.Value))
                 {
                     await _mediator.Publish(SettingChangingEvent.Updated(settingEntity), ct);
                 }
-                settingEntity.Value = updateDto.Value;
                 return SettingUpdateResult.Success;
             }
 

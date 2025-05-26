@@ -28,7 +28,10 @@ public class FetchAuthorVideosJob : EntityDataFetchJobBase<Author>
 
     protected override Expression<Func<Author, bool>> FilterExpression =>
         DataUow.DataFetches.ShouldFetchAuthorData(JobDefinition)
-            .And(DataUow.DataFetches.AuthorIsActiveAndConfiguredForVideoArchival);
+            .And(a =>
+                a.ArchivalSettingsId != null
+                && a.ArchivalSettings!.IsEnabledForArchival
+                && a.ArchivalSettings!.ArchiveVideos);
 
     protected override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {

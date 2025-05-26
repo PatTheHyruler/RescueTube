@@ -1,10 +1,11 @@
 using Hangfire;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.JobOrchestration.Jobs;
 
 namespace RescueTube.Core.Jobs.Registration;
 
-public static class RegisterBllJobsServiceCollectionExtensions
+public static class BllJobsSetupExtensions
 {
     public static IServiceCollection RegisterBllRecurringJobs(this IServiceCollection services)
     {
@@ -45,5 +46,12 @@ public static class RegisterBllJobsServiceCollectionExtensions
         });
 
         return services;
+    }
+
+    public static async Task ClearRecurringJobsAsync(this IApplicationBuilder app)
+    {
+        await using var scope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateAsyncScope();
+        var recurringJobsService = scope.ServiceProvider.GetRequiredService<RecurringJobsService>();
+        recurringJobsService.RemoveAllRecurringJobs();
     }
 }

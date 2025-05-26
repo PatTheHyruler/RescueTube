@@ -157,20 +157,14 @@ public static class SetupExtensions
     /// Requires <see cref="AddSeeding"/> (called by <see cref="AddCustomIdentity"/>)
     /// to have been called during service registration.
     /// </remarks>
-    public static async Task SeedIdentityAsync(this WebApplication app)
+    public static async Task SeedIdentityAsync(this IApplicationBuilder app)
     {
-        var appBuilder = app as IApplicationBuilder;
-        await using var scope = appBuilder.ApplicationServices.GetRequiredService<IServiceScopeFactory>()
+        await using var scope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>()
             .CreateAsyncScope();
         var services = scope.ServiceProvider;
 
         await services.SeedRoles();
         await services.SeedUsers();
-    }
-
-    public static void SeedIdentity(this WebApplication app)
-    {
-        app.SeedIdentityAsync().GetAwaiter().GetResult();
     }
 
     private static async Task SeedUsers(this IServiceProvider services)

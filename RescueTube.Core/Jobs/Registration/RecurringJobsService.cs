@@ -1,6 +1,8 @@
 using Hangfire;
 using Hangfire.Storage;
 using Microsoft.Extensions.Options;
+using RescueTube.Core.Constants;
+using RescueTube.Core.Services;
 
 namespace RescueTube.Core.Jobs.Registration;
 
@@ -8,16 +10,19 @@ public class RecurringJobsService
 {
     private readonly IRecurringJobManagerV2 _recurringJobManager;
     private readonly HangfireRecurringJobRegistry _hangfireRecurringJobRegistry;
+    private readonly SettingService _settingService;
 
     public RecurringJobsService(
         IRecurringJobManagerV2 recurringJobManager,
-        IOptions<HangfireRecurringJobRegistry> hangfireRecurringJobRegistry)
+        IOptions<HangfireRecurringJobRegistry> hangfireRecurringJobRegistry,
+        SettingService settingService)
     {
         _recurringJobManager = recurringJobManager;
+        _settingService = settingService;
         _hangfireRecurringJobRegistry = hangfireRecurringJobRegistry.Value;
     }
 
-    public void CreateRecurringJobs()
+    public void RemoveAllRecurringJobs()
     {
         using var storageConnection = _recurringJobManager.Storage.GetConnection();
         using var jobLock = AcquireRecurringJobLock(storageConnection);
@@ -27,8 +32,20 @@ public class RecurringJobsService
         {
             _recurringJobManager.RemoveIfExists(recurringJob.Id);
         }
+    }
 
-        foreach (var jobRegistration in _hangfireRecurringJobRegistry.RegisteredJobs)
+    public async Task CreateRecurringJobsAsync(CancellationToken ct)
+    {
+        using var storageConnection = _recurringJobManager.Storage.GetConnection();
+        using var jobLock = AcquireRecurringJobLock(storageConnection);
+
+        var disableAllArchival = await _settingService.GetValueAsync(SettingDefinitions.DisableAllArchival, ct)
+                                 ?? SettingDefinitions.DisableAllArchival.DefaultValue;
+
+        var jobRegistrations = disableAllArchival
+            ? _hangfireRecurringJobRegistry.RegisteredJobs.Where(x => !x.IsArchivalJob)
+            : _hangfireRecurringJobRegistry.RegisteredJobs;
+        foreach (var jobRegistration in jobRegistrations)
         {
             jobRegistration.RegistrationAction(_recurringJobManager);
         }
