@@ -162,4 +162,12 @@ public static class ApiMapper
             ArchiveVideos = src.ArchiveVideos,
         };
     }
+
+    public static VideoArchivalSettingsDtoV1 MapToVideoArchivalSettingsDtoV1(this VideoArchivalSettings src)
+    {
+        return new()
+        {
+            ShouldRegularlyFetchVideoData = src.ShouldRegularlyFetchVideoData,
+        };
+    }
 }

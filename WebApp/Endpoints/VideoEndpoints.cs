@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using RescueTube.Core.Data;
+using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
 using WebApp.ApiModels;
 using WebApp.ApiModels.Mappers;
@@ -16,6 +19,13 @@ public static class VideoEndpoints
         videosGroup.MapPost("search", SearchVideosAsync).HasApiVersion(1);
         videosGroup.MapGet("{videoId:guid}", GetVideoAsync)
             .AllowAnonymous()
+            .HasApiVersion(1);
+
+        videosGroup.MapGet("{videoId:guid}/archival-settings", GetVideoArchivalSettingsAsync)
+            .HasApiVersion(1);
+
+        videosGroup.MapPut("{videoId:guid}/archival-settings", UpsertVideoArchivalSettingsAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
     }
 
@@ -64,5 +74,47 @@ public static class VideoEndpoints
         }
 
         return TypedResults.Ok(response.MapToVideoSimpleDtoV1(httpContext.GetBaseUrl()));
+    }
+
+    private static async Task<Results<Ok<VideoArchivalSettingsDtoV1>, NotFound<ErrorResponseDto>>>
+        GetVideoArchivalSettingsAsync([FromRoute] Guid videoId, [FromServices] IDataUow dataUow, CancellationToken ct)
+    {
+        var videoSettings = await dataUow.Ctx.Videos
+            .Where(v => v.Id == videoId)
+            .Select(v => v.ArchivalSettings)
+            .FirstOrDefaultAsync(ct);
+        if (videoSettings is null)
+        {
+            return TypedResults.NotFound(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.EntityNotFound,
+                Message = "Video not found",
+            });
+        }
+
+        return TypedResults.Ok(videoSettings.MapToVideoArchivalSettingsDtoV1());
+    }
+
+    private static async Task<Results<Ok, NotFound<ErrorResponseDto>>> UpsertVideoArchivalSettingsAsync(
+        [FromRoute] Guid videoId, [FromBody] VideoArchivalSettingsDtoV1 settingsDto,
+        [FromServices] IDataUow dataUow, CancellationToken ct)
+    {
+        // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataQuery
+        var video = await dataUow.Ctx.Videos.FirstOrDefaultAsync(v => v.Id == videoId, ct);
+        if (video is null)
+        {
+            return TypedResults.NotFound(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.EntityNotFound,
+                Message = "Video not found",
+            });
+        }
+
+        // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
+        video.ArchivalSettings.ShouldRegularlyFetchVideoData = settingsDto.ShouldRegularlyFetchVideoData;
+
+        await dataUow.SaveChangesAsync(ct);
+
+        return TypedResults.Ok();
     }
 }
