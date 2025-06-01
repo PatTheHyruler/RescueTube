@@ -73,7 +73,6 @@ public class VideoService : BaseYouTubeService
             .ThenInclude(t => t!.Translations)
             .Include(v => v.Description)
             .ThenInclude(t => t!.Translations)
-            .Include(v => v.ArchivalSettings)
             .Include(v => v.VideoTags)
             .Include(v => v.VideoStatisticSnapshots)
             .Include(v => v.Captions)
