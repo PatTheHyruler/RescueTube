@@ -42,12 +42,18 @@ public class StorageLimitService
     public async Task<bool> IsVideoDownloadForbiddenAsync(CancellationToken ct)
     {
         // TODO: Cache these maybe?
-        var minFreeSpace = await _settingService.GetValueAsync(SettingDefinitions.MinFreeSpaceForVideoDownload, ct)
-                           ?? SettingDefinitions.MinFreeSpaceForVideoDownload.DefaultValue;
-        var driveInfo = new DriveInfo(_appPaths.GetAbsolutePathFromContentRoot(_appPaths.GetVideosBaseDirectory()));
+        var videosBaseDirectory = _appPaths.GetVideosBaseDirectory();
+        if (!Directory.Exists(videosBaseDirectory))
+        {
+            Directory.CreateDirectory(videosBaseDirectory);
+        }
+        var driveInfo = new DriveInfo(_appPaths.GetAbsolutePathFromContentRoot(videosBaseDirectory));
 
         await WaitForDriveToBeReady(driveInfo, ct);
         var availableFreeSpace = DataSize.FromBytes(driveInfo.AvailableFreeSpace);
+
+        var minFreeSpace = await _settingService.GetValueAsync(SettingDefinitions.MinFreeSpaceForVideoDownload, ct)
+                           ?? SettingDefinitions.MinFreeSpaceForVideoDownload.DefaultValue;
 
         _logger.LogInformation(
             "Available free space: {AvailableFreeSpace}, minimum required: {MinimumRequiredFreeSpace}",
