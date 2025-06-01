@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RescueTube.Core.Constants.DataFetches;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
@@ -27,7 +28,7 @@ public class DownloadVideoJob
     private readonly IMediator _mediator;
     private readonly ServiceRegistry _serviceRegistry;
 
-    public DownloadVideoJob(ILogger<DownloadVideoJob> logger, StorageLimitService storageLimitService, IDataUow dataUow, IServiceProvider serviceProvider, TimeProvider timeProvider, AppPaths appPaths, IMediator mediator, ServiceRegistry serviceRegistry)
+    public DownloadVideoJob(ILogger<DownloadVideoJob> logger, StorageLimitService storageLimitService, IDataUow dataUow, IServiceProvider serviceProvider, TimeProvider timeProvider, AppPaths appPaths, IMediator mediator, IOptions<ServiceRegistry> serviceRegistry)
     {
         _logger = logger;
         _storageLimitService = storageLimitService;
@@ -36,7 +37,7 @@ public class DownloadVideoJob
         _timeProvider = timeProvider;
         _appPaths = appPaths;
         _mediator = mediator;
-        _serviceRegistry = serviceRegistry;
+        _serviceRegistry = serviceRegistry.Value;
     }
 
     private static readonly ConcurrentDictionary<Guid, DateTimeOffset> DownloadingVideoIds = new();

@@ -23,7 +23,7 @@ public static class BuilderExtensions
         services.AddSingleton<JobExecutionRegistry>();
         services.AddOptions<JobsConfiguration>();
 
-        services.AddSingleton<ServiceRegistry>();
+        services.AddOptions<ServiceRegistry>();
 
         services.AddSingleton<DataFetchContext>();
 
