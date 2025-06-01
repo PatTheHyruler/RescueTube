@@ -26,7 +26,7 @@ public static class AccountEndpoints
             .HasApiVersion(1);
 
         accountGroup.MapPost("RefreshToken", RefreshTokenAsync)
-            .RequireAuthorization()
+            .AllowAnonymous()
             .HasApiVersion(1);
 
         accountGroup.MapPost("logout", LogoutAsync)
