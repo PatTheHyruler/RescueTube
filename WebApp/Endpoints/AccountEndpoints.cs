@@ -30,7 +30,7 @@ public static class AccountEndpoints
             .HasApiVersion(1);
 
         accountGroup.MapPost("logout", LogoutAsync)
-            .RequireAuthorization()
+            .AllowAnonymous()
             .HasApiVersion(1);
 
         accountGroup.MapGet("me", GetMeAsync)
@@ -214,11 +214,9 @@ public static class AccountEndpoints
     {
         try
         {
-            using var transaction = TransactionUtils.NewTransactionScope();
             await identityUow.TokenService.DeleteRefreshTokenAsync(
                 jwt: logoutDto.Jwt, refreshToken: logoutDto.RefreshToken, ct);
             await identityUow.SaveChangesAsync(ct);
-            transaction.Complete();
             return TypedResults.Ok();
         }
         catch (InvalidJwtException)
