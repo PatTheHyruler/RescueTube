@@ -26,11 +26,22 @@ public static class DataFetchEndpoints
         [FromServices] IDataUow dataUow,
         CancellationToken ct)
     {
-        var query = dataUow.Ctx.DataFetches;
-        var dataFetches = await query
-            .OrderByDescending(x => x.OccurredAt)
+        var query = dataUow.Ctx.DataFetches
+            .Where(x => request.Source == null || x.Source == request.Source)
+            .Where(x => request.Type == null || x.Type == request.Type)
+            .Where(x => request.OccurredAtFrom == null || x.OccurredAt >= request.OccurredAtFrom)
+            .Where(x => request.OccurredAtTo == null || x.OccurredAt <= request.OccurredAtTo)
+            .Where(x => request.Success == null || x.Success == request.Success);
+
+        var orderedQuery = (request.OrderByDescending ?? true) switch
+        {
+            true => query.OrderByDescending(x => x.OccurredAt),
+            false => query.OrderBy(x => x.OccurredAt),
+        };
+        var dataFetches = await orderedQuery
             .Paginate(request)
             .ToListAsync(ct);
+
         var paginationResult = request.ToPaginationResult(dataFetches.Count, await query.CountAsync(ct));
         var result = new DataFetchesResponseDtoV1
         {
