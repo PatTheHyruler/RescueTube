@@ -125,6 +125,9 @@ public static class ApiMapper
         Source = src.Source,
         Success = src.Success,
         Type = src.Type,
+
+        VideoId = src.VideoId,
+        AuthorId = src.AuthorId,
     };
 
     public static CommentStatisticSnapshotDtoV1 MapCommentStatisticSnapshotDtoV1(this CommentStatisticSnapshotDto src)
