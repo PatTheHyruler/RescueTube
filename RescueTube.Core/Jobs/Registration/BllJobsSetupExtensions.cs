@@ -33,7 +33,8 @@ public static class BllJobsSetupExtensions
             jobRegistry.RegisterJob<DataFetchesKillSwitchJob>(
                 "data-fetch-kill-switch-job",
                 x => x.CheckDataFetchAmountAsync(CancellationToken.None),
-                "*/10 * * * *"); // Every 10th minute
+                "*/10 * * * *", // Every 10th minute
+                isArchivalJob: false);
 
             foreach (var workerIndex in Enumerable.Range(0, 10))
             {
