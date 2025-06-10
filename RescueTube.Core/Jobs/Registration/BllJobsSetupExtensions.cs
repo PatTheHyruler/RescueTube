@@ -30,6 +30,10 @@ public static class BllJobsSetupExtensions
                 x => x.EnqueueAsync(default),
                 Cron.Daily(),
                 isArchivalJob: false);
+            jobRegistry.RegisterJob<DataFetchesKillSwitchJob>(
+                "data-fetch-kill-switch-job",
+                x => x.CheckDataFetchAmountAsync(CancellationToken.None),
+                "*/10 * * * *"); // Every 10th minute
 
             foreach (var workerIndex in Enumerable.Range(0, 10))
             {

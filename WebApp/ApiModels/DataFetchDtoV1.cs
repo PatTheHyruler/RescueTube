@@ -8,4 +8,7 @@ public class DataFetchDtoV1
     public required string Type { get; set; }
     public required bool ShouldAffectValidity { get; set; }
     public required string Source { get; set; }
+
+    public required Guid? VideoId { get; init; }
+    public required Guid? AuthorId { get; init; }
 }

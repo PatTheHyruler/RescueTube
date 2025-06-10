@@ -48,6 +48,11 @@ public class SettingService
         return await GetStructValueAsync(_dataUow.Ctx.LongSettings, settingDefinition, ct);
     }
 
+    public async Task<long> GetValueAsync(SettingDefinition.Long.WithDefault settingDefinition, CancellationToken ct)
+    {
+        return await GetStructValueAsync(_dataUow.Ctx.LongSettings, settingDefinition, ct) ?? settingDefinition.DefaultValue;
+    }
+
     public async Task<bool?> GetValueAsync(SettingDefinition.Bool settingDefinition, CancellationToken ct)
     {
         return await GetStructValueAsync(_dataUow.Ctx.BoolSettings, settingDefinition, ct);
@@ -90,6 +95,18 @@ public class SettingService
             .OfType<TSetting>()
             .OrderByDescending(x => x.Id)
             .FirstOrDefault();
+    }
+
+    public async Task UpdateSettingAsync(SettingDefinition<bool> definition, bool? value, CancellationToken ct)
+    {
+        // TODO: Make this more efficient, no need to use bulk update logic here?
+        await UpdateSettingsAsync([
+            new SettingValueUpdateDto.Bool
+            {
+                Key = definition.Key,
+                Value = value,
+            }
+        ], ct);
     }
 
     public enum SettingUpdateResult

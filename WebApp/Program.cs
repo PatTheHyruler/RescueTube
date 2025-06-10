@@ -226,6 +226,7 @@ try
     baseVersionedApi.MapVideoEndpoints();
     baseVersionedApi.MapVideoFileEndpoints();
     baseVersionedApi.MapSettingEndpoints();
+    baseVersionedApi.MapDataFetchEndpoints();
 
     app.MapControllers();
 
