@@ -19,6 +19,8 @@ public static class AuthorEndpoints
 
         authorsGroup.MapGet("{authorId:guid}", GetAuthorAsync).HasApiVersion(1);
 
+        authorsGroup.MapGet("", GetAuthorsAsync).HasApiVersion(1);
+
         authorsGroup.MapGet("{authorId:guid}/archival-settings", GetAuthorArchivalSettingsAsync)
             .HasApiVersion(1);
 
@@ -42,6 +44,26 @@ public static class AuthorEndpoints
         }
 
         return TypedResults.Ok(author.MapAuthorSimpleDtoV1(httpContext.GetBaseUrl()));
+    }
+
+    private static async Task<Ok<AuthorSearchResponseDtoV1>> GetAuthorsAsync(
+        [AsParameters] AuthorSearchDtoV1 request,
+        [FromServices] AuthorPresentationService authorPresentationService,
+        HttpContext httpContext,
+        CancellationToken ct)
+    {
+        var result = await authorPresentationService.SearchAuthorsSimpleAsync(
+            request, request.Name, ct);
+        return TypedResults.Ok(new AuthorSearchResponseDtoV1
+        {
+            Authors = result.Result
+                .Select(a => a.MapAuthorSimpleDtoV1(httpContext.GetBaseUrl()))
+                .ToArray(),
+            Page = result.PaginationResult.Page,
+            AmountOnPage = result.PaginationResult.AmountOnPage,
+            TotalResults = result.PaginationResult.TotalResults,
+            Limit = result.PaginationResult.Limit,
+        });
     }
 
     private static async Task<Ok<AuthorArchivalSettingsDtoV1?>> GetAuthorArchivalSettingsAsync(

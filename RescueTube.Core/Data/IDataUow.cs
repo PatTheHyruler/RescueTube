@@ -5,6 +5,7 @@ namespace RescueTube.Core.Data;
 public interface IDataUow
 {
     public IVideoSpecification Videos { get; }
+    public IAuthorSpecification Authors { get; }
     public IPlaylistSpecification Playlists { get; }
     public IPermissionSpecification Permissions { get; }
     public IImageSpecification Images { get; }
