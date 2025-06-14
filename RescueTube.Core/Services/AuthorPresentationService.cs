@@ -37,11 +37,15 @@ public class AuthorPresentationService
     }
 
     public async Task<PaginationResponse<AuthorSimple[]>> SearchAuthorsSimpleAsync(
-        IPaginationQuery pagination, string? name,
+        IPaginationQuery pagination, string? name, Guid[]? excludeAuthorIds,
         CancellationToken ct)
     {
         var query = _dataUow.Ctx.Authors
             .Where(_dataUow.Authors.HasName(name));
+        if (excludeAuthorIds is { Length: > 0 })
+        {
+            query = query.Where(x => !excludeAuthorIds.Contains(x.Id));
+        }
 
         var authors = await query
             .OrderBy(x => x.AddedToArchiveAt)
