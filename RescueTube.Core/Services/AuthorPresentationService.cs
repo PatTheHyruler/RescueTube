@@ -5,6 +5,7 @@ using RescueTube.Core.Data.Mappers;
 using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.Utils.Pagination;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
 
@@ -37,11 +38,18 @@ public class AuthorPresentationService
     }
 
     public async Task<PaginationResponse<AuthorSimple[]>> SearchAuthorsSimpleAsync(
-        IPaginationQuery pagination, string? name, Guid[]? excludeAuthorIds,
+        IPaginationQuery pagination, string? name, Guid[]? authorIds, Guid[]? excludeAuthorIds,
         CancellationToken ct)
     {
-        var query = _dataUow.Ctx.Authors
-            .Where(_dataUow.Authors.HasName(name));
+        IQueryable<Author> query = _dataUow.Ctx.Authors;
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            query = query.Where(_dataUow.Authors.HasName(name));
+        }
+        if (authorIds is { Length: > 0 })
+        {
+            query = query.Where(x => authorIds.Contains(x.Id));
+        }
         if (excludeAuthorIds is { Length: > 0 })
         {
             query = query.Where(x => !excludeAuthorIds.Contains(x.Id));

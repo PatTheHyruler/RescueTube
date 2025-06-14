@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace WebApp.ApiModels;
 
 public class CommaSeparatedGuidArray
@@ -29,4 +31,7 @@ public class CommaSeparatedGuidArray
         result = new CommaSeparatedGuidArray { Value = guids.ToArray() };
         return true;
     }
+
+    [return: NotNullIfNotNull(nameof(src))]
+    public static implicit operator Guid[]?(CommaSeparatedGuidArray? src) => src?.Value;
 }

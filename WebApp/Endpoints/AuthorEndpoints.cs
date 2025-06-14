@@ -53,7 +53,11 @@ public static class AuthorEndpoints
         CancellationToken ct)
     {
         var result = await authorPresentationService.SearchAuthorsSimpleAsync(
-            request, request.Name, request.ExcludeAuthorIds?.Value, ct);
+            request,
+            name: request.Name,
+            authorIds: request.AuthorIds,
+            excludeAuthorIds: request.ExcludeAuthorIds,
+            ct);
         return TypedResults.Ok(new AuthorSearchResponseDtoV1
         {
             Authors = result.Result
