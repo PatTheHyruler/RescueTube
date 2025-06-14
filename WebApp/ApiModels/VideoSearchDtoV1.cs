@@ -5,12 +5,13 @@ namespace WebApp.ApiModels;
 
 public class VideoSearchDtoV1 : IPaginationQuery
 {
-    public string? NameQuery { get; set; }
-    public string? AuthorQuery { get; set; }
+    public string? NameQuery { get; init; }
+    public string? AuthorQuery { get; init; }
+    public Guid[]? AuthorIds { get; init; }
 
-    public EVideoSortingOptions SortingOptions { get; set; }
-    public bool Descending { get; set; } = true;
+    public EVideoSortingOptions SortingOptions { get; init; }
+    public bool Descending { get; init; } = true;
 
-    public int Page { get; set; } = 1;
-    public int Limit { get; set; } = 50;
+    public int Page { get; init; } = 1;
+    public int Limit { get; init; } = 50;
 }

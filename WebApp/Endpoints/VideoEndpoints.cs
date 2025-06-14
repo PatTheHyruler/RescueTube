@@ -34,7 +34,8 @@ public static class VideoEndpoints
         HttpContext httpContext, CancellationToken ct)
     {
         var response = await videoPresentationService.SearchVideosAsync(
-            platformQuery: null, nameQuery: query.NameQuery, authorQuery: query.AuthorQuery,
+            platformQuery: null, nameQuery: query.NameQuery,
+            authorQuery: query.AuthorQuery, authorIds: query.AuthorIds,
             categoryIds: null,
             user: httpContext.User, userAuthorId: null,
             query,

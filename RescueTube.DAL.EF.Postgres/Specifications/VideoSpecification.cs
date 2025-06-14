@@ -34,6 +34,11 @@ public class VideoSpecification : BaseDbService, IVideoSpecification
                 .Any(n => Microsoft.EntityFrameworkCore.EF.Functions.ILike(n, authorQuery)));
         }
 
+        if (search.AuthorIds is { Length: > 0 })
+        {
+            query = query.Where(v => v.VideoAuthors!.Any(va => search.AuthorIds.Contains(va.AuthorId)));
+        }
+
         if (search.CategoryIds is { Count: > 0 })
         {
             // TODO: Categories

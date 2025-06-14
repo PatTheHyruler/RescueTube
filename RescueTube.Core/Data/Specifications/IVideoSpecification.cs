@@ -11,6 +11,7 @@ public interface IVideoSpecification
         public EPlatform? Platform { get; set; }
         public string? Name { get; set; }
         public string? Author { get; set; }
+        public Guid[]? AuthorIds { get; init; }
         public ICollection<Guid>? CategoryIds { get; set; }
         public Guid? UserId { get; set; }
         public Guid? UserAuthorId { get; set; }
