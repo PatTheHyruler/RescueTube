@@ -22,7 +22,8 @@ public class VideoPresentationService : BaseService
 
     public async Task<PaginationResponse<List<VideoSimple>>> SearchVideosAsync(
         EPlatform? platformQuery, string? nameQuery,
-        string? authorQuery, ICollection<Guid>? categoryIds,
+        string? authorQuery, Guid[]? authorIds,
+        ICollection<Guid>? categoryIds,
         ClaimsPrincipal user, Guid? userAuthorId,
         IPaginationQuery paginationQuery,
         EVideoSortingOptions sortingOptions, bool descending,
@@ -34,7 +35,8 @@ public class VideoPresentationService : BaseService
         var videos = await DataUow.Videos.SearchVideos(new IVideoSpecification.VideoSearchParams
             {
                 Platform = platformQuery,
-                Name = nameQuery, Author = authorQuery,
+                Name = nameQuery,
+                Author = authorQuery, AuthorIds = authorIds,
                 CategoryIds = categoryIds, UserId = userId,
                 UserAuthorId = userAuthorId,
                 AccessAllowed = accessAllowed,

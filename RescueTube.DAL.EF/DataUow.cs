@@ -6,7 +6,7 @@ namespace RescueTube.DAL.EF;
 public class DataUow : IDataUow
 {
     public DataUow(AppDbContext ctx, IVideoSpecification videos, IPlaylistSpecification playlists,
-        IPermissionSpecification permissions, IImageSpecification images, IDataFetchSpecification dataFetches)
+        IPermissionSpecification permissions, IImageSpecification images, IDataFetchSpecification dataFetches, IAuthorSpecification authors)
     {
         _ctx = ctx;
         Videos = videos;
@@ -14,9 +14,11 @@ public class DataUow : IDataUow
         Permissions = permissions;
         Images = images;
         DataFetches = dataFetches;
+        Authors = authors;
     }
 
     public IVideoSpecification Videos { get; }
+    public IAuthorSpecification Authors { get; }
     public IPlaylistSpecification Playlists { get; }
     public IPermissionSpecification Permissions { get; }
     public IImageSpecification Images { get; }
