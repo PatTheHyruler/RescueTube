@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace WebApp.Utils;
+namespace WebApp.Utils.Swagger;
 
 public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
 {
@@ -85,5 +85,7 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
         {
             { jwtSecurityScheme, [] },
         });
+
+        options.ParameterFilter<CommaSeparatedGuidArrayParameterFilter>();
     }
 }

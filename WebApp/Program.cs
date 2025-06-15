@@ -26,6 +26,7 @@ using WebApp.Auth;
 using WebApp.Endpoints;
 using WebApp.Utils;
 using WebApp.Utils.Logging;
+using WebApp.Utils.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 
