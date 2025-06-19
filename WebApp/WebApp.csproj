@@ -51,10 +51,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="ClientApp\"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <None Update="ClientApp\**\*.*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
