@@ -173,7 +173,8 @@ try
 
     app.UseStaticFiles();
 
-    string[] specialPaths = ["/api", "/hangfire"];
+    const string hangfirePrefix = "/hangfire-dashboard";
+    string[] specialPaths = ["/api", hangfirePrefix];
     bool IsSpecialPath(string path) => specialPaths.Any(path.StartsWith);
 
     var spaIndexPath = Path.Combine(app.Environment.ContentRootPath, spaDirectory, "index.html");
@@ -195,10 +196,10 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.UseWhen(context => context.Request.Path.StartsWithSegments("/hangfire"), hangfireApp =>
+    app.UseWhen(context => context.Request.Path.StartsWithSegments(hangfirePrefix), hangfireApp =>
     {
         hangfireApp.UseMiddleware<HangfireDashboardAuthenticationMiddleware>();
-        hangfireApp.UseHangfireDashboard(options: new DashboardOptions
+        hangfireApp.UseHangfireDashboard(pathMatch: hangfirePrefix, options: new DashboardOptions
         {
             AppPath = null,
             DarkModeEnabled = true,
