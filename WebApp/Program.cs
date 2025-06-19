@@ -173,7 +173,8 @@ try
 
     app.UseStaticFiles();
 
-    string[] specialPaths = ["/api", "/hangfire"];
+    const string hangfirePrefix = "/hangfire-dashboard";
+    string[] specialPaths = ["/api", hangfirePrefix];
     bool IsSpecialPath(string path) => specialPaths.Any(path.StartsWith);
 
     var spaIndexPath = Path.Combine(app.Environment.ContentRootPath, spaDirectory, "index.html");
@@ -192,20 +193,13 @@ try
     app.UseCors(corsAllowAllName);
     app.UseCors(corsAllowCredentialsName);
 
-    app.MapGet("/auth/hangfire", (
-        [FromServices] HangfireAuthService hangfireAuthService,
-        HttpResponse response,
-        [FromQuery, Required] string hangfireToken,
-        [FromQuery, Required] string targetUrl,
-        [FromQuery] string? appAuthUrl = null
-    ) => hangfireAuthService.HandleInitialAuth(new(HangfireJwt: hangfireToken, TargetUrl: targetUrl, AppAuthUrl: appAuthUrl), response));
     app.UseAuthentication();
     app.UseAuthorization();
 
-    app.UseWhen(context => context.Request.Path.StartsWithSegments("/hangfire"), hangfireApp =>
+    app.UseWhen(context => context.Request.Path.StartsWithSegments(hangfirePrefix), hangfireApp =>
     {
         hangfireApp.UseMiddleware<HangfireDashboardAuthenticationMiddleware>();
-        hangfireApp.UseHangfireDashboard(options: new DashboardOptions
+        hangfireApp.UseHangfireDashboard(pathMatch: hangfirePrefix, options: new DashboardOptions
         {
             AppPath = null,
             DarkModeEnabled = true,
@@ -217,6 +211,17 @@ try
     var versionedApiBuilder = app.NewVersionedApi().RequireAuthorization();
     var baseVersionedApi = versionedApiBuilder.MapGroup("api/v{version:apiVersion}");
 
+    baseVersionedApi
+        .MapGet("/auth/hangfire", (
+            [FromServices] HangfireAuthService hangfireAuthService,
+            HttpResponse response,
+            [FromQuery, Required] string hangfireToken,
+            [FromQuery, Required] string targetUrl,
+            [FromQuery] string? appAuthUrl = null
+        ) => hangfireAuthService.HandleInitialAuth(
+            new(HangfireJwt: hangfireToken, TargetUrl: targetUrl, AppAuthUrl: appAuthUrl), response))
+        .HasApiVersion(1)
+        .AllowAnonymous();
     baseVersionedApi.MapAuthorEndpoints();
     baseVersionedApi.MapAccountEndpoints();
     baseVersionedApi.MapCommentEndpoints();
