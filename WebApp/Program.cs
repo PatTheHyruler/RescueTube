@@ -192,13 +192,6 @@ try
     app.UseCors(corsAllowAllName);
     app.UseCors(corsAllowCredentialsName);
 
-    app.MapGet("/auth/hangfire", (
-        [FromServices] HangfireAuthService hangfireAuthService,
-        HttpResponse response,
-        [FromQuery, Required] string hangfireToken,
-        [FromQuery, Required] string targetUrl,
-        [FromQuery] string? appAuthUrl = null
-    ) => hangfireAuthService.HandleInitialAuth(new(HangfireJwt: hangfireToken, TargetUrl: targetUrl, AppAuthUrl: appAuthUrl), response));
     app.UseAuthentication();
     app.UseAuthorization();
 
@@ -217,6 +210,17 @@ try
     var versionedApiBuilder = app.NewVersionedApi().RequireAuthorization();
     var baseVersionedApi = versionedApiBuilder.MapGroup("api/v{version:apiVersion}");
 
+    baseVersionedApi
+        .MapGet("/auth/hangfire", (
+            [FromServices] HangfireAuthService hangfireAuthService,
+            HttpResponse response,
+            [FromQuery, Required] string hangfireToken,
+            [FromQuery, Required] string targetUrl,
+            [FromQuery] string? appAuthUrl = null
+        ) => hangfireAuthService.HandleInitialAuth(
+            new(HangfireJwt: hangfireToken, TargetUrl: targetUrl, AppAuthUrl: appAuthUrl), response))
+        .HasApiVersion(1)
+        .AllowAnonymous();
     baseVersionedApi.MapAuthorEndpoints();
     baseVersionedApi.MapAccountEndpoints();
     baseVersionedApi.MapCommentEndpoints();
