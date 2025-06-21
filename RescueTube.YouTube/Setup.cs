@@ -47,6 +47,7 @@ public static class Setup
         services.AddScoped<PlaylistService>();
         services.AddScoped<AuthorService>();
         services.AddScoped<CommentService>();
+        services.AddScoped<CookieService>();
 
         services.AddScoped<IThumbnailComparer, ThumbnailComparer>();
 

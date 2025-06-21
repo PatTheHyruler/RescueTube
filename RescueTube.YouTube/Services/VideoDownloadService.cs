@@ -15,16 +15,19 @@ namespace RescueTube.YouTube.Services;
 public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDownloadService
 {
     private readonly AppPaths _appPaths;
+    private readonly CookieService _cookieService;
 
     private static ThrottlingAssessmentWithValidity? LatestThrottlingAssessment { get; set; }
 
     public VideoDownloadService(
         IServiceProvider services,
         ILogger<VideoDownloadService> logger,
-        AppPaths appPaths
+        AppPaths appPaths,
+        CookieService cookieService
     ) : base(services, logger)
     {
         _appPaths = appPaths;
+        _cookieService = cookieService;
     }
 
     public bool IsLikelyThrottled()
@@ -46,8 +49,17 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
         );
         // TODO: Add way to see download progress on the video page itself
 
-        var result = await YouTubeUow.YoutubeDl.RunVideoDownload(Url.ToVideoUrl(video.IdOnPlatform), ct: ct,
-            overrideOptions: YouTubeUow.DownloadOptions, progress: downloadProgressHandler);
+        var options = YouTubeUow.CreateDownloadOptions();
+        var cookieFilePath = _cookieService.GetFirstCookieFilePath();
+        if (cookieFilePath is not null)
+        {
+            options.Cookies = cookieFilePath;
+        }
+        var result = await YouTubeUow.YoutubeDl.RunVideoDownload(
+            url: Url.ToVideoUrl(video.IdOnPlatform),
+            ct: ct,
+            overrideOptions: options,
+            progress: downloadProgressHandler);
         var throttlingAssessment = downloadSpeedMonitor.GetThrottlingAssessment();
         Logger.LogInformation("Video download finished, average download speed: {DownloadSpeed} B/s",
             downloadSpeedMonitor.AverageDownloadSpeed);
