@@ -47,6 +47,10 @@ public sealed class CookieService
     {
         Directory.CreateDirectory(CookiesDirectory);
         var filePath = Path.Combine(CookiesDirectory, fileName ?? DefaultCookieFileName);
+        if (Path.GetDirectoryName(filePath)?.TrimEnd('/') != CookiesDirectory.TrimEnd('/'))
+        {
+            throw new ArgumentException($"File path '{filePath}' is outside of the cookies directory", nameof(fileName));
+        }
         await File.WriteAllTextAsync(filePath, content, ct);
     }
 }
