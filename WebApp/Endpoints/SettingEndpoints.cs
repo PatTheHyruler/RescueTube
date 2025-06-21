@@ -5,6 +5,7 @@ using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
 using WebApp.ApiModels.Mappers;
 using WebApp.ApiModels.Settings;
+using WebApp.ApiModels.Settings.YouTube;
 
 namespace WebApp.Endpoints;
 
@@ -19,6 +20,15 @@ public static class SettingEndpoints
             .HasApiVersion(1);
 
         settingsGroup.MapPut("bulk", UpsertSettingsAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.SuperAdmin))
+            .HasApiVersion(1);
+
+        var youtubeGroup = settingsGroup.MapGroup("youtube").WithTags("YouTube");
+        youtubeGroup.MapGet("cookie-files", GetCookieFiles)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.SuperAdmin))
+            .HasApiVersion(1);
+
+        youtubeGroup.MapPut("cookie-files", CreateCookieFileAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.SuperAdmin))
             .HasApiVersion(1);
     }
@@ -40,5 +50,28 @@ public static class SettingEndpoints
         var mappedSettingValueUpdates = settingValueUpdates.Select(SettingMapper.MapToCoreSettingValueUpdateDto);
         await settingService.UpdateSettingsAsync(mappedSettingValueUpdates, ct);
         await dataUow.SaveChangesAsync(ct);
+    }
+
+    private static Ok<CookieFileInfoDtoV1[]> GetCookieFiles(
+        [FromServices] RescueTube.YouTube.Services.CookieService cookieService)
+    {
+        var files = cookieService.GetCookieFiles()
+            .Select(f => new CookieFileInfoDtoV1
+            {
+                FileName = f.Name,
+            })
+            .ToArray();
+        return TypedResults.Ok(files);
+    }
+
+    private static async Task CreateCookieFileAsync(
+        [FromBody] CreateCookieFileDtoV1 createCookieFileDto,
+        [FromServices] RescueTube.YouTube.Services.CookieService cookieService,
+        CancellationToken ct)
+    {
+        await cookieService.CreateCookieFileAsync(
+            content: createCookieFileDto.Content,
+            fileName: createCookieFileDto.FileName,
+            ct);
     }
 }
