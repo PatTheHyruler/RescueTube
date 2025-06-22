@@ -7,6 +7,7 @@ using WebApp.ApiModels;
 using WebApp.ApiModels.Mappers;
 using WebApp.ApiModels.Settings;
 using WebApp.ApiModels.Settings.YouTube;
+using WebApp.Utils.Validation;
 
 namespace WebApp.Endpoints;
 
@@ -31,6 +32,7 @@ public static class SettingEndpoints
 
         youtubeGroup.MapPut("cookie-files", CreateCookieFileAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.SuperAdmin))
+            .AddEndpointFilter<ValidationFilter<CreateCookieFileDtoV1>>()
             .HasApiVersion(1);
 
         youtubeGroup.MapDelete("cookie-files", DeleteCookieFile)
@@ -39,6 +41,7 @@ public static class SettingEndpoints
 
         youtubeGroup.MapPost("cookie-files/rename", RenameCookieFile)
             .RequireAuthorization(p => p.RequireRole(RoleNames.SuperAdmin))
+            .AddEndpointFilter<ValidationFilter<RenameCookieFileDtoV1>>()
             .HasApiVersion(1);
     }
 

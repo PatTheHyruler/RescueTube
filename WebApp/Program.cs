@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
+using FluentValidation;
 using Hangfire;
 using Hangfire.Console;
 using Hangfire.Console.Extensions;
@@ -126,6 +127,7 @@ builder.Services
 builder.Services.AddBll();
 builder.Services.AddYouTube();
 
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddLocalization();
 
 var app = builder.Build();
