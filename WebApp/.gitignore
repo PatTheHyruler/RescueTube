@@ -4,3 +4,4 @@ ffprobe*
 downloads/
 Logs/
 /ClientApp/*
+/config/

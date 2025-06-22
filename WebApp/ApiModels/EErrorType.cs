@@ -6,6 +6,7 @@ public enum EErrorType
     /// Generic unspecified error
     /// </summary>
     GenericError,
+    ValidationError,
     /// <summary>
     /// Generic error indicating that requested entity wasn't found.
     /// NB! Should be treated as semantically different from "page not found"!
@@ -52,4 +53,6 @@ public enum EErrorType
     /// Setting key not found.
     /// </summary>
     SettingKeyNotFound,
+
+    FileNotFound,
 }

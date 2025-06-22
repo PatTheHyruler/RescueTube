@@ -34,7 +34,7 @@ public class YouTubeUow
             ? 20
             : 200;
 
-    public OptionSet DownloadOptions => new()
+    public OptionSet CreateDownloadOptions() => new()
     {
         WriteInfoJson = true,
         RestrictFilenames = true,
