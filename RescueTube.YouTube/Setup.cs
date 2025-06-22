@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using RescueTube.Core;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.JobOrchestration;
+using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
@@ -14,6 +15,7 @@ using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Services;
 using YoutubeDLSharp;
+using YouTubeCommentService = RescueTube.YouTube.Services.CommentService;
 
 namespace RescueTube.YouTube;
 
@@ -46,7 +48,7 @@ public static class Setup
         services.AddPlatformVideoDownloadService<VideoDownloadService>(EPlatform.YouTube);
         services.AddScoped<PlaylistService>();
         services.AddScoped<AuthorService>();
-        services.AddScoped<CommentService>();
+        services.AddScoped<YouTubeCommentService>();
         services.AddScoped<CookieService>();
 
         services.AddScoped<IThumbnailComparer, ThumbnailComparer>();
@@ -84,6 +86,8 @@ public static class Setup
             },
             new JobDefinition<FetchAuthorVideosJob>()
         ));
+
+        services.Configure<SettingRegistry>(x => x.RegisterDefinitions(YouTubeSettingDefinitions.AllDefinitions));
     }
 
     public static async Task SetupYouTubeAsync(this WebApplication app)

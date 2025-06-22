@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.DataFetches;
+using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 using RescueTube.YouTube.Base;
@@ -16,6 +17,7 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
 {
     private readonly AppPaths _appPaths;
     private readonly CookieService _cookieService;
+    private readonly SettingService _settingService;
 
     private static ThrottlingAssessmentWithValidity? LatestThrottlingAssessment { get; set; }
 
@@ -23,11 +25,13 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
         IServiceProvider services,
         ILogger<VideoDownloadService> logger,
         AppPaths appPaths,
-        CookieService cookieService
+        CookieService cookieService,
+        SettingService settingService
     ) : base(services, logger)
     {
         _appPaths = appPaths;
         _cookieService = cookieService;
+        _settingService = settingService;
     }
 
     public bool IsLikelyThrottled()
@@ -50,10 +54,15 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
         // TODO: Add way to see download progress on the video page itself
 
         var options = YouTubeUow.CreateDownloadOptions();
-        var cookieFilePath = _cookieService.GetFirstCookieFilePath();
-        if (cookieFilePath is not null)
+        var shouldUseCookieFile = await _settingService.GetValueAsync(YouTubeSettingDefinitions.UseCookieFile, ct)
+                                  ?? YouTubeSettingDefinitions.UseCookieFile.DefaultValue;
+        if (shouldUseCookieFile)
         {
-            options.Cookies = cookieFilePath;
+            var cookieFilePath = _cookieService.GetFirstCookieFilePath();
+            if (cookieFilePath is not null)
+            {
+                options.Cookies = cookieFilePath;
+            }
         }
         var result = await YouTubeUow.YoutubeDl.RunVideoDownload(
             url: Url.ToVideoUrl(video.IdOnPlatform),
