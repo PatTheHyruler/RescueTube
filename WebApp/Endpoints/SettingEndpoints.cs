@@ -36,6 +36,10 @@ public static class SettingEndpoints
         youtubeGroup.MapDelete("cookie-files", DeleteCookieFile)
             .RequireAuthorization(p => p.RequireRole(RoleNames.SuperAdmin))
             .HasApiVersion(1);
+
+        youtubeGroup.MapPost("cookie-files/rename", RenameCookieFile)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.SuperAdmin))
+            .HasApiVersion(1);
     }
 
     private static async Task<Ok<SettingValueDtoV1[]>> GetSettingsAsync(
@@ -85,6 +89,25 @@ public static class SettingEndpoints
         [FromServices] RescueTube.YouTube.Services.CookieService cookieService)
     {
         var result = cookieService.DeleteCookieFile(fileName);
+        if (!result)
+        {
+            return TypedResults.NotFound(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.FileNotFound,
+            });
+        }
+
+        return TypedResults.Ok();
+    }
+
+    private static Results<Ok, NotFound<ErrorResponseDto>> RenameCookieFile(
+        [FromBody] RenameCookieFileDtoV1 renameCookieFileDto,
+        [FromServices] RescueTube.YouTube.Services.CookieService cookieService)
+    {
+        var result = cookieService.RenameCookieFile(
+            oldFileName: renameCookieFileDto.OldFileName,
+            newFileName: renameCookieFileDto.NewFileName);
+
         if (!result)
         {
             return TypedResults.NotFound(new ErrorResponseDto

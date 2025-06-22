@@ -71,6 +71,25 @@ public sealed class CookieService
         return true;
     }
 
+    public bool RenameCookieFile(string oldFileName, string newFileName)
+    {
+        var oldFilePath = Path.Combine(CookiesDirectory, oldFileName);
+        var newFilePath = Path.Combine(CookiesDirectory, newFileName);
+
+        if (!IsFilePathInCookiesDirectory(oldFilePath) || !File.Exists(oldFilePath))
+        {
+            return false;
+        }
+
+        if (!IsFilePathInCookiesDirectory(newFilePath))
+        {
+            throw new ArgumentException($"File path '{newFilePath}' is outside of the cookies directory", nameof(newFileName));
+        }
+
+        File.Move(oldFilePath, newFilePath);
+        return true;
+    }
+
     private bool IsFilePathInCookiesDirectory(string filePath)
     {
         return Path.GetDirectoryName(filePath)?.TrimEnd('/') == CookiesDirectory.TrimEnd('/');

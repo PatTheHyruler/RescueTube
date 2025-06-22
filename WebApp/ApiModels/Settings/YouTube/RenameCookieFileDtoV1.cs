@@ -3,11 +3,10 @@ using WebApp.Utils.Validation;
 
 namespace WebApp.ApiModels.Settings.YouTube;
 
-public sealed record CreateCookieFileDtoV1
+public record RenameCookieFileDtoV1
 {
-    [MaxLength(8 * 1000)]
-    public required string Content { get; init; }
+    public required string OldFileName { get; init; }
 
     [MaxLength(30), RegularExpression(ValidationUtils.LimitedFileNameRegex)]
-    public string? FileName { get; init; }
+    public required string NewFileName { get; init; }
 }
