@@ -47,10 +47,32 @@ public sealed class CookieService
     {
         Directory.CreateDirectory(CookiesDirectory);
         var filePath = Path.Combine(CookiesDirectory, fileName ?? DefaultCookieFileName);
-        if (Path.GetDirectoryName(filePath)?.TrimEnd('/') != CookiesDirectory.TrimEnd('/'))
+        if (!IsFilePathInCookiesDirectory(filePath))
         {
             throw new ArgumentException($"File path '{filePath}' is outside of the cookies directory", nameof(fileName));
         }
         await File.WriteAllTextAsync(filePath, content, ct);
+    }
+
+    public bool DeleteCookieFile(string fileName)
+    {
+        var filePath = Path.Combine(CookiesDirectory, fileName);
+        if (!IsFilePathInCookiesDirectory(filePath))
+        {
+            return false;
+        }
+
+        if (!File.Exists(filePath))
+        {
+            return false;
+        }
+
+        File.Delete(filePath);
+        return true;
+    }
+
+    private bool IsFilePathInCookiesDirectory(string filePath)
+    {
+        return Path.GetDirectoryName(filePath)?.TrimEnd('/') == CookiesDirectory.TrimEnd('/');
     }
 }

@@ -52,4 +52,6 @@ public enum EErrorType
     /// Setting key not found.
     /// </summary>
     SettingKeyNotFound,
+
+    FileNotFound,
 }

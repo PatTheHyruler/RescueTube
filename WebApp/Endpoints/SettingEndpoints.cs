@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core.Data;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
+using WebApp.ApiModels;
 using WebApp.ApiModels.Mappers;
 using WebApp.ApiModels.Settings;
 using WebApp.ApiModels.Settings.YouTube;
@@ -29,6 +30,10 @@ public static class SettingEndpoints
             .HasApiVersion(1);
 
         youtubeGroup.MapPut("cookie-files", CreateCookieFileAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.SuperAdmin))
+            .HasApiVersion(1);
+
+        youtubeGroup.MapDelete("cookie-files", DeleteCookieFile)
             .RequireAuthorization(p => p.RequireRole(RoleNames.SuperAdmin))
             .HasApiVersion(1);
     }
@@ -73,5 +78,21 @@ public static class SettingEndpoints
             content: createCookieFileDto.Content,
             fileName: createCookieFileDto.FileName,
             ct);
+    }
+
+    private static Results<Ok, NotFound<ErrorResponseDto>> DeleteCookieFile(
+        [FromQuery] string fileName,
+        [FromServices] RescueTube.YouTube.Services.CookieService cookieService)
+    {
+        var result = cookieService.DeleteCookieFile(fileName);
+        if (!result)
+        {
+            return TypedResults.NotFound(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.FileNotFound,
+            });
+        }
+
+        return TypedResults.Ok();
     }
 }
