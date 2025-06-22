@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Asp.Versioning;
 using FluentValidation;
 using Hangfire;
@@ -217,8 +216,8 @@ try
         .MapGet("/auth/hangfire", (
             [FromServices] HangfireAuthService hangfireAuthService,
             HttpResponse response,
-            [FromQuery, Required] string hangfireToken,
-            [FromQuery, Required] string targetUrl,
+            [FromQuery] string hangfireToken,
+            [FromQuery] string targetUrl,
             [FromQuery] string? appAuthUrl = null
         ) => hangfireAuthService.HandleInitialAuth(
             new(HangfireJwt: hangfireToken, TargetUrl: targetUrl, AppAuthUrl: appAuthUrl), response))
