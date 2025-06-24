@@ -1,6 +1,6 @@
 ﻿using RescueTube.Core.DTO.Enums;
+using RescueTube.Core.DTO.Videos;
 using RescueTube.Domain.Entities;
-using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Data.Specifications;
 
@@ -8,16 +8,11 @@ public interface IVideoSpecification
 {
     public class VideoSearchParams
     {
-        public EPlatform? Platform { get; set; }
-        public string? Name { get; set; }
-        public string? Author { get; set; }
-        public Guid[]? AuthorIds { get; init; }
-        public ICollection<Guid>? CategoryIds { get; set; }
-        public Guid? UserId { get; set; }
-        public Guid? UserAuthorId { get; set; }
-        public bool AccessAllowed { get; set; }
-        public EVideoSortingOptions SortingOptions { get; set; }
-        public bool Descending { get; set; }
+        public VideoSearchFilter? Filter { get; init; }
+        public Guid? UserId { get; init; }
+        public bool AccessAllowed { get; init; }
+        public EVideoSortingOptions SortingOptions { get; init; }
+        public bool Descending { get; init; }
     }
 
     public IQueryable<Video> SearchVideos(VideoSearchParams search);

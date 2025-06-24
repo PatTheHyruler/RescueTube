@@ -34,11 +34,15 @@ public static class VideoEndpoints
         HttpContext httpContext, CancellationToken ct)
     {
         var response = await videoPresentationService.SearchVideosAsync(
-            platformQuery: null, nameQuery: query.NameQuery,
-            authorQuery: query.AuthorQuery, authorIds: query.AuthorIds,
-            categoryIds: null,
-            user: httpContext.User, userAuthorId: null,
-            query,
+            filter: new()
+            {
+                Platform = null,
+                Name = query.NameQuery,
+                Author = query.AuthorQuery,
+                AuthorIds = query.AuthorIds,
+            },
+            user: httpContext.User,
+            paginationQuery: query,
             sortingOptions: query.SortingOptions, descending: query.Descending,
             ct
         );

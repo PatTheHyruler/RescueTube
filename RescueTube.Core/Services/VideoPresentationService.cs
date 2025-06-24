@@ -8,10 +8,10 @@ using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.Data.Specifications;
 using RescueTube.Core.DTO.Entities;
 using RescueTube.Core.DTO.Enums;
+using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Identity.Services;
 using RescueTube.Core.Utils.Pagination;
 using RescueTube.Domain.Entities;
-using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Services;
 
@@ -21,10 +21,8 @@ public class VideoPresentationService : BaseService
     private readonly IEnumerable<IPlatformPresentationHandler> _presentationHandlers;
 
     public async Task<PaginationResponse<List<VideoSimple>>> SearchVideosAsync(
-        EPlatform? platformQuery, string? nameQuery,
-        string? authorQuery, Guid[]? authorIds,
-        ICollection<Guid>? categoryIds,
-        ClaimsPrincipal user, Guid? userAuthorId,
+        VideoSearchFilter filter,
+        ClaimsPrincipal user,
         IPaginationQuery paginationQuery,
         EVideoSortingOptions sortingOptions, bool descending,
         CancellationToken ct)
@@ -34,11 +32,8 @@ public class VideoPresentationService : BaseService
         paginationQuery = paginationQuery.ToClamped();
         var videos = await DataUow.Videos.SearchVideos(new IVideoSpecification.VideoSearchParams
             {
-                Platform = platformQuery,
-                Name = nameQuery,
-                Author = authorQuery, AuthorIds = authorIds,
-                CategoryIds = categoryIds, UserId = userId,
-                UserAuthorId = userAuthorId,
+                Filter = filter,
+                UserId = userId,
                 AccessAllowed = accessAllowed,
                 SortingOptions = sortingOptions, Descending = descending,
             })

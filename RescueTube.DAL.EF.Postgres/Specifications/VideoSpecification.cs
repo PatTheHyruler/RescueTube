@@ -8,40 +8,40 @@ namespace RescueTube.DAL.EF.Postgres.Specifications;
 
 public class VideoSpecification : BaseDbService, IVideoSpecification
 {
+    public VideoSpecification(IServiceProvider services) : base(services)
+    {
+    }
+
     public IQueryable<Video> SearchVideos(IVideoSpecification.VideoSearchParams search)
     {
         IQueryable<Video> query = Ctx.Videos;
+        var filter = search.Filter;
 
-        if (search.Platform != null)
+        if (filter?.Platform is not null)
         {
-            query = query.Where(e => e.Platform == search.Platform);
+            query = query.Where(e => e.Platform == filter.Platform);
         }
 
-        if (!string.IsNullOrEmpty(search.Name))
+        if (!string.IsNullOrEmpty(filter?.Name))
         {
-            var nameQuery = '%' + Utils.EscapeWildcards(search.Name) + '%';
+            var nameQuery = '%' + Utils.EscapeWildcards(filter.Name) + '%';
             query = query.Where(e => e.Title!.Translations!
                 .Any(t => Microsoft.EntityFrameworkCore.EF.Functions
                     .ILike(t.Content, nameQuery, "\\")));
             // TODO: SQLI?
         }
 
-        if (!string.IsNullOrEmpty(search.Author))
+        if (!string.IsNullOrEmpty(filter?.Author))
         {
-            var authorQuery = "%" + Utils.EscapeWildcards(search.Author) + "%";
+            var authorQuery = "%" + Utils.EscapeWildcards(filter.Author) + "%";
             query = query.Where(e => e.VideoAuthors!
                 .Select(a => a.Author!.UserName + a.Author!.DisplayName)
                 .Any(n => Microsoft.EntityFrameworkCore.EF.Functions.ILike(n, authorQuery)));
         }
 
-        if (search.AuthorIds is { Length: > 0 })
+        if (filter?.AuthorIds is { Length: > 0 })
         {
-            query = query.Where(v => v.VideoAuthors!.Any(va => search.AuthorIds.Contains(va.AuthorId)));
-        }
-
-        if (search.CategoryIds is { Count: > 0 })
-        {
-            // TODO: Categories
+            query = query.Where(v => v.VideoAuthors!.Any(va => filter.AuthorIds.Contains(va.AuthorId)));
         }
 
         if (!search.AccessAllowed)
@@ -65,9 +65,5 @@ public class VideoSpecification : BaseDbService, IVideoSpecification
         }
 
         return query;
-    }
-
-    public VideoSpecification(IServiceProvider services) : base(services)
-    {
     }
 }
