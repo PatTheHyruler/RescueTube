@@ -27,6 +27,10 @@ public static class VideoEndpoints
         videosGroup.MapPut("{videoId:guid}/archival-settings", UpsertVideoArchivalSettingsAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
+
+        videosGroup.MapPut("archival-settings/bulk", UpsertVideoArchivalSettingsBulkAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
     }
 
     private static async Task<Ok<VideoSearchResponseDtoV1>> SearchVideosAsync(
@@ -121,5 +125,12 @@ public static class VideoEndpoints
         await dataUow.SaveChangesAsync(ct);
 
         return TypedResults.Ok();
+    }
+
+    private static async Task<Ok> UpsertVideoArchivalSettingsBulkAsync(
+        [FromBody] VideoArchivalSettingsBulkUpdateDtoV1 updateDto,
+        CancellationToken ct)
+    {
+        throw new NotImplementedException();
     }
 }
