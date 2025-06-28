@@ -31,7 +31,7 @@ public class PartialGenerator : IIncrementalGenerator
             return null;
         }
 
-        var properties = targetSymbol.GetAttributes()
+        var sourceTypeProperties = targetSymbol.GetAttributes()
             .Where(x => x.AttributeClass is not null && GetTypeFullName(x.AttributeClass) == PartialAttributeFullTypeName)
             .SelectMany(GetPropertiesFromPartialSource);
 
@@ -40,7 +40,8 @@ public class PartialGenerator : IIncrementalGenerator
             Namespace = GetNamespace(targetSymbol),
             Name = targetSymbol.Name,
             IsRecord = targetSymbol.IsRecord,
-            Properties = properties,
+            SourceTypeProperties = sourceTypeProperties,
+            ExistingMemberNames = targetSymbol.GetMembers().Select(x => x.Name),
         };        
     }
 
@@ -100,10 +101,10 @@ public class PartialGenerator : IIncrementalGenerator
         var definitionType = partialClassToGenerate.IsRecord ? "record" : "class";
         sb.AppendLine($"    public partial {definitionType} {partialClassToGenerate.Name}");
         sb.AppendLine("    {");
-        HashSet<string> seenProperties = [];
-        foreach (var propertySymbol in partialClassToGenerate.Properties)
+        var usedProperties = new HashSet<string>(partialClassToGenerate.ExistingMemberNames);
+        foreach (var propertySymbol in partialClassToGenerate.SourceTypeProperties)
         {
-            if (!seenProperties.Add(propertySymbol.Name))
+            if (!usedProperties.Add(propertySymbol.Name))
             {
                 continue;
             }
@@ -139,5 +140,6 @@ internal record PartialClassToGenerate
     public string Namespace { get; set; } = null!;
     public string Name { get; set; } = null!;
     public bool IsRecord { get; set; }
-    public IEnumerable<IPropertySymbol> Properties { get; set; } = null!;
+    public IEnumerable<IPropertySymbol> SourceTypeProperties { get; set; } = null!;
+    public IEnumerable<string> ExistingMemberNames { get; set; } = null!;
 }
