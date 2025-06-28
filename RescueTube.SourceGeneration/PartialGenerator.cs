@@ -12,9 +12,9 @@ public class PartialGenerator : IIncrementalGenerator
         var classesToGenerate = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 PartialAttributeFullTypeName,
-                predicate: static (s, ct) => true,
+                predicate: static (_, _) => true,
                 transform: GetClassToGenerate)
-            .Where(static m => m is not null);
+            .Where(static x => x is not null);
 
         context.RegisterSourceOutput(classesToGenerate, Execute);
     }
@@ -110,12 +110,14 @@ public class PartialGenerator : IIncrementalGenerator
             }
 
             sb.Append("        public ");
-            if (propertySymbol.IsRequired)
-            {
-                sb.Append("required ");
-            }
-            var propertyType = propertySymbol.Type.ToDisplayString();
-            sb.Append(propertyType).Append(' ');
+            sb.Append("RescueTube.Core.Utils.")
+                .Append(propertySymbol.Type switch
+                {
+                    { IsReferenceType: true, NullableAnnotation: NullableAnnotation.NotAnnotated } => "OptionalClass<" + propertySymbol.Type.ToDisplayString(),
+                    { IsReferenceType: true } => "OptionalNullableClass<" + propertySymbol.Type.ToDisplayString().TrimEnd('?'),
+                    { IsReferenceType: false } => "OptionalStruct<" + propertySymbol.Type.ToDisplayString(),
+                })
+                .Append("> ");
             sb.Append(propertySymbol.Name);
             sb.Append(" { get; ");
             if (!propertySymbol.IsReadOnly)
