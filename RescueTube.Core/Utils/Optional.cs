@@ -1,23 +1,20 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace RescueTube.Core.Utils;
 
-public readonly record struct OptionalNullableClass<T> where T : class
+public readonly record struct Optional<T>
 {
-    public T? Value { get; init; }
+    private readonly T _value;
+    public T Value => HasValue ? _value : throw new InvalidOperationException("Value is not set");
     public bool HasValue { get; private init; }
-}
 
-public readonly record struct OptionalClass<T> where T : class
-{
-    public T? Value { get; init; }
-    [MemberNotNullWhen(true, nameof(Value))]
-    public bool HasValue { get; private init; }
-}
+    public Optional(T value)
+    {
+        _value = value;
+        HasValue = true;
+    }
 
-public readonly record struct OptionalStruct<T>
-{
-    public T? Value { get; init; }
-    [MemberNotNullWhen(true, nameof(Value))]
-    public bool HasValue { get; private init; }
+    public Optional()
+    {
+        _value = default!;
+        HasValue = false;
+    }
 }

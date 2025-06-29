@@ -109,15 +109,9 @@ public class PartialGenerator : IIncrementalGenerator
                 continue;
             }
 
-            sb.Append("        public ");
-            sb.Append("RescueTube.Core.Utils.")
-                .Append(propertySymbol.Type switch
-                {
-                    { IsReferenceType: true, NullableAnnotation: NullableAnnotation.NotAnnotated } => "OptionalClass<" + propertySymbol.Type.ToDisplayString(),
-                    { IsReferenceType: true } => "OptionalNullableClass<" + propertySymbol.Type.ToDisplayString().TrimEnd('?'),
-                    { IsReferenceType: false } => "OptionalStruct<" + propertySymbol.Type.ToDisplayString(),
-                })
-                .Append("> ");
+            sb.Append("        public RescueTube.Core.Utils.Optional<");
+            sb.Append(propertySymbol.Type.ToDisplayString());
+            sb.Append("> ");
             sb.Append(propertySymbol.Name);
             sb.Append(" { get; ");
             if (!propertySymbol.IsReadOnly)
