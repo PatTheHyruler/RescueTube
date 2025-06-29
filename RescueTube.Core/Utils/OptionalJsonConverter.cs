@@ -39,7 +39,8 @@ public class OptionalJsonConverter<T> : JsonConverter<Optional<T>>
         }
         else
         {
-            // TODO: Should ignore the property completely, not just write a null value
+            // Ideally, empty Optional properties should be omitted completely before getting to this point
+            // But just in case they weren't, serialize them as null
             writer.WriteNullValue();
         }
     }
