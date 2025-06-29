@@ -1,9 +1,11 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
+using RescueTube.Domain.Entities;
 using WebApp.ApiModels;
 using WebApp.ApiModels.Mappers;
 using WebApp.Utils;
@@ -127,10 +129,28 @@ public static class VideoEndpoints
         return TypedResults.Ok();
     }
 
-    private static async Task<Ok> UpsertVideoArchivalSettingsBulkAsync(
+    private static async Task<Ok<int>> UpsertVideoArchivalSettingsBulkAsync(
         [FromBody] VideoArchivalSettingsBulkUpdateDtoV1 updateDto,
+        [FromServices] IDataUow dataUow,
         CancellationToken ct)
     {
-        throw new NotImplementedException();
+        Expression<Func<Video, bool>> videoIdFilter = updateDto switch
+        {
+            { SelectAll: true, VideoIds.Length: > 0 } => v => !updateDto.VideoIds.Contains(v.Id),
+            { SelectAll: true, VideoIds: null or { Length: 0 } } => static v => true,
+            { SelectAll: false, VideoIds.Length: > 0 } => v => updateDto.VideoIds.Contains(v.Id),
+            { SelectAll: false, VideoIds: null or { Length: 0 } } => static v => false,
+        };
+        var updatedAmount = await dataUow.Ctx.Videos
+            // TODO: Apply video filter
+            .Where(videoIdFilter)
+            .ExecuteUpdateAsync(x =>
+                x.SetProperty(
+                    static v => v.ArchivalSettings.ShouldRegularlyFetchVideoData,
+                    v => updateDto.Settings.ShouldRegularlyFetchVideoData.HasValue
+                        ? updateDto.Settings.ShouldRegularlyFetchVideoData.Value
+                        : v.ArchivalSettings.ShouldRegularlyFetchVideoData),
+                ct);
+        return TypedResults.Ok(updatedAmount);
     }
 }
