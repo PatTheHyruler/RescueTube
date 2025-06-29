@@ -109,6 +109,10 @@ public class PartialGenerator : IIncrementalGenerator
                 continue;
             }
 
+            var fullOriginalPropertyName = $"{GetNamespace(propertySymbol.ContainingType)}.{propertySymbol.ContainingType.Name}.{propertySymbol.Name}";
+            sb.AppendLine("        /// <summary>");
+            sb.AppendLine($"        /// Based on <see cref=\"{fullOriginalPropertyName}\" />");
+            sb.AppendLine("        /// </summary>");
             sb.Append("        public RescueTube.Core.Utils.Optional<");
             sb.Append(propertySymbol.Type.ToDisplayString());
             sb.Append("> ");
