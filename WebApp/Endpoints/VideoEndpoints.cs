@@ -30,7 +30,7 @@ public static class VideoEndpoints
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
 
-        videosGroup.MapPut("archival-settings/bulk", UpsertVideoArchivalSettingsBulkAsync)
+        videosGroup.MapPatch("archival-settings/bulk", UpsertVideoArchivalSettingsBulkAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
     }
