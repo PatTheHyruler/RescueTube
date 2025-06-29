@@ -1,6 +1,11 @@
 namespace RescueTube.Core.Utils;
 
-public readonly record struct Optional<T>
+public interface IOptional
+{
+    public bool HasValue { get; }
+}
+
+public readonly record struct Optional<T> : IOptional
 {
     private readonly T _value;
     public T Value => HasValue ? _value : throw new InvalidOperationException("Value is not set");
@@ -17,4 +22,6 @@ public readonly record struct Optional<T>
         _value = default!;
         HasValue = false;
     }
+
+    public static implicit operator Optional<T>(T value) => new(value);
 }
