@@ -8,7 +8,7 @@ public partial record VideoArchivalSettingsPartialDtoV1;
 
 public record VideoArchivalSettingsBulkUpdateDtoV1
 {
-    public required VideoSearchFilterDtoV1? Filter { get; init; }
+    public VideoSearchFilterDtoV1? Filter { get; init; }
     public bool SelectAll { get; init; }
     public Guid[]? VideoIds { get; init; }
 
