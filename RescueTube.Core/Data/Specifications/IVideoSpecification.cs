@@ -1,4 +1,5 @@
-﻿using RescueTube.Core.DTO.Enums;
+﻿using System.Linq.Expressions;
+using RescueTube.Core.DTO.Enums;
 using RescueTube.Core.DTO.Videos;
 using RescueTube.Domain.Entities;
 
@@ -15,5 +16,6 @@ public interface IVideoSpecification
         public bool Descending { get; init; }
     }
 
+    public Expression<Func<Video, bool>> FilterVideos(VideoSearchFilter filter);
     public IQueryable<Video> SearchVideos(VideoSearchParams search);
 }

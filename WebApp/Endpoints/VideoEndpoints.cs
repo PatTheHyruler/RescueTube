@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
+using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
@@ -141,16 +142,42 @@ public static class VideoEndpoints
             { SelectAll: false, VideoIds.Length: > 0 } => v => updateDto.VideoIds.Contains(v.Id),
             { SelectAll: false, VideoIds: null or { Length: 0 } } => static v => false,
         };
-        var updatedAmount = await dataUow.Ctx.Videos
-            // TODO: Apply video filter
-            .Where(videoIdFilter)
-            .ExecuteUpdateAsync(x =>
-                x.SetProperty(
-                    static v => v.ArchivalSettings.ShouldRegularlyFetchVideoData,
-                    v => updateDto.Settings.ShouldRegularlyFetchVideoData.HasValue
-                        ? updateDto.Settings.ShouldRegularlyFetchVideoData.Value
-                        : v.ArchivalSettings.ShouldRegularlyFetchVideoData),
-                ct);
+        var filter = updateDto.Filter is not null
+            ? new VideoSearchFilter
+            {
+                Platform = null,
+                Name = updateDto.Filter.NameQuery,
+                Author = updateDto.Filter.AuthorQuery,
+                AuthorIds = updateDto.Filter.AuthorIds,
+            }
+            : null;
+        var videosQuery = dataUow.Ctx.Videos
+            .Where(videoIdFilter);
+        if (filter is not null)
+        {
+            videosQuery = videosQuery.Where(dataUow.Videos.FilterVideos(filter));
+        }
+
+        var updatedAmount = 0;
+        await foreach (var video in videosQuery.AsAsyncEnumerable().WithCancellation(ct))
+        {
+            updatedAmount++;
+            if (updateDto.Settings.ShouldRegularlyFetchVideoData.HasValue)
+            {
+                video.ArchivalSettings.ShouldRegularlyFetchVideoData = updateDto.Settings.ShouldRegularlyFetchVideoData.Value;
+            }
+        }
+
+        await dataUow.SaveChangesAsync(ct);
+        // TODO: Use ExecuteUpdate when complex filter bug is solved - https://github.com/npgsql/efcore.pg/issues/3573
+        // var updatedAmount = await videosQuery
+        //     .ExecuteUpdateAsync(x =>
+        //         x.SetProperty(
+        //             static v => v.ArchivalSettings.ShouldRegularlyFetchVideoData,
+        //             v => updateDto.Settings.ShouldRegularlyFetchVideoData.HasValue
+        //                 ? updateDto.Settings.ShouldRegularlyFetchVideoData.Value
+        //                 : v.ArchivalSettings.ShouldRegularlyFetchVideoData),
+        //         ct);
         return TypedResults.Ok(updatedAmount);
     }
 }

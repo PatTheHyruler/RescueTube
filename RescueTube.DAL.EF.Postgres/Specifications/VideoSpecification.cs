@@ -1,7 +1,9 @@
-﻿using LinqKit;
+﻿using System.Linq.Expressions;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data.Specifications;
 using RescueTube.Core.DTO.Enums;
+using RescueTube.Core.DTO.Videos;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.DAL.EF.Postgres.Specifications;
@@ -12,36 +14,47 @@ public class VideoSpecification : BaseDbService, IVideoSpecification
     {
     }
 
-    public IQueryable<Video> SearchVideos(IVideoSpecification.VideoSearchParams search)
+    public Expression<Func<Video, bool>> FilterVideos(VideoSearchFilter filter)
     {
-        IQueryable<Video> query = Ctx.Videos;
-        var filter = search.Filter;
+        Expression<Func<Video, bool>> query = v => true;
 
-        if (filter?.Platform is not null)
+        if (filter.Platform is not null)
         {
-            query = query.Where(e => e.Platform == filter.Platform);
+            query = query.And(v => v.Platform == filter.Platform);
         }
 
-        if (!string.IsNullOrEmpty(filter?.Name))
+        if (!string.IsNullOrEmpty(filter.Name))
         {
             var nameQuery = '%' + Utils.EscapeWildcards(filter.Name) + '%';
-            query = query.Where(e => e.Title!.Translations!
+            query = query.And(v => v.Title!.Translations!
                 .Any(t => Microsoft.EntityFrameworkCore.EF.Functions
                     .ILike(t.Content, nameQuery, "\\")));
             // TODO: SQLI?
         }
 
-        if (!string.IsNullOrEmpty(filter?.Author))
+        if (!string.IsNullOrEmpty(filter.Author))
         {
             var authorQuery = "%" + Utils.EscapeWildcards(filter.Author) + "%";
-            query = query.Where(e => e.VideoAuthors!
+            query = query.And(e => e.VideoAuthors!
                 .Select(a => a.Author!.UserName + a.Author!.DisplayName)
                 .Any(n => Microsoft.EntityFrameworkCore.EF.Functions.ILike(n, authorQuery)));
         }
 
-        if (filter?.AuthorIds is { Length: > 0 })
+        if (filter.AuthorIds is { Length: > 0 })
         {
-            query = query.Where(v => v.VideoAuthors!.Any(va => filter.AuthorIds.Contains(va.AuthorId)));
+            query = query.And(v => v.VideoAuthors!.Any(va => filter.AuthorIds.Contains(va.AuthorId)));
+        }
+
+        return query;
+    }
+
+    public IQueryable<Video> SearchVideos(IVideoSpecification.VideoSearchParams search)
+    {
+        IQueryable<Video> query = Ctx.Videos;
+
+        if (search.Filter is not null)
+        {
+            query = query.AsExpandable().Where(FilterVideos(search.Filter));
         }
 
         if (!search.AccessAllowed)
