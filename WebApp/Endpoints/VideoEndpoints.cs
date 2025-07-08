@@ -169,7 +169,7 @@ public static class VideoEndpoints
         }
 
         await dataUow.SaveChangesAsync(ct);
-        // TODO: Use ExecuteUpdate when complex filter bug is solved - https://github.com/npgsql/efcore.pg/issues/3573
+        // TODO: Use ExecuteUpdate when complex filter bug is solved - https://github.com/npgsql/efcore.pg/issues/3573 https://github.com/dotnet/efcore/issues/36336
         // var updatedAmount = await videosQuery
         //     .ExecuteUpdateAsync(x =>
         //         x.SetProperty(
