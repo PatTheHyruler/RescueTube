@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
-using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
@@ -41,13 +40,7 @@ public static class VideoEndpoints
         HttpContext httpContext, CancellationToken ct)
     {
         var response = await videoPresentationService.SearchVideosAsync(
-            filter: new()
-            {
-                Platform = null,
-                Name = query.NameQuery,
-                Author = query.AuthorQuery,
-                AuthorIds = query.AuthorIds,
-            },
+            filter: query.Filter.MapToCoreVideoFilter(),
             user: httpContext.User,
             paginationQuery: query,
             sortingOptions: query.SortingOptions, descending: query.Descending,
@@ -142,20 +135,12 @@ public static class VideoEndpoints
             { SelectAll: false, VideoIds.Length: > 0 } => v => updateDto.VideoIds.Contains(v.Id),
             { SelectAll: false, VideoIds: null or { Length: 0 } } => static v => false,
         };
-        var filter = updateDto.Filter is not null
-            ? new VideoSearchFilter
-            {
-                Platform = null,
-                Name = updateDto.Filter.NameQuery,
-                Author = updateDto.Filter.AuthorQuery,
-                AuthorIds = updateDto.Filter.AuthorIds,
-            }
-            : null;
         var videosQuery = dataUow.Ctx.Videos
             .Where(videoIdFilter);
-        if (filter is not null)
+
+        if (updateDto.Filter is not null)
         {
-            videosQuery = videosQuery.Where(dataUow.Videos.FilterVideos(filter));
+            videosQuery = videosQuery.Where(dataUow.Videos.FilterVideos(updateDto.Filter.MapToCoreVideoFilter()));
         }
 
         var updatedAmount = 0;

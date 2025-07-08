@@ -1,4 +1,5 @@
 ﻿using RescueTube.Core.DTO.Entities;
+using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
@@ -171,6 +172,17 @@ public static class ApiMapper
         return new()
         {
             ShouldRegularlyFetchVideoData = src.ShouldRegularlyFetchVideoData,
+        };
+    }
+
+    public static VideoSearchFilter MapToCoreVideoFilter(this VideoSearchFilterDtoV1? src)
+    {
+        return new()
+        {
+            Platform = null,
+            Name = src?.NameQuery,
+            Author = src?.AuthorQuery,
+            AuthorIds = src?.AuthorIds,
         };
     }
 }
