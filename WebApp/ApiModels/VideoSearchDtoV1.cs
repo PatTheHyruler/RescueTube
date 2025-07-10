@@ -5,10 +5,7 @@ namespace WebApp.ApiModels;
 
 public class VideoSearchDtoV1 : IPaginationQuery
 {
-    public string? NameQuery { get; init; }
-    public string? AuthorQuery { get; init; }
-    public Guid[]? AuthorIds { get; init; }
-
+    public VideoSearchFilterDtoV1? Filter { get; init; }
     public EVideoSortingOptions SortingOptions { get; init; }
     public bool Descending { get; init; } = true;
 

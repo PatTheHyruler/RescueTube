@@ -1,9 +1,11 @@
+using System.Linq.Expressions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
+using RescueTube.Domain.Entities;
 using WebApp.ApiModels;
 using WebApp.ApiModels.Mappers;
 using WebApp.Utils;
@@ -27,6 +29,10 @@ public static class VideoEndpoints
         videosGroup.MapPut("{videoId:guid}/archival-settings", UpsertVideoArchivalSettingsAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
+
+        videosGroup.MapPatch("archival-settings/bulk", UpsertVideoArchivalSettingsBulkAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
     }
 
     private static async Task<Ok<VideoSearchResponseDtoV1>> SearchVideosAsync(
@@ -34,11 +40,9 @@ public static class VideoEndpoints
         HttpContext httpContext, CancellationToken ct)
     {
         var response = await videoPresentationService.SearchVideosAsync(
-            platformQuery: null, nameQuery: query.NameQuery,
-            authorQuery: query.AuthorQuery, authorIds: query.AuthorIds,
-            categoryIds: null,
-            user: httpContext.User, userAuthorId: null,
-            query,
+            filter: query.Filter.MapToCoreVideoFilter(),
+            user: httpContext.User,
+            paginationQuery: query,
             sortingOptions: query.SortingOptions, descending: query.Descending,
             ct
         );
@@ -117,5 +121,48 @@ public static class VideoEndpoints
         await dataUow.SaveChangesAsync(ct);
 
         return TypedResults.Ok();
+    }
+
+    private static async Task<Ok<int>> UpsertVideoArchivalSettingsBulkAsync(
+        [FromBody] VideoArchivalSettingsBulkUpdateDtoV1 updateDto,
+        [FromServices] IDataUow dataUow,
+        CancellationToken ct)
+    {
+        Expression<Func<Video, bool>> videoIdFilter = updateDto switch
+        {
+            { SelectAll: true, VideoIds.Length: > 0 } => v => !updateDto.VideoIds.Contains(v.Id),
+            { SelectAll: true, VideoIds: null or { Length: 0 } } => static v => true,
+            { SelectAll: false, VideoIds.Length: > 0 } => v => updateDto.VideoIds.Contains(v.Id),
+            { SelectAll: false, VideoIds: null or { Length: 0 } } => static v => false,
+        };
+        var videosQuery = dataUow.Ctx.Videos
+            .Where(videoIdFilter);
+
+        if (updateDto.Filter is not null)
+        {
+            videosQuery = videosQuery.Where(dataUow.Videos.FilterVideos(updateDto.Filter.MapToCoreVideoFilter()));
+        }
+
+        var updatedAmount = 0;
+        await foreach (var video in videosQuery.AsAsyncEnumerable().WithCancellation(ct))
+        {
+            updatedAmount++;
+            if (updateDto.Settings.ShouldRegularlyFetchVideoData.HasValue)
+            {
+                video.ArchivalSettings.ShouldRegularlyFetchVideoData = updateDto.Settings.ShouldRegularlyFetchVideoData.Value;
+            }
+        }
+
+        await dataUow.SaveChangesAsync(ct);
+        // TODO: Use ExecuteUpdate when complex filter bug is solved - https://github.com/npgsql/efcore.pg/issues/3573 https://github.com/dotnet/efcore/issues/36336
+        // var updatedAmount = await videosQuery
+        //     .ExecuteUpdateAsync(x =>
+        //         x.SetProperty(
+        //             static v => v.ArchivalSettings.ShouldRegularlyFetchVideoData,
+        //             v => updateDto.Settings.ShouldRegularlyFetchVideoData.HasValue
+        //                 ? updateDto.Settings.ShouldRegularlyFetchVideoData.Value
+        //                 : v.ArchivalSettings.ShouldRegularlyFetchVideoData),
+        //         ct);
+        return TypedResults.Ok(updatedAmount);
     }
 }

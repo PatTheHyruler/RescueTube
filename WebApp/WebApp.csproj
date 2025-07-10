@@ -45,6 +45,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\RescueTube.SourceGeneration\RescueTube.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\RescueTube.YouTube\RescueTube.YouTube.csproj"/>
         <ProjectReference Include="..\RescueTube.Core\RescueTube.Core.csproj"/>
         <ProjectReference Include="..\RescueTube.DAL.EF.Postgres\RescueTube.DAL.EF.Postgres.csproj"/>
