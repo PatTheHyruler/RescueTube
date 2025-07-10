@@ -8,7 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TUnit" Version="0.19.32" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.7.0" />
+    <PackageReference Include="TUnit" Version="0.25.21" />
   </ItemGroup>
 
   <ItemGroup>
