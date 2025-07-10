@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Time.Testing;
 using RescueTube.Core.Data;
 using RescueTube.Core.Services;
 using RescueTube.DAL.EF.Postgres;
@@ -16,6 +17,11 @@ public class EntityUpdateServiceTest
 
     private IServiceScope CreateScope() => _serviceCollection.BuildServiceProvider().CreateScope();
 
+    private readonly FakeTimeProvider _timeProvider = new(new(2025, 07, 10, 12, 34, 56, TimeSpan.Zero))
+    {
+        AutoAdvanceAmount = TimeSpan.FromSeconds(1),
+    };
+
     public EntityUpdateServiceTest()
     {
         var config = new ConfigurationBuilder()
@@ -25,6 +31,7 @@ public class EntityUpdateServiceTest
             })
             .Build();
         _serviceCollection = new ServiceCollection();
+        _serviceCollection.AddSingleton<TimeProvider>(_timeProvider);
         _serviceCollection.AddSingleton<IConfiguration>(config);
         _serviceCollection.AddLogging(b => b.AddConsole());
         _serviceCollection.AddDbPersistenceEfPostgres(config);
