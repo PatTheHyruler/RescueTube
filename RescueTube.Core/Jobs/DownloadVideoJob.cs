@@ -66,7 +66,8 @@ public class DownloadVideoJob
                 .Count(d => !d.Success) < 3)
             .Where(v => !downloadingVideoIds.Contains(v.Id))
             .Include(v => v.VideoFiles)
-            .OrderBy(v => v.Id)
+            .OrderByDescending(v => v.ArchivalSettings.DownloadPriority)
+            .ThenBy(v => v.Id)
             .FirstOrDefaultAsync(ct);
 
         if (video is null)
