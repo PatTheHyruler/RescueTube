@@ -117,6 +117,8 @@ public static class VideoEndpoints
 
         // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
         video.ArchivalSettings.ShouldRegularlyFetchVideoData = settingsDto.ShouldRegularlyFetchVideoData;
+        // ReSharper disable once EntityFramework.NPlusOne.IncompleteDataUsage
+        video.ArchivalSettings.DownloadPriority = settingsDto.DownloadPriority;
 
         await dataUow.SaveChangesAsync(ct);
 
@@ -147,9 +149,15 @@ public static class VideoEndpoints
         await foreach (var video in videosQuery.AsAsyncEnumerable().WithCancellation(ct))
         {
             updatedAmount++;
+
             if (updateDto.Settings.ShouldRegularlyFetchVideoData.HasValue)
             {
                 video.ArchivalSettings.ShouldRegularlyFetchVideoData = updateDto.Settings.ShouldRegularlyFetchVideoData.Value;
+            }
+
+            if (updateDto.Settings.DownloadPriority.HasValue)
+            {
+                video.ArchivalSettings.DownloadPriority = updateDto.Settings.DownloadPriority.Value;
             }
         }
 

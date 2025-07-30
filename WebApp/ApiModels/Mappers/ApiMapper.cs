@@ -172,6 +172,7 @@ public static class ApiMapper
         return new()
         {
             ShouldRegularlyFetchVideoData = src.ShouldRegularlyFetchVideoData,
+            DownloadPriority = src.DownloadPriority,
         };
     }
 
