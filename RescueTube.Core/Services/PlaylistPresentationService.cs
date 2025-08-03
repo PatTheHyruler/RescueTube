@@ -29,7 +29,7 @@ public class PlaylistPresentationService : BaseService
         public string? Name { get; set; }
     }
 
-    public async Task<PaginationResponse<List<PlaylistDto>>> SearchPlaylists(PlaylistSearchParams search,
+    public async Task<PaginationResponse<List<PlaylistDto>>> SearchPlaylists(PlaylistSearchParams filter,
         IPaginationQuery paginationQuery, ClaimsPrincipal user)
     {
         var userId = user.GetUserIdIfExists();
@@ -38,7 +38,7 @@ public class PlaylistPresentationService : BaseService
 
         var playlistQuery = DataUow.Playlists.SearchPlaylists(new IPlaylistSpecification.PlaylistSearchParams
             {
-                Name = search.Name,
+                Name = filter.Name,
                 Author = null,
                 UserId = userId,
                 AccessAllowed = accessAllowed,

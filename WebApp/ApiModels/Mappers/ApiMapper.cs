@@ -3,6 +3,7 @@ using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
+using WebApp.ApiModels.Playlists;
 using WebApp.ApiModels.Statistics;
 using WebApp.Utils;
 
@@ -184,6 +185,15 @@ public static class ApiMapper
             Name = src?.NameQuery,
             Author = src?.AuthorQuery,
             AuthorIds = src?.AuthorIds,
+        };
+    }
+
+    public static PlaylistSimpleDtoV1 MapToPlaylistSimpleDtoV1(this PlaylistDto src, string? baseUrl)
+    {
+        return new PlaylistSimpleDtoV1
+        {
+            Id = src.Id,
+            Thumbnail = src.Thumbnail?.MapImage(baseUrl),
         };
     }
 }

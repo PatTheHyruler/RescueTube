@@ -232,6 +232,7 @@ try
     baseVersionedApi.MapSubmissionEndpoints();
     baseVersionedApi.MapVideoEndpoints();
     baseVersionedApi.MapVideoFileEndpoints();
+    baseVersionedApi.MapPlaylistEndpoints();
     baseVersionedApi.MapSettingEndpoints();
     baseVersionedApi.MapDataFetchEndpoints();
 
