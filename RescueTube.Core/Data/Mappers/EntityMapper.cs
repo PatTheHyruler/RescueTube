@@ -50,6 +50,8 @@ public class EntityMapper
         Title = pl.Title!.Translations!,
         Description = pl.Description!.Translations!,
 
+        VideosCount = pl.PlaylistItems!.Count,
+
         Thumbnail = OrderThumbnails.Invoke(
                 pl.PlaylistImages!.Where(pli => pli.ImageType == EImageType.Thumbnail)
                     .Select(pli => pli.Image!).AsQueryable()

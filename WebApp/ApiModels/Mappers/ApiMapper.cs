@@ -194,6 +194,15 @@ public static class ApiMapper
         {
             Id = src.Id,
             Thumbnail = src.Thumbnail?.MapImage(baseUrl),
+            Title = src.Title.Select(MapTranslation).ToArray(),
+            Description = src.Title.Select(MapTranslation).ToArray(),
+            VideosCount = src.VideosCount,
+            UrlOnPlatform = src.UrlOnPlatform,
+            Platform = src.Platform,
+            IdOnPlatform = src.IdOnPlatform,
+            AddedToArchiveAt = src.AddedToArchiveAt,
+            CreatedAt = src.CreatedAt,
+            UpdatedAt = src.UpdatedAt,
         };
     }
 }
