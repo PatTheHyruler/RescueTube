@@ -76,7 +76,7 @@ public class VideoPresentationService : BaseService
         }
     }
 
-    private void MakePresentable(VideoSimple? video)
+    public void MakePresentable(VideoSimple? video)
     {
         if (video == null)
         {

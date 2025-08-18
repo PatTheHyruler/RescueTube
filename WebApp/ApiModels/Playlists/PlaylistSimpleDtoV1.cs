@@ -10,6 +10,8 @@ public record PlaylistSimpleDtoV1
 
     public required int VideosCount { get; init; }
 
+    public required List<AuthorSimpleDtoV1> Authors { get; set; }
+
     public required ImageDtoV1? Thumbnail { get; init; }
     public required string? UrlOnPlatform { get; init; }
 

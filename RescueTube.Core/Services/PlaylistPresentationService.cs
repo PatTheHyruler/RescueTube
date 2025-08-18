@@ -16,12 +16,14 @@ public class PlaylistPresentationService : BaseService
 {
     private readonly IEnumerable<IPlatformPresentationHandler> _presentationHandlers;
     private readonly EntityMapper _mapper;
+    private readonly VideoPresentationService _videoPresentationService;
 
     public PlaylistPresentationService(IServiceProvider services, ILogger<PlaylistPresentationService> logger,
-        IEnumerable<IPlatformPresentationHandler> presentationHandlers, EntityMapper mapper) : base(services, logger)
+        IEnumerable<IPlatformPresentationHandler> presentationHandlers, EntityMapper mapper, VideoPresentationService videoPresentationService) : base(services, logger)
     {
         _presentationHandlers = presentationHandlers;
         _mapper = mapper;
+        _videoPresentationService = videoPresentationService;
     }
 
     public class PlaylistSearchParams
@@ -29,7 +31,7 @@ public class PlaylistPresentationService : BaseService
         public string? Name { get; set; }
     }
 
-    public async Task<PaginationResponse<List<PlaylistDto>>> SearchPlaylists(PlaylistSearchParams filter,
+    public async Task<PaginationResponse<List<PlaylistDto>>> SearchPlaylistsAsync(PlaylistSearchParams filter,
         IPaginationQuery paginationQuery, ClaimsPrincipal user)
     {
         var userId = user.GetUserIdIfExists();
@@ -54,6 +56,51 @@ public class PlaylistPresentationService : BaseService
         {
             Result = playlists,
             PaginationResult = paginationQuery.ToPaginationResult(playlists.Count),
+        };
+    }
+
+    public async Task<PlaylistDto?> GetPlaylistByIdAsync(Guid playlistId, CancellationToken ct)
+    {
+        var playlist = await DataUow.Ctx.Playlists
+            .Where(p => p.Id == playlistId)
+            .Select(_mapper.ToPlaylistDto)
+            .FirstOrDefaultAsync(ct);
+
+        if (playlist is null)
+        {
+            return null;
+        }
+
+        MakePresentable(playlist);
+
+        return playlist;
+    }
+
+    public async Task<PaginationResponse<PlaylistItemDto<VideoSimple>[]>> GetPlaylistItemsAsync(
+        Guid playlistId, IPaginationQuery paginationQuery, CancellationToken ct)
+    {
+        var query = DataUow.Ctx.PlaylistItems
+            .Where(pi => pi.PlaylistId == playlistId);
+
+        var playlistItems = await query
+            .OrderBy(pi => pi.Position)
+            .ThenBy(pi => pi.AddedAt)
+            .ThenBy(pi => pi.Id)
+            .Paginate(paginationQuery)
+            .Select(_mapper.ToPlaylistItemDtoWithVideoSimple)
+            .ToArrayAsync(ct);
+
+        var count = await query.CountAsync(ct);
+
+        foreach (var playlistItem in playlistItems)
+        {
+            _videoPresentationService.MakePresentable(playlistItem.Video);
+        }
+
+        return new PaginationResponse<PlaylistItemDto<VideoSimple>[]>
+        {
+            Result = playlistItems,
+            PaginationResult = paginationQuery.ToPaginationResult(playlistItems.Length, count),
         };
     }
 

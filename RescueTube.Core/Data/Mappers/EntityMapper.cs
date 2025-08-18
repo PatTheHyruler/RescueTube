@@ -119,6 +119,16 @@ public class EntityMapper
         UpdatedAt = pl.UpdatedAt,
     };
 
+    public Expression<Func<PlaylistItem, PlaylistItemDto<VideoSimple>>> ToPlaylistItemDtoWithVideoSimple => pi =>
+        new PlaylistItemDto<VideoSimple>
+        {
+            Id = pi.Id,
+            Video = ToVideoSimple.Invoke(pi.Video!),
+            Position = pi.Position,
+            AddedAt = pi.AddedAt,
+            RemovedAt = pi.RemovedAt,
+        };
+
     public static Expression<Func<Comment, CommentDto>> ToCommentDto(int depth) => comment => new CommentDto
     {
         Id = comment.Id,
