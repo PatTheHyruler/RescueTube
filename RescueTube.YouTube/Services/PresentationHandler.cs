@@ -22,12 +22,12 @@ public class PresentationHandler : IPlatformPresentationHandler
         }
     }
 
-    public bool CanHandle(PlaylistDto playlist)
+    public bool CanHandle(IPlaylistDto playlist)
     {
         return playlist.Platform == EPlatform.YouTube;
     }
 
-    public void Handle(PlaylistDto playlist)
+    public void Handle(IPlaylistDto playlist)
     {
         playlist.UrlOnPlatform = Url.ToPlaylistUrl(playlist.IdOnPlatform);
         if (playlist.Creator != null)

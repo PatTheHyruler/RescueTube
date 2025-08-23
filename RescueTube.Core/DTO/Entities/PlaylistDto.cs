@@ -4,7 +4,7 @@ using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.DTO.Entities;
 
-public class PlaylistDto
+public class PlaylistDto : IPlaylistDto
 {
     public required ICollection<TextTranslation> Title { get; set; }
     public required ICollection<TextTranslation> Description { get; set; }

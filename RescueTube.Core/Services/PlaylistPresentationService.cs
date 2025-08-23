@@ -31,7 +31,7 @@ public class PlaylistPresentationService : BaseService
         public string? Name { get; set; }
     }
 
-    public async Task<PaginationResponse<List<PlaylistDto>>> SearchPlaylistsAsync(PlaylistSearchParams filter,
+    public async Task<PaginationResponse<List<PlaylistSimpleDto>>> SearchPlaylistsAsync(PlaylistSearchParams filter,
         IPaginationQuery paginationQuery, ClaimsPrincipal user)
     {
         var userId = user.GetUserIdIfExists();
@@ -46,13 +46,13 @@ public class PlaylistPresentationService : BaseService
                 AccessAllowed = accessAllowed,
             })
             .Paginate(paginationQuery)
-            .Select(_mapper.ToPlaylistDto);
+            .Select(_mapper.ToPlaylistSimpleDto);
 
         var playlists = await playlistQuery.ToListAsync();
 
         MakePresentable(playlists);
 
-        return new PaginationResponse<List<PlaylistDto>>
+        return new PaginationResponse<List<PlaylistSimpleDto>>
         {
             Result = playlists,
             PaginationResult = paginationQuery.ToPaginationResult(playlists.Count),
@@ -104,7 +104,7 @@ public class PlaylistPresentationService : BaseService
         };
     }
 
-    private void MakePresentable(IEnumerable<PlaylistDto> playlists)
+    private void MakePresentable(IEnumerable<IPlaylistDto> playlists)
     {
         foreach (var playlist in playlists)
         {
@@ -112,7 +112,7 @@ public class PlaylistPresentationService : BaseService
         }
     }
 
-    private void MakePresentable(PlaylistDto playlist)
+    private void MakePresentable(IPlaylistDto playlist)
     {
         foreach (var presentationHandler in _presentationHandlers)
         {

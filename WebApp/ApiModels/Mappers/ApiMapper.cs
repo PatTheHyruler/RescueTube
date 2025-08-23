@@ -207,6 +207,25 @@ public static class ApiMapper
         };
     }
 
+    public static PlaylistSimpleDtoV1 MapToPlaylistSimpleDtoV1(this PlaylistSimpleDto src, string? baseUrl)
+    {
+        return new PlaylistSimpleDtoV1
+        {
+            Id = src.Id,
+            Thumbnail = src.Thumbnail?.MapImage(baseUrl),
+            Title = src.Title.Select(MapTranslation).ToArray(),
+            Description = src.Description.Select(MapTranslation).ToArray(),
+            VideosCount = src.VideosCount,
+            Authors = src.Creator is not null ? [src.Creator.MapAuthorSimpleDtoV1(baseUrl)] : [], // TODO: Change playlists domain model to allow multiple authors
+            UrlOnPlatform = src.UrlOnPlatform,
+            Platform = src.Platform,
+            IdOnPlatform = src.IdOnPlatform,
+            AddedToArchiveAt = src.AddedToArchiveAt,
+            CreatedAt = src.CreatedAt,
+            UpdatedAt = src.UpdatedAt,
+        };
+    }
+
     public static PlaylistItemDtoV1 MapToPlaylistItemDtoV1(this PlaylistItemDto<VideoSimple> src, string? baseUrl)
     {
         return new PlaylistItemDtoV1

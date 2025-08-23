@@ -71,6 +71,7 @@ public static class PlaylistEndpoints
             });
         }
 
+        // TODO: Separate detail DTO for this
         return TypedResults.Ok(response.MapToPlaylistSimpleDtoV1(httpContext.GetBaseUrl()));
     }
 
