@@ -3,6 +3,7 @@ using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
+using WebApp.ApiModels.Playlists;
 using WebApp.ApiModels.Statistics;
 using WebApp.Utils;
 
@@ -184,6 +185,56 @@ public static class ApiMapper
             Name = src?.NameQuery,
             Author = src?.AuthorQuery,
             AuthorIds = src?.AuthorIds,
+        };
+    }
+
+    public static PlaylistSimpleDtoV1 MapToPlaylistSimpleDtoV1(this PlaylistDto src, string? baseUrl)
+    {
+        return new PlaylistSimpleDtoV1
+        {
+            Id = src.Id,
+            Thumbnail = src.Thumbnail?.MapImage(baseUrl),
+            Title = src.Title.Select(MapTranslation).ToArray(),
+            Description = src.Description.Select(MapTranslation).ToArray(),
+            VideosCount = src.VideosCount,
+            Authors = src.Creator is not null ? [src.Creator.MapAuthorSimpleDtoV1(baseUrl)] : [], // TODO: Change playlists domain model to allow multiple authors
+            UrlOnPlatform = src.UrlOnPlatform,
+            Platform = src.Platform,
+            IdOnPlatform = src.IdOnPlatform,
+            AddedToArchiveAt = src.AddedToArchiveAt,
+            CreatedAt = src.CreatedAt,
+            UpdatedAt = src.UpdatedAt,
+        };
+    }
+
+    public static PlaylistSimpleDtoV1 MapToPlaylistSimpleDtoV1(this PlaylistSimpleDto src, string? baseUrl)
+    {
+        return new PlaylistSimpleDtoV1
+        {
+            Id = src.Id,
+            Thumbnail = src.Thumbnail?.MapImage(baseUrl),
+            Title = src.Title.Select(MapTranslation).ToArray(),
+            Description = src.Description.Select(MapTranslation).ToArray(),
+            VideosCount = src.VideosCount,
+            Authors = src.Creator is not null ? [src.Creator.MapAuthorSimpleDtoV1(baseUrl)] : [], // TODO: Change playlists domain model to allow multiple authors
+            UrlOnPlatform = src.UrlOnPlatform,
+            Platform = src.Platform,
+            IdOnPlatform = src.IdOnPlatform,
+            AddedToArchiveAt = src.AddedToArchiveAt,
+            CreatedAt = src.CreatedAt,
+            UpdatedAt = src.UpdatedAt,
+        };
+    }
+
+    public static PlaylistItemDtoV1 MapToPlaylistItemDtoV1(this PlaylistItemDto<VideoSimple> src, string? baseUrl)
+    {
+        return new PlaylistItemDtoV1
+        {
+            Id = src.Id,
+            Video = src.Video.MapToVideoSimpleDtoV1(baseUrl),
+            Position = src.Position,
+            AddedAt = src.AddedAt,
+            RemovedAt = src.RemovedAt,
         };
     }
 }

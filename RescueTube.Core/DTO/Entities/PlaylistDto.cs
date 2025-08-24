@@ -4,15 +4,12 @@ using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.DTO.Entities;
 
-public class PlaylistWithVideosDto<TVideo> : PlaylistDto
-{
-    public required List<PlaylistItemDto<TVideo>> Items { get; set; }
-}
-
-public class PlaylistDto
+public class PlaylistDto : IPlaylistDto
 {
     public required ICollection<TextTranslation> Title { get; set; }
     public required ICollection<TextTranslation> Description { get; set; }
+
+    public required int VideosCount { get; init; }
 
     public Image? Thumbnail { get; set; }
     public string? UrlOnPlatform { get; set; }

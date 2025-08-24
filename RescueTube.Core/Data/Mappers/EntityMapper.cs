@@ -50,6 +50,8 @@ public class EntityMapper
         Title = pl.Title!.Translations!,
         Description = pl.Description!.Translations!,
 
+        VideosCount = pl.PlaylistItems!.Count,
+
         Thumbnail = OrderThumbnails.Invoke(
                 pl.PlaylistImages!.Where(pli => pli.ImageType == EImageType.Thumbnail)
                     .Select(pli => pli.Image!).AsQueryable()
@@ -116,6 +118,43 @@ public class EntityMapper
         CreatedAt = pl.CreatedAt,
         UpdatedAt = pl.UpdatedAt,
     };
+
+    public Expression<Func<Playlist, PlaylistSimpleDto>> ToPlaylistSimpleDto => pl => new()
+    {
+        Title = pl.Title!.Translations!,
+        Description = pl.Description!.Translations!,
+
+        VideosCount = pl.PlaylistItems!.Count,
+
+        Thumbnail = OrderThumbnails.Invoke(
+                pl.PlaylistImages!.Where(pli => pli.ImageType == EImageType.Thumbnail)
+                    .Select(pli => pli.Image!).AsQueryable()
+            )
+            .FirstOrDefault(),
+
+        Creator = pl.Creator != null ? ToAuthorSimple.Invoke(pl.Creator) : null,
+
+        PrivacyStatusOnPlatform = pl.PrivacyStatusOnPlatform,
+        PrivacyStatus = pl.PrivacyStatus,
+
+        Id = pl.Id,
+        Platform = pl.Platform,
+        IdOnPlatform = pl.IdOnPlatform,
+
+        AddedToArchiveAt = pl.AddedToArchiveAt,
+        CreatedAt = pl.CreatedAt,
+        UpdatedAt = pl.UpdatedAt,
+    };
+
+    public Expression<Func<PlaylistItem, PlaylistItemDto<VideoSimple>>> ToPlaylistItemDtoWithVideoSimple => pi =>
+        new PlaylistItemDto<VideoSimple>
+        {
+            Id = pi.Id,
+            Video = ToVideoSimple.Invoke(pi.Video!),
+            Position = pi.Position,
+            AddedAt = pi.AddedAt,
+            RemovedAt = pi.RemovedAt,
+        };
 
     public static Expression<Func<Comment, CommentDto>> ToCommentDto(int depth) => comment => new CommentDto
     {

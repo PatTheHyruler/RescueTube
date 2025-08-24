@@ -77,4 +77,18 @@ public class AuthorizationService : BaseService
             .AsExpandable().Where(DataUow.Permissions.IsUserAllowedToAccessVideoOrVideoIsPublic(userId, false));
         return await videos.AnyAsync(ct);
     }
+
+    public async Task<bool> IsPlaylistAccessAllowedAsync(Guid playlistId, ClaimsPrincipal? user = null, CancellationToken ct = default)
+    {
+        if (IsAllowedToAccessAnyContentByRole(user))
+        {
+            return true;
+        }
+
+        var userId = user?.GetUserIdIfExists();
+        var videos = DbCtx.Playlists
+            .Where(v => v.Id == playlistId)
+            .AsExpandable().Where(DataUow.Permissions.IsUserAllowedToAccessPlaylistOrPlaylistIsPublic(userId, false));
+        return await videos.AnyAsync(ct);
+    }
 }
