@@ -8,7 +8,7 @@ using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs.DataFetch;
 
-public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author>
+public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author>, IEntityDataFetchJobWithDefinition
 {
     private readonly YouTubeUow _youTubeUow;
     private readonly TimeProvider _timeProvider;
@@ -21,7 +21,7 @@ public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author>
         _timeProvider = timeProvider;
     }
 
-    private static readonly DataFetchJobDefinition JobDefinition = new()
+    public static DataFetchJobDefinition JobDefinition { get; } = new()
     {
         DataFetchDefinition = YouTubeConstants.DataFetches.YouTubeExplode.Channel,
         SuccessCutoffOffset = TimeSpan.FromDays(10),
@@ -31,7 +31,7 @@ public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author>
     protected override Expression<Func<Author, bool>> FilterExpression =>
         DataUow.DataFetches.ShouldFetchAuthorData(JobDefinition);
 
-    protected override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
+    public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         if (AuthorService.LastYtExplodeRateLimitHit > _timeProvider.GetUtcNow().Subtract(TimeSpan.FromHours(1)))
         {

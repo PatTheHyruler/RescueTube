@@ -1,9 +1,13 @@
+using Hangfire;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using RescueTube.Core.Data;
 using RescueTube.Core.Data.Pagination;
+using RescueTube.Core.DataFetches;
 using RescueTube.Core.Identity;
+using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils.Pagination;
 using WebApp.ApiModels;
 using WebApp.ApiModels.Mappers;
@@ -17,6 +21,14 @@ public static class DataFetchEndpoints
         var dataFetchesGroup = app.MapGroup("data-fetches").WithTags("Data Fetches");
 
         dataFetchesGroup.MapGet("", GetDataFetchesAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
+
+        dataFetchesGroup.MapPost("jobs/enqueue", EnqueueDataFetchJob)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
+
+        dataFetchesGroup.MapGet("jobs/definitions", GetDataFetchJobDefinitionsAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
     }
@@ -51,6 +63,36 @@ public static class DataFetchEndpoints
             TotalResults = paginationResult.TotalResults,
             AmountOnPage = paginationResult.AmountOnPage,
         };
+        return TypedResults.Ok(result);
+    }
+
+    private static Results<Ok, BadRequest<ErrorResponseDto>> EnqueueDataFetchJob(
+        [FromBody] EnqueueDataFetchJobRequestV1 request,
+        [FromServices] IOptions<DataFetchJobsConfiguration> config,
+        [FromServices] IBackgroundJobClientV2 backgroundJobClient)
+    {
+        var jobName = request.JobName;
+
+        var jobDefinition = config.Value.RegisteredJobs.FirstOrDefault(x => x.JobName == jobName);
+        if (jobDefinition is null)
+        {
+            return TypedResults.BadRequest(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.GenericError,
+                Message = $"Job definition with name '{jobName}' not found",
+            });
+        }
+
+        backgroundJobClient.Enqueue<ManualDataFetchJob>(x => x.FetchEntityDataAsync(jobName, request.EntityId, CancellationToken.None));
+        return TypedResults.Ok();
+    }
+
+    private static Ok<DataFetchJobDefinitionsResponseDtoV1> GetDataFetchJobDefinitionsAsync(IOptions<DataFetchJobsConfiguration> dataFetchJobsConfig)
+    {
+        var result = new DataFetchJobDefinitionsResponseDtoV1(JobDefinitions: dataFetchJobsConfig.Value.RegisteredJobs
+            .Select(x => new DataFetchJobDefinitionDtoV1(
+                EntityType: x.Definition.DataFetchDefinition.EntityType,
+                JobName: x.JobName)));
         return TypedResults.Ok(result);
     }
 }

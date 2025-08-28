@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RescueTube.Core;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.DataFetches;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
@@ -86,6 +87,12 @@ public static class Setup
             },
             new JobDefinition<FetchAuthorVideosJob>()
         ));
+
+        services.Configure<DataFetchJobsConfiguration>(c => c
+            .RegisterJob<FetchPlaylistDataJob>()
+            .RegisterJob<FetchVideoDataJob>()
+            .RegisterJob<FetchYouTubeExplodeAuthorDataJob>()
+            .RegisterJob<FetchAuthorVideosJob>());
 
         services.Configure<SettingRegistry>(x => x.RegisterDefinitions(YouTubeSettingDefinitions.AllDefinitions));
     }

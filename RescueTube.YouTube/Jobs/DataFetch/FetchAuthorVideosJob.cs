@@ -9,7 +9,7 @@ using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs.DataFetch;
 
-public class FetchAuthorVideosJob : EntityDataFetchJobBase<Author>
+public class FetchAuthorVideosJob : EntityDataFetchJobBase<Author>, IEntityDataFetchJobWithDefinition
 {
     private readonly YouTubeUow _youTubeUow;
 
@@ -19,7 +19,7 @@ public class FetchAuthorVideosJob : EntityDataFetchJobBase<Author>
         _youTubeUow = youTubeUow;
     }
 
-    private static readonly DataFetchJobDefinition JobDefinition = new()
+    public static DataFetchJobDefinition JobDefinition { get; } = new()
     {
         DataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.ChannelVideos,
         SuccessCutoffOffset = AuthorService.LatestAllowedVideosFetchOffset,
@@ -33,7 +33,7 @@ public class FetchAuthorVideosJob : EntityDataFetchJobBase<Author>
                 && a.ArchivalSettings!.IsEnabledForArchival
                 && a.ArchivalSettings!.ArchiveVideos);
 
-    protected override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
+    public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeUow.AuthorService.TryFetchAuthorVideosAsync(authorId: entityId, force: false, ct: ct);

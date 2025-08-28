@@ -7,7 +7,7 @@ using RescueTube.Domain.Entities;
 
 namespace RescueTube.YouTube.Jobs.DataFetch;
 
-public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist>
+public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist>, IEntityDataFetchJobWithDefinition
 {
     private readonly YouTubeUow _youTubeUow;
 
@@ -17,7 +17,7 @@ public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist>
         _youTubeUow = youTubeUow;
     }
 
-    private static readonly DataFetchJobDefinition JobDefinition = new()
+    public static DataFetchJobDefinition JobDefinition { get; } = new()
     {
         DataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.Playlist,
         SuccessCutoffOffset = TimeSpan.FromDays(5),
@@ -27,7 +27,7 @@ public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist>
     protected override Expression<Func<Playlist, bool>> FilterExpression =>
         DataUow.DataFetches.ShouldFetchPlaylistData(JobDefinition);
 
-    protected override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
+    public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeUow.PlaylistService.UpdatePlaylistAsync(entityId, ct);

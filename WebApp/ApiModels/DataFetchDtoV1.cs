@@ -11,4 +11,5 @@ public class DataFetchDtoV1
 
     public required Guid? VideoId { get; init; }
     public required Guid? AuthorId { get; init; }
+    public required Guid? PlaylistId { get; init; }
 }

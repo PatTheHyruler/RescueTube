@@ -10,7 +10,7 @@ using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.DataFetches;
 
-public abstract class EntityDataFetchJobBase<TEntity> : IJob
+public abstract class EntityDataFetchJobBase<TEntity> : IJob, IEntityDataFetchJob
     where TEntity : class, IIdDatabaseEntity, IPlatformEntity, IFetchable
 {
     protected readonly IDataUow DataUow;
@@ -53,7 +53,7 @@ public abstract class EntityDataFetchJobBase<TEntity> : IJob
 
     protected abstract Expression<Func<TEntity, bool>> FilterExpression { get; }
 
-    protected abstract Task FetchEntityDataAsync(Guid entityId, CancellationToken ct);
+    public abstract Task FetchEntityDataAsync(Guid entityId, CancellationToken ct);
 
     private static bool IsValidEntityType(EEntityType entityType)
     {

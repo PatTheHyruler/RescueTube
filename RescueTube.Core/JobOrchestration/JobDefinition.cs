@@ -4,9 +4,15 @@ namespace RescueTube.Core.JobOrchestration;
 
 public abstract record JobDefinition
 {
+    protected JobDefinition(Type jobType)
+    {
+        JobType = jobType;
+    }
+
     public Guid Id { get; } = Guid.NewGuid();
 
-    public string? Name { get; init; }
+    public Type JobType { get; }
+    public string? Name => JobType.FullName;
 
     public int PreferredMinConcurrentExecutions { get; init; } = 0;
     public int PreferredMaxConcurrentExecutions { get; init; } = 1;
@@ -18,9 +24,8 @@ public abstract record JobDefinition
 
 public record JobDefinition<TJob> : JobDefinition where TJob : IJob
 {
-    public JobDefinition()
+    public JobDefinition() : base(typeof(TJob))
     {
-        Name = typeof(TJob).FullName;
     }
 
     public override IJob GetJob(IServiceProvider serviceProvider)
