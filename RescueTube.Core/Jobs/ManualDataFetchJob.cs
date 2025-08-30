@@ -18,6 +18,7 @@ public class ManualDataFetchJob
 
     [JobDisplayName("{0} for '{1}'")]
     [DisableConcurrentExecution("entity-{1}", timeoutSec: 5)]
+    [Queue(JobQueues.HighPriority)]
     public async Task FetchEntityDataAsync(string jobName, Guid entityId, CancellationToken cancellationToken)
     {
         var jobDefinition = _config.Value.RegisteredJobs.FirstOrDefault(x => x.JobName == jobName);

@@ -1,9 +1,11 @@
 using System.Linq.Expressions;
+using Hangfire;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.Identity;
+using RescueTube.Core.Jobs;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using WebApp.ApiModels;
@@ -31,6 +33,10 @@ public static class VideoEndpoints
             .HasApiVersion(1);
 
         videosGroup.MapPatch("archival-settings/bulk", UpsertVideoArchivalSettingsBulkAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
+
+        videosGroup.MapPost("{videoId:guid}/enqueue-download", EnqueueManualVideoDownloadAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
     }
@@ -172,5 +178,11 @@ public static class VideoEndpoints
         //                 : v.ArchivalSettings.ShouldRegularlyFetchVideoData),
         //         ct);
         return TypedResults.Ok(updatedAmount);
+    }
+
+    private static void EnqueueManualVideoDownloadAsync(
+        [FromRoute] Guid videoId, [FromServices] IBackgroundJobClientV2 backgroundJobClient)
+    {
+        backgroundJobClient.Enqueue<DownloadVideoJob>(x => x.DownloadVideoAsync(videoId, CancellationToken.None));
     }
 }
