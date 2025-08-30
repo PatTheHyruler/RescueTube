@@ -43,6 +43,25 @@ public class DownloadVideoJob
     private static readonly ConcurrentDictionary<Guid, DateTimeOffset> DownloadingVideoIds = new();
 
     [AutomaticRetry(Attempts = 0)]
+    [DisableConcurrentExecution("download-video:{0}", timeoutSec: 5)]
+    [Queue(JobQueues.Critical)]
+    public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
+    {
+        if (!DownloadingVideoIds.TryAdd(videoId, _timeProvider.GetUtcNow()))
+        {
+            _logger.LogError("Video {VideoId} is already downloading", videoId);
+            return;
+        }
+
+        var video = await _dataUow.Ctx.Videos
+            .Where(v => v.Id == videoId)
+            .Include(v => v.VideoFiles)
+            .FirstAsync(ct);
+
+        await DownloadVideoAsync(video, ct);
+    }
+
+    [AutomaticRetry(Attempts = 0)]
     [SkipConcurrent("core:download-not-downloaded-video-recurring")]
     [Queue(JobQueues.HighPriority)]
     public async Task DownloadNextNotDownloadedVideoAsync(CancellationToken ct)
@@ -82,6 +101,11 @@ public class DownloadVideoJob
             return;
         }
 
+        await DownloadVideoAsync(video, ct);
+    }
+
+    private async Task DownloadVideoAsync(Video video, CancellationToken ct)
+    {
         try
         {
             var platformVideoDownloadService = _serviceProvider.GetRequiredKeyedService<IPlatformVideoDownloadService>(video.Platform);

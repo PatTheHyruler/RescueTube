@@ -130,6 +130,7 @@ public static class ApiMapper
 
         VideoId = src.VideoId,
         AuthorId = src.AuthorId,
+        PlaylistId = src.PlaylistId,
     };
 
     public static CommentStatisticSnapshotDtoV1 MapCommentStatisticSnapshotDtoV1(this CommentStatisticSnapshotDto src)

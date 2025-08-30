@@ -7,7 +7,7 @@ using RescueTube.Domain.Entities;
 
 namespace RescueTube.YouTube.Jobs.DataFetch;
 
-public class FetchVideoDataJob : EntityDataFetchJobBase<Video>
+public class FetchVideoDataJob : EntityDataFetchJobBase<Video>, IEntityDataFetchJobWithDefinition
 {
     private readonly IDataUow _dataUow;
     private readonly YouTubeUow _youTubeUow;
@@ -19,7 +19,7 @@ public class FetchVideoDataJob : EntityDataFetchJobBase<Video>
         _youTubeUow = youTubeUow;
     }
 
-    private static readonly DataFetchJobDefinition JobDefinition = new()
+    public static DataFetchJobDefinition JobDefinition { get; } = new()
     {
         DataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.VideoPage,
         SuccessCutoffOffset = TimeSpan.FromDays(10),
@@ -30,7 +30,7 @@ public class FetchVideoDataJob : EntityDataFetchJobBase<Video>
         DataUow.DataFetches.ShouldFetchVideoData(JobDefinition, v =>
             v.ArchivalSettings.ShouldRegularlyFetchVideoData);
 
-    protected override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
+    public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeUow.VideoService.UpdateVideoAsync(entityId, ct);
