@@ -5,7 +5,6 @@ using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
-using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs.DataFetch;
 
