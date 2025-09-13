@@ -25,7 +25,7 @@ To override the API key in user secrets without redefining the entire logging co
 
 ## Migrations
 (In solution root directory)
-* Add migration: `dotnet ef migrations add --project RescueTube.DAL.EF.Postgres --startup-project WebApp`
-* Remove migration: `dotnet ef migrations remove --project RescueTube.DAL.EF.Postgres --startup-project WebApp`
-* Update to latest migration: `dotnet ef database update --project RescueTube.DAL.EF.Postgres --startup-project WebApp`
-* Add migration: `dotnet ef database update MigrationName --project RescueTube.DAL.EF.Postgres --startup-project WebApp`
+* Add migration: `dotnet ef migrations add --project RescueTube.DAL.EF.Postgres --startup-project RescueTube.WebApi`
+* Remove migration: `dotnet ef migrations remove --project RescueTube.DAL.EF.Postgres --startup-project RescueTube.WebApi`
+* Update to latest migration: `dotnet ef database update --project RescueTube.DAL.EF.Postgres --startup-project RescueTube.WebApi`
+* Add migration: `dotnet ef database update MigrationName --project RescueTube.DAL.EF.Postgres --startup-project RescueTube.WebApi`
