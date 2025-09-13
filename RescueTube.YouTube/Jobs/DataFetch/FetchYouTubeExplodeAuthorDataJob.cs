@@ -10,14 +10,14 @@ namespace RescueTube.YouTube.Jobs.DataFetch;
 
 public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author>, IEntityDataFetchJobWithDefinition
 {
-    private readonly YouTubeUow _youTubeUow;
+    private readonly YouTubeServices _youTubeServices;
     private readonly TimeProvider _timeProvider;
 
-    public FetchYouTubeExplodeAuthorDataJob(YouTubeUow youTubeUow, IDataUow dataUow,
+    public FetchYouTubeExplodeAuthorDataJob(YouTubeServices youTubeServices, IDataUow dataUow,
         ILogger<FetchYouTubeExplodeAuthorDataJob> logger, TimeProvider timeProvider)
         : base(dataUow, logger, JobDefinition.DataFetchDefinition)
     {
-        _youTubeUow = youTubeUow;
+        _youTubeServices = youTubeServices;
         _timeProvider = timeProvider;
     }
 
@@ -41,7 +41,7 @@ public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author>, 
         }
 
         using var transaction = TransactionUtils.NewTransactionScope();
-        await _youTubeUow.AuthorService.TryUpdateWithYouTubeExplodeDataAsync(entityId, ct);
+        await _youTubeServices.AuthorService.TryUpdateWithYouTubeExplodeDataAsync(entityId, ct);
         await DataUow.SaveChangesAsync(ct);
         transaction.Complete();
     }

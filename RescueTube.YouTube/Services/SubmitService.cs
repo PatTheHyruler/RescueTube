@@ -15,12 +15,12 @@ namespace RescueTube.YouTube.Services;
 public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 {
     private readonly AppDbContext _dbCtx;
-    private readonly YouTubeUow _youTubeUow;
+    private readonly YouTubeServices _youTubeServices;
 
-    public SubmitService(AppDbContext dbCtx, YouTubeUow youTubeUow)
+    public SubmitService(AppDbContext dbCtx, YouTubeServices youTubeServices)
     {
         _dbCtx = dbCtx;
-        _youTubeUow = youTubeUow;
+        _youTubeServices = youTubeServices;
     }
 
     public bool IsPlatformUrl(string url, [NotNullWhen(true)] out RecognizedPlatformUrl? recognizedPlatformUrl)
@@ -90,14 +90,14 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         var addedOrExistingAuthor = existingAuthor;
         if (addedOrExistingAuthor == null)
         {
-            var channel = await _youTubeUow.AuthorService.FetchYouTubeExplodeChannelAsync(idOnPlatform, idType, ct);
+            var channel = await _youTubeServices.AuthorService.FetchYouTubeExplodeChannelAsync(idOnPlatform, idType, ct);
 
             if (channel is null)
             {
                 throw new ApplicationException("Author not found on platform");
             }
 
-            addedOrExistingAuthor = await _youTubeUow.AuthorService.AddOrGetAuthor(channel, ct);
+            addedOrExistingAuthor = await _youTubeServices.AuthorService.AddOrGetAuthor(channel, ct);
         }
 
         if (addedOrExistingAuthor.ArchivalSettings == null)
@@ -127,7 +127,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             return existingVideo;
         }
 
-        var addedVideo = await _youTubeUow.VideoService.AddOrUpdateVideoAsync(videoIdOnPlatform, ct);
+        var addedVideo = await _youTubeServices.VideoService.AddOrUpdateVideoAsync(videoIdOnPlatform, ct);
         return addedVideo ?? throw new VideoNotFoundOnPlatformException();
     }
 
@@ -141,7 +141,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             return existingPlaylist;
         }
 
-        var addedPlaylist = await _youTubeUow.PlaylistService.AddOrUpdatePlaylistAsync(playlistIdOnPlatform, ct);
+        var addedPlaylist = await _youTubeServices.PlaylistService.AddOrUpdatePlaylistAsync(playlistIdOnPlatform, ct);
         return addedPlaylist ?? throw new ApplicationException("Playlist not found on platform");
     }
 }

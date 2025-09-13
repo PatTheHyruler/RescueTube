@@ -21,21 +21,21 @@ public class VideoService : BaseYouTubeService
     private readonly ILogger<VideoService> _logger;
     private readonly IMediator _mediator;
     private readonly DataFetchContext _dataFetchContext;
-    private readonly YouTubeUow _youTubeUow;
+    private readonly YouTubeServices _youTubeServices;
 
-    public VideoService(ILogger<VideoService> logger, IMediator mediator, DataFetchContext dataFetchContext, AppDbContext dbCtx, EntityUpdateService entityUpdateService, YouTubeUow youTubeUow)
+    public VideoService(ILogger<VideoService> logger, IMediator mediator, DataFetchContext dataFetchContext, AppDbContext dbCtx, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices)
     {
         _logger = logger;
         _mediator = mediator;
         _dataFetchContext = dataFetchContext;
         _dbCtx = dbCtx;
         _entityUpdateService = entityUpdateService;
-        _youTubeUow = youTubeUow;
+        _youTubeServices = youTubeServices;
     }
 
     public async Task<VideoData?> FetchVideoDataYtdlAsync(string id, bool fetchComments, CancellationToken ct = default)
     {
-        var videoResult = await _youTubeUow.YoutubeDl.RunVideoDataFetch(
+        var videoResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(
             Url.ToVideoUrl(id), fetchComments: fetchComments, ct: ct);
         if (videoResult is not { Success: true })
         {
@@ -111,7 +111,7 @@ public class VideoService : BaseYouTubeService
             }
             else
             {
-                await _youTubeUow.AuthorService.AddAndSetAuthor(video, author, ct);
+                await _youTubeServices.AuthorService.AddAndSetAuthor(video, author, ct);
             }
         }
 
@@ -172,7 +172,7 @@ public class VideoService : BaseYouTubeService
     {
         try
         {
-            await _youTubeUow.AuthorService.AddAndSetAuthor(video, videoData, fetchType, ct);
+            await _youTubeServices.AuthorService.AddAndSetAuthor(video, videoData, fetchType, ct);
             _dbCtx.DataFetches.Add(new DataFetch
             {
                 VideoId = video.Id,

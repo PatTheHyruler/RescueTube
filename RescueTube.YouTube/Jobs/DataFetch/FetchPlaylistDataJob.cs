@@ -9,12 +9,12 @@ namespace RescueTube.YouTube.Jobs.DataFetch;
 
 public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist>, IEntityDataFetchJobWithDefinition
 {
-    private readonly YouTubeUow _youTubeUow;
+    private readonly YouTubeServices _youTubeServices;
 
-    public FetchPlaylistDataJob(IDataUow dataUow, YouTubeUow youTubeUow, ILogger<FetchPlaylistDataJob> logger)
+    public FetchPlaylistDataJob(IDataUow dataUow, YouTubeServices youTubeServices, ILogger<FetchPlaylistDataJob> logger)
         : base(dataUow, logger, JobDefinition.DataFetchDefinition)
     {
-        _youTubeUow = youTubeUow;
+        _youTubeServices = youTubeServices;
     }
 
     public static DataFetchJobDefinition JobDefinition { get; } = new()
@@ -30,7 +30,7 @@ public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist>, IEntityDat
     public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
-        await _youTubeUow.PlaylistService.UpdatePlaylistAsync(entityId, ct);
+        await _youTubeServices.PlaylistService.UpdatePlaylistAsync(entityId, ct);
         await DataUow.SaveChangesAsync(ct);
         transaction.Complete();
     }

@@ -19,7 +19,7 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
     private readonly AppPaths _appPaths;
     private readonly CookieService _cookieService;
     private readonly SettingService _settingService;
-    private readonly YouTubeUow _youTubeUow;
+    private readonly YouTubeServices _youTubeServices;
 
     private static ThrottlingAssessmentWithValidity? LatestThrottlingAssessment { get; set; }
 
@@ -28,13 +28,13 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
         AppPaths appPaths,
         CookieService cookieService,
         SettingService settingService,
-        YouTubeUow youTubeUow)
+        YouTubeServices youTubeServices)
     {
         _logger = logger;
         _appPaths = appPaths;
         _cookieService = cookieService;
         _settingService = settingService;
-        _youTubeUow = youTubeUow;
+        _youTubeServices = youTubeServices;
     }
 
     public bool IsLikelyThrottled()
@@ -56,7 +56,7 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
         );
         // TODO: Add way to see download progress on the video page itself
 
-        var options = _youTubeUow.CreateDownloadOptions();
+        var options = _youTubeServices.CreateDownloadOptions();
         var shouldUseCookieFile = await _settingService.GetValueAsync(YouTubeSettingDefinitions.UseCookieFile, ct)
                                   ?? YouTubeSettingDefinitions.UseCookieFile.DefaultValue;
         if (shouldUseCookieFile)
@@ -67,7 +67,7 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
                 options.Cookies = cookieFilePath;
             }
         }
-        var result = await _youTubeUow.YoutubeDl.RunVideoDownload(
+        var result = await _youTubeServices.YoutubeDl.RunVideoDownload(
             url: Url.ToVideoUrl(video.IdOnPlatform),
             ct: ct,
             overrideOptions: options,

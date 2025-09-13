@@ -20,20 +20,20 @@ public class PlaylistService : BaseYouTubeService
     private readonly ILogger<PlaylistService> _logger;
     private readonly DataFetchContext _dataFetchContext;
     private readonly EntityUpdateService _entityUpdateService;
-    private YouTubeUow _youTubeUow;
+    private YouTubeServices _youTubeServices;
 
-    public PlaylistService(AppDbContext dbCtx, ILogger<PlaylistService> logger, DataFetchContext dataFetchContext, EntityUpdateService entityUpdateService, YouTubeUow youTubeUow)
+    public PlaylistService(AppDbContext dbCtx, ILogger<PlaylistService> logger, DataFetchContext dataFetchContext, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices)
     {
         _dbCtx = dbCtx;
         _logger = logger;
         _dataFetchContext = dataFetchContext;
         _entityUpdateService = entityUpdateService;
-        _youTubeUow = youTubeUow;
+        _youTubeServices = youTubeServices;
     }
 
     private async Task<VideoData?> FetchPlaylistDataYtdlAsync(string id, CancellationToken ct = default)
     {
-        var playlistResult = await _youTubeUow.YoutubeDl.RunVideoDataFetch(Url.ToPlaylistUrl(id), ct);
+        var playlistResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(Url.ToPlaylistUrl(id), ct);
         if (playlistResult is not { Success: true })
         {
             return null;
@@ -103,7 +103,7 @@ public class PlaylistService : BaseYouTubeService
             .FirstOrDefault() ?? DateTimeOffset.UtcNow;
         await UpdatePlaylistItemsAsync(playlist, playlistData, isNew, fetchTime, ct);
 
-        var author = await _youTubeUow.AuthorService.AddOrGetAuthor(playlistData, fetchType, ct);
+        var author = await _youTubeServices.AuthorService.AddOrGetAuthor(playlistData, fetchType, ct);
         playlist.Creator = author;
         playlist.CreatorId = author.Id;
 
@@ -144,7 +144,7 @@ public class PlaylistService : BaseYouTubeService
                 .Skip(occurrences) // Attempting to behave reasonably if playlist has/had multiple entries for the same video
                 .FirstOrDefault();
 
-            var video = await _youTubeUow.VideoService.AddOrUpdateVideoAsync(playlistEntry,
+            var video = await _youTubeServices.VideoService.AddOrUpdateVideoAsync(playlistEntry,
                 YouTubeConstants.FetchTypes.YtDlp.Playlist, ct);
             var newPlaylistItem = new PlaylistItem
             {

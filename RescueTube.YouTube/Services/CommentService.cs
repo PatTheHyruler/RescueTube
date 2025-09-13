@@ -15,14 +15,14 @@ public class CommentService : BaseYouTubeService
     private readonly AppDbContext _dbCtx;
     private readonly ILogger<CommentService> _logger;
     private readonly EntityUpdateService _entityUpdateService;
-    private readonly YouTubeUow _youTubeUow;
+    private readonly YouTubeServices _youTubeServices;
 
-    public CommentService(AppDbContext dbCtx, ILogger<CommentService> logger, EntityUpdateService entityUpdateService, YouTubeUow youTubeUow)
+    public CommentService(AppDbContext dbCtx, ILogger<CommentService> logger, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices)
     {
         _dbCtx = dbCtx;
         _logger = logger;
         _entityUpdateService = entityUpdateService;
-        _youTubeUow = youTubeUow;
+        _youTubeServices = youTubeServices;
     }
 
     private DataFetch AddDataFetch(Guid videoId, DateTimeOffset commentsFetched, bool success)
@@ -54,7 +54,7 @@ public class CommentService : BaseYouTubeService
             .ThenInclude(v => v.CommentStatisticSnapshots)
             .SingleAsync(cancellationToken: ct);
         
-        var videoData = await _youTubeUow.VideoService.FetchVideoDataYtdlAsync(video.IdOnPlatform, true, ct);
+        var videoData = await _youTubeServices.VideoService.FetchVideoDataYtdlAsync(video.IdOnPlatform, true, ct);
         if (videoData?.Comments == null)
         {
             AddDataFetch(video, DateTimeOffset.UtcNow, false);
@@ -100,7 +100,7 @@ public class CommentService : BaseYouTubeService
             .Select(c => new AuthorFetchArg(
                 c.AuthorID,
                 () => c.ToDomainAuthor(YouTubeConstants.FetchTypes.YtDlp.Comments)));
-        var addedOrFetchedAuthors = await _youTubeUow.AuthorService.AddOrGetAuthors(authorFetchArgs);
+        var addedOrFetchedAuthors = await _youTubeServices.AuthorService.AddOrGetAuthors(authorFetchArgs);
 
         var commentOrderIndex = 0L;
 

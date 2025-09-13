@@ -22,18 +22,18 @@ public class AuthorService : BaseYouTubeService
     private readonly EntityUpdateService _entityUpdateService;
     private readonly IMediator _mediator;
     private readonly DataFetchContext _dataFetchContext;
-    private readonly YouTubeUow _youTubeUow;
+    private readonly YouTubeServices _youTubeServices;
 
     private readonly Dictionary<string, Author> _cachedAuthors = new();
 
-    public AuthorService(AppDbContext dbCtx, ILogger<AuthorService> logger, EntityUpdateService entityUpdateService, IMediator mediator, DataFetchContext dataFetchContext, YouTubeUow youTubeUow)
+    public AuthorService(AppDbContext dbCtx, ILogger<AuthorService> logger, EntityUpdateService entityUpdateService, IMediator mediator, DataFetchContext dataFetchContext, YouTubeServices youTubeServices)
     {
         _dbCtx = dbCtx;
         _logger = logger;
         _entityUpdateService = entityUpdateService;
         _mediator = mediator;
         _dataFetchContext = dataFetchContext;
-        _youTubeUow = youTubeUow;
+        _youTubeServices = youTubeServices;
     }
 
     /// <summary>
@@ -64,7 +64,7 @@ public class AuthorService : BaseYouTubeService
 
         _logger.LogInformation("Fetching videos for author {AuthorId}", authorId);
 
-        var authorResult = await _youTubeUow.YoutubeDl.RunVideoDataFetch(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
+        var authorResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
 
         _logger.LogInformation("Fetched videos for author {AuthorId}", authorId);
 
@@ -88,7 +88,7 @@ public class AuthorService : BaseYouTubeService
                 ImageUpdateOptions = EntityUpdateService.EImageUpdateOptions.OnlyAdd,
             });
 
-        await _youTubeUow.VideoService.AddOrUpdateVideosFromAuthorVideosFetchAsync(
+        await _youTubeServices.VideoService.AddOrUpdateVideosFromAuthorVideosFetchAsync(
             authorResult.Data, author, dataFetchDefinition.Type, ct);
     }
 
@@ -191,9 +191,9 @@ public class AuthorService : BaseYouTubeService
     {
         var channel = idType switch
         {
-            YouTubeConstants.IdTypes.Author.Handle => await _youTubeUow.YouTubeExplodeClient.Channels
+            YouTubeConstants.IdTypes.Author.Handle => await _youTubeServices.YouTubeExplodeClient.Channels
                 .GetByHandleAsync(Url.AuthorHandleRemovePrefix(idOnPlatform), ct),
-            _ => await _youTubeUow.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct),
+            _ => await _youTubeServices.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct),
         };
 
         return channel;
@@ -247,7 +247,7 @@ public class AuthorService : BaseYouTubeService
     private async Task<Author> FetchExtraYouTubeExplodeAuthorDataAsync(string idOnPlatform,
         CancellationToken ct = default)
     {
-        var channel = await _youTubeUow.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct);
+        var channel = await _youTubeServices.YouTubeExplodeClient.Channels.GetAsync(idOnPlatform, ct);
 
         return new Author
         {

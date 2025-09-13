@@ -42,7 +42,7 @@ public static class Setup
     {
         services.AddOptionsRecursive<YouTubeOptions>(YouTubeOptions.Section);
 
-        services.AddScoped<YouTubeUow>();
+        services.AddScoped<YouTubeServices>();
 
         services.AddScoped<SubmitService>();
         services.AddScoped<VideoService>();
