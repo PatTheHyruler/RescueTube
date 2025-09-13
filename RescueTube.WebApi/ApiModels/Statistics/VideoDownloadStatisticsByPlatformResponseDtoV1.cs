@@ -1,4 +1,4 @@
-﻿namespace WebApp.ApiModels.Statistics;
+﻿namespace RescueTube.WebApi.ApiModels.Statistics;
 
 public class VideoDownloadStatisticsByPlatformResponseDtoV1
 {

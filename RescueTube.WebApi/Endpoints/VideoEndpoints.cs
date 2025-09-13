@@ -8,11 +8,11 @@ using RescueTube.Core.Identity;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
-using WebApp.ApiModels;
-using WebApp.ApiModels.Mappers;
-using WebApp.Utils;
+using RescueTube.WebApi.ApiModels;
+using RescueTube.WebApi.ApiModels.Mappers;
+using RescueTube.WebApi.Utils;
 
-namespace WebApp.Endpoints;
+namespace RescueTube.WebApi.Endpoints;
 
 public static class VideoEndpoints
 {

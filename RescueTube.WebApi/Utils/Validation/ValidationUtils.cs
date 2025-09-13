@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace WebApp.Utils.Validation;
+namespace RescueTube.WebApi.Utils.Validation;
 
 public static class ValidationUtils
 {

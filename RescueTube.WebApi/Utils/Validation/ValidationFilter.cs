@@ -1,7 +1,7 @@
 using FluentValidation;
-using WebApp.ApiModels;
+using RescueTube.WebApi.ApiModels;
 
-namespace WebApp.Utils.Validation;
+namespace RescueTube.WebApi.Utils.Validation;
 
 public class ValidationFilter<TRequest, TValidator> : IEndpointFilter where TValidator : IValidator<TRequest>
 {

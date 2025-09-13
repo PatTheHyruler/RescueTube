@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core.Services;
-using WebApp.ApiModels.Mappers;
-using WebApp.ApiModels.Statistics;
+using RescueTube.WebApi.ApiModels.Mappers;
+using RescueTube.WebApi.ApiModels.Statistics;
 
-namespace WebApp.Endpoints;
+namespace RescueTube.WebApi.Endpoints;
 
 public static class StatisticsEndpoints
 {

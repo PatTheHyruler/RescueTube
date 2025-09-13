@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core.Data;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
-using WebApp.ApiModels;
-using WebApp.ApiModels.Mappers;
-using WebApp.ApiModels.Settings;
-using WebApp.ApiModels.Settings.YouTube;
-using WebApp.Utils.Validation;
+using RescueTube.WebApi.ApiModels;
+using RescueTube.WebApi.ApiModels.Mappers;
+using RescueTube.WebApi.ApiModels.Settings;
+using RescueTube.WebApi.ApiModels.Settings.YouTube;
+using RescueTube.WebApi.Utils.Validation;
 
-namespace WebApp.Endpoints;
+namespace RescueTube.WebApi.Endpoints;
 
 public static class SettingEndpoints
 {

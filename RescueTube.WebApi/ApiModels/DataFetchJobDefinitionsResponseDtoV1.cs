@@ -1,6 +1,6 @@
 using RescueTube.Domain.Enums;
 
-namespace WebApp.ApiModels;
+namespace RescueTube.WebApi.ApiModels;
 
 public record DataFetchJobDefinitionsResponseDtoV1(IEnumerable<DataFetchJobDefinitionDtoV1> JobDefinitions);
 

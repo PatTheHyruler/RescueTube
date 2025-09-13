@@ -1,4 +1,4 @@
-namespace WebApp.ApiModels.Playlists;
+namespace RescueTube.WebApi.ApiModels.Playlists;
 
 public record PlaylistItemsResponseDtoV1
 {

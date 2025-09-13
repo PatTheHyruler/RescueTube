@@ -1,6 +1,6 @@
 ﻿using RescueTube.Domain.Enums;
 
-namespace WebApp.ApiModels;
+namespace RescueTube.WebApi.ApiModels;
 
 public class AuthorSimpleDtoV1
 {

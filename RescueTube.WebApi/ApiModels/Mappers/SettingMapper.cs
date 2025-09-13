@@ -1,8 +1,8 @@
 using RescueTube.Core.DTO.Settings;
+using RescueTube.WebApi.ApiModels.Settings;
 using Riok.Mapperly.Abstractions;
-using WebApp.ApiModels.Settings;
 
-namespace WebApp.ApiModels.Mappers;
+namespace RescueTube.WebApi.ApiModels.Mappers;
 
 [Mapper]
 public static partial class SettingMapper

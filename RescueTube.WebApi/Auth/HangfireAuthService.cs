@@ -6,7 +6,7 @@ using RescueTube.Core.DTO.Entities.Identity;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Identity.Services;
 
-namespace WebApp.Auth;
+namespace RescueTube.WebApi.Auth;
 
 public class HangfireAuthService
 {

@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core;
 using RescueTube.Core.Exceptions;
 using RescueTube.Core.Utils;
-using WebApp.ApiModels;
+using RescueTube.WebApi.ApiModels;
 
-namespace WebApp.Endpoints;
+namespace RescueTube.WebApi.Endpoints;
 
 public static class SubmissionEndpoints
 {

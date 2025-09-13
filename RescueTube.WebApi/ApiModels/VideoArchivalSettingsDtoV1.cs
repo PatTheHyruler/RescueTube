@@ -1,4 +1,4 @@
-namespace WebApp.ApiModels;
+namespace RescueTube.WebApi.ApiModels;
 
 public record VideoArchivalSettingsDtoV1
 {

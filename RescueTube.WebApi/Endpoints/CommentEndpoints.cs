@@ -2,11 +2,11 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils.Pagination;
-using WebApp.ApiModels;
-using WebApp.ApiModels.Mappers;
-using WebApp.Utils;
+using RescueTube.WebApi.ApiModels;
+using RescueTube.WebApi.ApiModels.Mappers;
+using RescueTube.WebApi.Utils;
 
-namespace WebApp.Endpoints;
+namespace RescueTube.WebApi.Endpoints;
 
 public static class CommentEndpoints
 {

@@ -1,4 +1,4 @@
-namespace WebApp.ApiModels.Settings;
+namespace RescueTube.WebApi.ApiModels.Settings;
 
 public abstract record SettingDefinitionDtoV1
 {

@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace WebApp.ApiModels;
+namespace RescueTube.WebApi.ApiModels;
 
 public class CommaSeparatedGuidArray
 {

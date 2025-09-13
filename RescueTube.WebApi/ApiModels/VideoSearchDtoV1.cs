@@ -1,7 +1,7 @@
 ﻿using RescueTube.Core.DTO.Enums;
 using RescueTube.Core.Utils.Pagination;
 
-namespace WebApp.ApiModels;
+namespace RescueTube.WebApi.ApiModels;
 
 public class VideoSearchDtoV1 : IPaginationQuery
 {

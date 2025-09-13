@@ -1,6 +1,6 @@
 ﻿using RescueTube.Domain.Entities;
 
-namespace WebApp.Utils;
+namespace RescueTube.WebApi.Utils;
 
 public static class ImageUtils
 {

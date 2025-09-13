@@ -1,6 +1,6 @@
 using RescueTube.Domain.Enums;
 
-namespace WebApp.Endpoints;
+namespace RescueTube.WebApi.Endpoints;
 
 public static class OptionsEndpoints
 {

@@ -1,7 +1,7 @@
 ﻿using Serilog.Core;
 using Serilog.Events;
 
-namespace WebApp.Utils.Logging;
+namespace RescueTube.WebApi.Utils.Logging;
 
 // Copied from https://stackoverflow.com/a/78314429
 public class ScopePathEnricher : ILogEventEnricher

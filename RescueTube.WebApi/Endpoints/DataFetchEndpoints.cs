@@ -9,10 +9,10 @@ using RescueTube.Core.DataFetches;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils.Pagination;
-using WebApp.ApiModels;
-using WebApp.ApiModels.Mappers;
+using RescueTube.WebApi.ApiModels;
+using RescueTube.WebApi.ApiModels.Mappers;
 
-namespace WebApp.Endpoints;
+namespace RescueTube.WebApi.Endpoints;
 
 public static class DataFetchEndpoints
 {

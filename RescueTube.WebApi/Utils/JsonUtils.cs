@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using RescueTube.Core.Utils;
 
-namespace WebApp.Utils;
+namespace RescueTube.WebApi.Utils;
 
 public static class JsonUtils
 {

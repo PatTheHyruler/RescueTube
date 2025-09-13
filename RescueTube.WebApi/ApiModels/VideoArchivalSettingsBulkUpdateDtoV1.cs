@@ -1,6 +1,6 @@
 using RescueTube.Core.SourceGeneration;
 
-namespace WebApp.ApiModels;
+namespace RescueTube.WebApi.ApiModels;
 
 [Partial<VideoArchivalSettingsDtoV1>]
 // ReSharper disable once ClassNeverInstantiated.Global

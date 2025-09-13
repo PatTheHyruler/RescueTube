@@ -5,18 +5,18 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
-COPY ["WebApp/WebApp.csproj", "WebApp/"]
-RUN dotnet restore "WebApp/WebApp.csproj"
+COPY ["RescueTube.WebApi/RescueTube.WebApi.csproj", "RescueTube.WebApi/"]
+RUN dotnet restore "RescueTube.WebApi/RescueTube.WebApi.csproj"
 COPY . .
-WORKDIR "/src/WebApp"
-RUN dotnet build "WebApp.csproj" -c Release -o /app/build
+WORKDIR "/src/RescueTube.WebApi"
+RUN dotnet build "RescueTube.WebApi.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "WebApp.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "RescueTube.WebApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 RUN apt update
 RUN apt install -y python3
-ENTRYPOINT ["dotnet", "WebApp.dll"]
+ENTRYPOINT ["dotnet", "RescueTube.WebApi.dll"]

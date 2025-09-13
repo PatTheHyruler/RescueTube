@@ -3,11 +3,11 @@ using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
-using WebApp.ApiModels.Playlists;
-using WebApp.ApiModels.Statistics;
-using WebApp.Utils;
+using RescueTube.WebApi.ApiModels.Playlists;
+using RescueTube.WebApi.ApiModels.Statistics;
+using RescueTube.WebApi.Utils;
 
-namespace WebApp.ApiModels.Mappers;
+namespace RescueTube.WebApi.ApiModels.Mappers;
 
 public static class ApiMapper
 {

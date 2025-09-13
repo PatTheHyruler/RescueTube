@@ -1,4 +1,4 @@
-namespace WebApp.ApiModels;
+namespace RescueTube.WebApi.ApiModels;
 
 public sealed class AuthorSearchResponseDtoV1 : PaginationResultDtoV1
 {

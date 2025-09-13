@@ -1,4 +1,4 @@
-﻿namespace WebApp.ApiModels.Auth;
+﻿namespace RescueTube.WebApi.ApiModels.Auth;
 
 public class MeResponseDtoV1
 {

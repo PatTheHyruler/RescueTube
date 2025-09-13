@@ -1,7 +1,7 @@
 using FluentValidation;
-using WebApp.Utils.Validation;
+using RescueTube.WebApi.Utils.Validation;
 
-namespace WebApp.ApiModels.Settings.YouTube;
+namespace RescueTube.WebApi.ApiModels.Settings.YouTube;
 
 public record RenameCookieFileDtoV1
 {

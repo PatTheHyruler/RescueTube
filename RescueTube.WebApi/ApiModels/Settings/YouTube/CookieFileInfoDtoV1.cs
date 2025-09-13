@@ -1,4 +1,4 @@
-namespace WebApp.ApiModels.Settings.YouTube;
+namespace RescueTube.WebApi.ApiModels.Settings.YouTube;
 
 public sealed record CookieFileInfoDtoV1
 {

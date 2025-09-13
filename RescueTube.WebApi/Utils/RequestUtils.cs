@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Primitives;
 
-namespace WebApp.Utils;
+namespace RescueTube.WebApi.Utils;
 
 public static class RequestUtils
 {

@@ -1,6 +1,6 @@
 ﻿using RescueTube.Core.Utils.Pagination;
 
-namespace WebApp.ApiModels;
+namespace RescueTube.WebApi.ApiModels;
 
 public class PaginationResultDtoV1 : IPaginationResult
 {

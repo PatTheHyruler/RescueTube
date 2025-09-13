@@ -1,7 +1,7 @@
 using Hangfire.Dashboard;
 using RescueTube.Core.Identity.Services;
 
-namespace WebApp.Auth;
+namespace RescueTube.WebApi.Auth;
 
 public class HangfireDashboardAuthorizationFilter : IDashboardAsyncAuthorizationFilter
 {

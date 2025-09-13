@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core.Services;
-using WebApp.ApiModels;
-using WebApp.ApiModels.Mappers;
-using WebApp.ApiModels.Playlists;
-using WebApp.Utils;
+using RescueTube.WebApi.ApiModels;
+using RescueTube.WebApi.ApiModels.Mappers;
+using RescueTube.WebApi.ApiModels.Playlists;
+using RescueTube.WebApi.Utils;
 
-namespace WebApp.Endpoints;
+namespace RescueTube.WebApi.Endpoints;
 
 public static class PlaylistEndpoints
 {

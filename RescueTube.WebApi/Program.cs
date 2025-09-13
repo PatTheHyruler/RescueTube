@@ -17,16 +17,16 @@ using RescueTube.Core.Jobs.Registration;
 using RescueTube.Core.Utils;
 using RescueTube.DAL.EF.MigrationUtils;
 using RescueTube.DAL.EF.Postgres;
+using RescueTube.WebApi.ApiModels;
+using RescueTube.WebApi.Auth;
+using RescueTube.WebApi.Endpoints;
+using RescueTube.WebApi.Utils;
+using RescueTube.WebApi.Utils.Logging;
+using RescueTube.WebApi.Utils.Swagger;
 using RescueTube.YouTube;
 using Serilog;
 using Serilog.Settings.Configuration;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using WebApp.ApiModels;
-using WebApp.Auth;
-using WebApp.Endpoints;
-using WebApp.Utils;
-using WebApp.Utils.Logging;
-using WebApp.Utils.Swagger;
 
 var builder = WebApplication.CreateBuilder(args);
 

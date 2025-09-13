@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace WebApp.Auth;
+namespace RescueTube.WebApi.Auth;
 
 public static class AuthHelpers
 {

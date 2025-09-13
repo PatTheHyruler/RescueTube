@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Localization;
 
-namespace WebApp.Utils;
+namespace RescueTube.WebApi.Utils;
 
 public static class DateTimeOffsetHelpers
 {

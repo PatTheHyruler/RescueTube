@@ -7,11 +7,11 @@ using RescueTube.Core.Identity.Exceptions;
 using RescueTube.Core.Identity.Services;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
-using WebApp.ApiModels;
-using WebApp.ApiModels.Auth;
-using WebApp.Auth;
+using RescueTube.WebApi.ApiModels;
+using RescueTube.WebApi.ApiModels.Auth;
+using RescueTube.WebApi.Auth;
 
-namespace WebApp.Endpoints;
+namespace RescueTube.WebApi.Endpoints;
 
 public static class VideoFileEndpoints
 {

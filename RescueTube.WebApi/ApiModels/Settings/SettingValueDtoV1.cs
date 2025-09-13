@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace WebApp.ApiModels.Settings;
+namespace RescueTube.WebApi.ApiModels.Settings;
 
 [JsonDerivedType(typeof(Long), nameof(Long))]
 [JsonDerivedType(typeof(Bool), nameof(Bool))]

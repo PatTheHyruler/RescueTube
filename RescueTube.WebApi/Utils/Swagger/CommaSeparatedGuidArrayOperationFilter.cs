@@ -1,9 +1,9 @@
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
+using RescueTube.WebApi.ApiModels;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using WebApp.ApiModels;
 
-namespace WebApp.Utils.Swagger;
+namespace RescueTube.WebApi.Utils.Swagger;
 
 public class CommaSeparatedGuidArrayParameterFilter : IParameterFilter
 {

@@ -1,4 +1,4 @@
-﻿namespace WebApp.ApiModels.Auth;
+﻿namespace RescueTube.WebApi.ApiModels.Auth;
 
 /// <summary>
 /// Required data for refreshing a JWT and refresh token

@@ -1,4 +1,4 @@
-﻿namespace WebApp.Auth;
+﻿namespace RescueTube.WebApi.Auth;
 
 public class HangfireDashboardAuthenticationMiddleware : IMiddleware
 {
