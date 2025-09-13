@@ -11,7 +11,6 @@ public class CommentDto : IFetchable
     public EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
-    public EPrivacyStatus PrivacyStatus { get; set; }
     public DataFetch? LastSuccessfulFetch { get; set; }
     public DataFetch? LastUnSuccessfulFetch { get; set; }
     public DateTimeOffset AddedToArchiveAt { get; set; }

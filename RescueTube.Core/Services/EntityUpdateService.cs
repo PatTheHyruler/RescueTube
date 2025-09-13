@@ -367,15 +367,16 @@ public class EntityUpdateService
         entity.UpdatedAt = DateTimeUtils.GetLatest(entity.UpdatedAt, newEntityData.UpdatedAt);
 
         if (!isNew &&
-            newEntityData.PrivacyStatus != entity.PrivacyStatus)
+            newEntityData.PrivacyStatusOnPlatform is not null && entity.PrivacyStatusOnPlatform is not null &&
+            newEntityData.PrivacyStatusOnPlatform != entity.PrivacyStatusOnPlatform)
         {
             var statusChangeEvent = entity switch
             {
-                Video video => new StatusChangeEvent(video, newEntityData.PrivacyStatus,
+                Video video => new StatusChangeEvent(video, newEntityData.PrivacyStatusOnPlatform,
                     newEntityData.UpdatedAt),
-                Playlist playlist => new StatusChangeEvent(playlist, newEntityData.PrivacyStatus,
+                Playlist playlist => new StatusChangeEvent(playlist, newEntityData.PrivacyStatusOnPlatform,
                     newEntityData.UpdatedAt),
-                Author author => new StatusChangeEvent(author, newEntityData.PrivacyStatus,
+                Author author => new StatusChangeEvent(author, newEntityData.PrivacyStatusOnPlatform,
                     newEntityData.UpdatedAt),
                 _ => null
             };
@@ -393,13 +394,7 @@ public class EntityUpdateService
             entity.AddedToArchiveAt = newEntityData.AddedToArchiveAt;
         }
 
-        entity.PrivacyStatusOnPlatform ??= newEntityData.PrivacyStatusOnPlatform;
-        if (isNew)
-        {
-            entity.PrivacyStatus =
-                newEntityData
-                    .PrivacyStatus; // TODO: Add way for updating this. Archive-specific property, will only be updated manually, not via datafetches, so shouldn't be updated here.
-        }
+        entity.PrivacyStatusOnPlatform = newEntityData.PrivacyStatusOnPlatform ?? entity.PrivacyStatusOnPlatform;
 
         if (newEntityData.DataFetches != null)
         {

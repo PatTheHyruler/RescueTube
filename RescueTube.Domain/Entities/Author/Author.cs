@@ -27,7 +27,6 @@ public class Author : BaseIdDbEntity, IMainArchiveEntity
     public required string IdOnPlatform { get; set; }
 
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
-    public EPrivacyStatus PrivacyStatus { get; set; }
 
     public DateTimeOffset AddedToArchiveAt { get; set; }
 

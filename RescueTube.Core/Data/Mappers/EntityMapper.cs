@@ -61,7 +61,6 @@ public class EntityMapper
         Creator = pl.Creator != null ? ToAuthorSimple.Invoke(pl.Creator) : null,
 
         PrivacyStatusOnPlatform = pl.PrivacyStatusOnPlatform,
-        PrivacyStatus = pl.PrivacyStatus,
 
         Statistics = new CombinedStatisticSnapshotDto
         {
@@ -135,7 +134,6 @@ public class EntityMapper
         Creator = pl.Creator != null ? ToAuthorSimple.Invoke(pl.Creator) : null,
 
         PrivacyStatusOnPlatform = pl.PrivacyStatusOnPlatform,
-        PrivacyStatus = pl.PrivacyStatus,
 
         Id = pl.Id,
         Platform = pl.Platform,
@@ -162,7 +160,6 @@ public class EntityMapper
         Platform = comment.Platform,
         IdOnPlatform = comment.IdOnPlatform,
         PrivacyStatusOnPlatform = comment.PrivacyStatusOnPlatform,
-        PrivacyStatus = comment.PrivacyStatus,
         LastSuccessfulFetch = comment.DataFetches!
             .OrderByDescending(x => x.OccurredAt)
             .FirstOrDefault(x => x.Success && x.ShouldAffectValidity), // TODO: Make sure these actually compile to SQL

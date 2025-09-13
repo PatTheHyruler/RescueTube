@@ -16,7 +16,6 @@ public static class YouTubeExplodeExtensions
             DisplayName = channel.Title,
 
             PrivacyStatusOnPlatform = EPrivacyStatus.Public,
-            PrivacyStatus = EPrivacyStatus.Private,
 
             AddedToArchiveAt = DateTimeOffset.UtcNow,
 

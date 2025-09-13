@@ -17,7 +17,6 @@ public class PlaylistSimpleDto : IPlaylistDto
     public required AuthorSimple? Creator { get; init; }
 
     public required EPrivacyStatus? PrivacyStatusOnPlatform { get; init; }
-    public required EPrivacyStatus PrivacyStatus { get; init; }
 
     public required Guid Id { get; init; }
     public required EPlatform Platform { get; init; }

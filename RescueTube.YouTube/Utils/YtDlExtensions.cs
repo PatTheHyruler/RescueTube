@@ -66,7 +66,6 @@ public static class YtDlExtensions
             },
 
             PrivacyStatusOnPlatform = EPrivacyStatus.Public,
-            PrivacyStatus = EPrivacyStatus.Private,
 
             AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
@@ -120,7 +119,6 @@ public static class YtDlExtensions
             UserName = commentData.Author,
 
             PrivacyStatusOnPlatform = EPrivacyStatus.Public,
-            PrivacyStatus = EPrivacyStatus.Private,
 
             AuthorImages = new List<AuthorImage>
             {
@@ -175,8 +173,6 @@ public static class YtDlExtensions
             AuthorIsCreator = commentData.AuthorIsUploader,
 
             CreatedAt = commentData.Timestamp.ToUniversalTime(),
-
-            PrivacyStatus = EPrivacyStatus.Private,
 
             DataFetches = new List<DataFetch>
             {
@@ -251,7 +247,6 @@ public static class YtDlExtensions
             PublishedAt = videoData.ReleaseTimestamp,
 
             PrivacyStatusOnPlatform = videoData.Availability.ToPrivacyStatus(),
-            PrivacyStatus = EPrivacyStatus.Private,
 
             DataFetches =
             [
@@ -283,7 +278,6 @@ public static class YtDlExtensions
 
             UpdatedAt = playlistData.ModifiedTimestamp?.ToUniversalTime() ?? playlistData.ModifiedDate?.ToUniversalTime(),
             PrivacyStatusOnPlatform = playlistData.Availability.ToPrivacyStatus(),
-            PrivacyStatus = EPrivacyStatus.Private,
 
             AddedToArchiveAt = DateTimeOffset.UtcNow,
             DataFetches = new List<DataFetch>
