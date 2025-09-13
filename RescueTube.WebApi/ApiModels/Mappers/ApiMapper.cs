@@ -97,7 +97,6 @@ public static class ApiMapper
             Platform = src.Platform,
             IdOnPlatform = src.IdOnPlatform,
             PrivacyStatusOnPlatform = src.PrivacyStatusOnPlatform,
-            PrivacyStatus = src.PrivacyStatus,
             LastSuccessfulFetch = src.LastSuccessfulFetch?.MapDataFetchDtoV1(),
             LastUnSuccessfulFetch = src.LastUnSuccessfulFetch?.MapDataFetchDtoV1(),
             AddedToArchiveAt = src.AddedToArchiveAt,

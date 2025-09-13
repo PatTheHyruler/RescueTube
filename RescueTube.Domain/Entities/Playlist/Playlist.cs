@@ -16,7 +16,6 @@ public class Playlist : BaseIdDbEntity, IMainArchiveEntity
     public EPlatform Platform { get; set; }
     public required string IdOnPlatform { get; set; }
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
-    public EPrivacyStatus PrivacyStatus { get; set; }
     public DateTimeOffset AddedToArchiveAt { get; set; }
     public ICollection<DataFetch>? DataFetches { get; set; }
     public DateTimeOffset? CreatedAt { get; set; }

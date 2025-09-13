@@ -25,10 +25,8 @@ public class StatusChangeEvent : BaseIdDbEntity
     private StatusChangeEvent(IPrivacyEntity entity, EPrivacyStatus? newPrivacyStatus, DateTimeOffset? occurredAt)
     {
         OccurredAt = occurredAt ?? DateTimeOffset.UtcNow;
-        PreviousPrivacyStatus = entity.PrivacyStatus;
+        PreviousPrivacyStatus = entity.PrivacyStatusOnPlatform;
         NewPrivacyStatus = newPrivacyStatus;
-
-        entity.PrivacyStatusOnPlatform = newPrivacyStatus;
     }
 
     public StatusChangeEvent(Video video, EPrivacyStatus? newPrivacyStatus,

@@ -17,7 +17,6 @@ public class PlaylistDto : IPlaylistDto
     public required AuthorSimple? Creator { get; set; }
 
     public EPrivacyStatus? PrivacyStatusOnPlatform { get; set; }
-    public required EPrivacyStatus PrivacyStatus { get; set; }
 
     public required CombinedStatisticSnapshotDto Statistics { get; set; }
 
