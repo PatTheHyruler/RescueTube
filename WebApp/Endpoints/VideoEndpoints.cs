@@ -21,9 +21,7 @@ public static class VideoEndpoints
         var videosGroup = app.MapGroup("videos").WithTags("Videos");
 
         videosGroup.MapPost("search", SearchVideosAsync).HasApiVersion(1);
-        videosGroup.MapGet("{videoId:guid}", GetVideoAsync)
-            .AllowAnonymous()
-            .HasApiVersion(1);
+        videosGroup.MapGet("{videoId:guid}", GetVideoAsync).HasApiVersion(1);
 
         videosGroup.MapGet("{videoId:guid}/archival-settings", GetVideoArchivalSettingsAsync)
             .HasApiVersion(1);
@@ -64,16 +62,10 @@ public static class VideoEndpoints
         Ok<VideoSimpleDtoV1>, NotFound<ErrorResponseDto>, ForbidHttpResult
     >> GetVideoAsync(
         [FromRoute] Guid videoId,
-        [FromServices] AuthorizationService authorizationService,
         [FromServices] VideoPresentationService videoPresentationService,
         HttpContext httpContext,
         CancellationToken ct)
     {
-        if (!await authorizationService.IsVideoAccessAllowedAsync(videoId, httpContext.User, ct))
-        {
-            return TypedResults.Forbid();
-        }
-
         var response = await videoPresentationService.GetVideoSimpleAsync(videoId, ct);
         if (response == null)
         {

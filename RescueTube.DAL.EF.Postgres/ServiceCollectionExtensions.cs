@@ -33,8 +33,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPlaylistSpecification>(s => s.GetRequiredService<PlaylistSpecification>());
         services.AddScoped<AuthorSpecification>();
         services.AddScoped<IAuthorSpecification>(s => s.GetRequiredService<AuthorSpecification>());
-        services.AddScoped<PermissionSpecification>();
-        services.AddScoped<IPermissionSpecification>(s => s.GetRequiredService<PermissionSpecification>());
         services.AddScoped<ImageSpecification>();
         services.AddScoped<IImageSpecification>(s => s.GetRequiredService<ImageSpecification>());
         services.AddScoped<DataFetchSpecification>();

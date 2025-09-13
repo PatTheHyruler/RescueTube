@@ -17,12 +17,10 @@ public static class PlaylistEndpoints
         playlistsGroup.MapPost("search", SearchPlaylistsAsync).HasApiVersion(1);
 
         playlistsGroup.MapGet("{playlistId:guid}", GetPlaylistAsync)
-            .HasApiVersion(1)
-            .AllowAnonymous();
+            .HasApiVersion(1);
 
         playlistsGroup.MapGet("{playlistId:guid}/items", GetPlaylistItemsAsync)
-            .HasApiVersion(1)
-            .AllowAnonymous();
+            .HasApiVersion(1);
     }
 
     private static async Task<Ok<PlaylistSearchResponseDtoV1>> SearchPlaylistsAsync(
@@ -47,20 +45,13 @@ public static class PlaylistEndpoints
 
     private static async Task<Results<
         Ok<PlaylistSimpleDtoV1>,
-        NotFound<ErrorResponseDto>,
-        ForbidHttpResult
+        NotFound<ErrorResponseDto>
     >> GetPlaylistAsync(
         [FromServices] PlaylistPresentationService playlistPresentationService,
-        [FromServices] AuthorizationService authorizationService,
         [FromRoute] Guid playlistId,
         HttpContext httpContext,
         CancellationToken ct)
     {
-        if (!await authorizationService.IsPlaylistAccessAllowedAsync(playlistId, httpContext.User, ct))
-        {
-            return TypedResults.Forbid();
-        }
-
         var response = await playlistPresentationService.GetPlaylistByIdAsync(playlistId, ct);
         if (response is null)
         {
@@ -80,17 +71,11 @@ public static class PlaylistEndpoints
         ForbidHttpResult
     >> GetPlaylistItemsAsync(
         [FromServices] PlaylistPresentationService playlistPresentationService,
-        [FromServices] AuthorizationService authorizationService,
         [FromRoute] Guid playlistId,
         [AsParameters] PaginationRequestOptionalDtoV1 paginationQuery,
         HttpContext httpContext,
         CancellationToken ct)
     {
-        if (!await authorizationService.IsPlaylistAccessAllowedAsync(playlistId, httpContext.User, ct))
-        {
-            return TypedResults.Forbid();
-        }
-
         var response = await playlistPresentationService.GetPlaylistItemsAsync(playlistId, paginationQuery, ct);
 
         return TypedResults.Ok(new PlaylistItemsResponseDtoV1

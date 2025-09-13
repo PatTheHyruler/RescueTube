@@ -59,7 +59,6 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
     public ICollection<VideoAuthor>? VideoAuthors { get; set; }
     public ICollection<VideoCategory>? VideoCategories { get; set; }
     public ICollection<StatusChangeEvent>? StatusChangeEvents { get; set; }
-    public ICollection<EntityAccessPermission>? EntityAccessPermissions { get; set; }
     public ICollection<Comment>? Comments { get; set; }
 
     public ICollection<PlaylistItem>? PlaylistItems { get; set; }

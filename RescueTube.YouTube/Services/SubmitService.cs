@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.Data;
 using RescueTube.Core.Exceptions;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;
@@ -14,9 +14,13 @@ namespace RescueTube.YouTube.Services;
 
 public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 {
-    public SubmitService(IServiceProvider services, ILogger<SubmitService> logger) : base(services,
-        logger)
+    private readonly AppDbContext _dbCtx;
+    private readonly YouTubeUow _youTubeUow;
+
+    public SubmitService(AppDbContext dbCtx, YouTubeUow youTubeUow)
     {
+        _dbCtx = dbCtx;
+        _youTubeUow = youTubeUow;
     }
 
     public bool IsPlatformUrl(string url, [NotNullWhen(true)] out RecognizedPlatformUrl? recognizedPlatformUrl)
@@ -77,7 +81,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             null => author => author.IdOnPlatform == idOnPlatform,
             _ => throw new ArgumentException($"Unsupported ID type '{idType}'", nameof(idType)),
         };
-        var existingAuthor = await DbCtx.Authors
+        var existingAuthor = await _dbCtx.Authors
             .Where(a => a.Platform == EPlatform.YouTube)
             .Where(existingAuthorFilter)
             .Include(a => a.ArchivalSettings)
@@ -86,36 +90,36 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         var addedOrExistingAuthor = existingAuthor;
         if (addedOrExistingAuthor == null)
         {
-            var channel = await YouTubeUow.AuthorService.FetchYouTubeExplodeChannelAsync(idOnPlatform, idType, ct);
+            var channel = await _youTubeUow.AuthorService.FetchYouTubeExplodeChannelAsync(idOnPlatform, idType, ct);
 
             if (channel is null)
             {
                 throw new ApplicationException("Author not found on platform");
             }
 
-            addedOrExistingAuthor = await YouTubeUow.AuthorService.AddOrGetAuthor(channel, ct);
+            addedOrExistingAuthor = await _youTubeUow.AuthorService.AddOrGetAuthor(channel, ct);
         }
 
         if (addedOrExistingAuthor.ArchivalSettings == null)
         {
-            await DbCtx.Entry(addedOrExistingAuthor).Reference(a => a.ArchivalSettings).LoadAsync(ct);
+            await _dbCtx.Entry(addedOrExistingAuthor).Reference(a => a.ArchivalSettings).LoadAsync(ct);
         }
 
         if (addedOrExistingAuthor.ArchivalSettings != null)
         {
-            DbCtx.Remove(addedOrExistingAuthor.ArchivalSettings);
+            _dbCtx.Remove(addedOrExistingAuthor.ArchivalSettings);
         }
 
         addedOrExistingAuthor.ArchivalSettings =
             options ?? AuthorArchivalSettings.CreateDefaultArchivedAuthorSettings(); // TODO: Better logic for this
-        DbCtx.Add(addedOrExistingAuthor.ArchivalSettings);
+        _dbCtx.Add(addedOrExistingAuthor.ArchivalSettings);
 
         return addedOrExistingAuthor;
     }
 
     private async Task<Video> SubmitVideoAsync(string videoIdOnPlatform, CancellationToken ct)
     {
-        var existingVideo = await DbCtx.Videos
+        var existingVideo = await _dbCtx.Videos
             .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoIdOnPlatform)
             .FirstOrDefaultAsync(cancellationToken: ct);
         if (existingVideo != null)
@@ -123,13 +127,13 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             return existingVideo;
         }
 
-        var addedVideo = await YouTubeUow.VideoService.AddOrUpdateVideoAsync(videoIdOnPlatform, ct);
+        var addedVideo = await _youTubeUow.VideoService.AddOrUpdateVideoAsync(videoIdOnPlatform, ct);
         return addedVideo ?? throw new VideoNotFoundOnPlatformException();
     }
 
     private async Task<Playlist> SubmitPlaylistAsync(string playlistIdOnPlatform, CancellationToken ct)
     {
-        var existingPlaylist = await DbCtx.Playlists
+        var existingPlaylist = await _dbCtx.Playlists
             .Where(p => p.Platform == EPlatform.YouTube && p.IdOnPlatform == playlistIdOnPlatform)
             .FirstOrDefaultAsync(ct);
         if (existingPlaylist != null)
@@ -137,7 +141,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             return existingPlaylist;
         }
 
-        var addedPlaylist = await YouTubeUow.PlaylistService.AddOrUpdatePlaylistAsync(playlistIdOnPlatform, ct);
+        var addedPlaylist = await _youTubeUow.PlaylistService.AddOrUpdatePlaylistAsync(playlistIdOnPlatform, ct);
         return addedPlaylist ?? throw new ApplicationException("Playlist not found on platform");
     }
 }

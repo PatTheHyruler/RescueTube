@@ -50,7 +50,6 @@ public static class SetupExtensions
         services.AddScoped<SignInManager<User>>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddIdentityCookiesCustom(services, configuration)
             .AddJwtBearerCustom(services, configuration);
 
         builder.Services.AddSeeding();
@@ -93,46 +92,6 @@ public static class SetupExtensions
         return authBuilder;
     }
 
-    private static Func<RedirectContext<CookieAuthenticationOptions>, Task> CookieApiRedirectOverride(int statusCode) =>
-        ctx =>
-        {
-            if (ctx.Request.Path.StartsWithSegments("/api"))
-            {
-                ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            }
-            else
-            {
-                ctx.Response.Redirect(ctx.RedirectUri);
-            }
-
-            return Task.CompletedTask;
-        };
-
-    private static AuthenticationBuilder AddIdentityCookiesCustom(this AuthenticationBuilder authBuilder,
-        IServiceCollection services, IConfiguration config)
-    {
-        var cookieSection = config.GetRequiredSection(CookieAuthOptions.Section);
-        services.AddOptionsFull<CookieAuthOptions>(cookieSection);
-        var cookieOptions = cookieSection.Get<CookieAuthOptions>()
-                            ?? throw new OptionsValidationException(CookieAuthOptions.Section,
-                                typeof(CookieAuthOptions),
-                                ["Failed to read authentication cookie options"]);
-        authBuilder.AddIdentityCookies()
-            .ApplicationCookie?
-            .Configure(o =>
-            {
-                o.Events.OnRedirectToLogin = CookieApiRedirectOverride(StatusCodes.Status401Unauthorized);
-                o.Events.OnRedirectToAccessDenied = CookieApiRedirectOverride(StatusCodes.Status403Forbidden);
-                o.LoginPath = "/Account/Login";
-                o.LogoutPath = "/Account/Logout";
-                o.SlidingExpiration = cookieOptions.SlidingExpiration;
-                o.ExpireTimeSpan = cookieOptions.ExpireTimeSpan;
-            });
-        services.Configure<SecurityStampValidatorOptions>(o =>
-            o.ValidationInterval = cookieOptions.ValidationInterval);
-        return authBuilder;
-    }
-
     private static void AddIdentityUowAndServices(this IServiceCollection services)
     {
         services.AddScoped<IdentityUow>();
@@ -154,7 +113,7 @@ public static class SetupExtensions
     /// Seed initial identity data from configuration.
     /// </summary>
     /// <remarks>
-    /// Requires <see cref="AddSeeding"/> (called by <see cref="AddCustomIdentity"/>)
+    /// Requires <see cref="AddSeeding"/> (called by <see cref="AddCustomIdentity{TContext}"/>)
     /// to have been called during service registration.
     /// </remarks>
     public static async Task SeedIdentityAsync(this IApplicationBuilder app)

@@ -31,12 +31,6 @@ public class PlaylistSpecification : BaseDbService, IPlaylistSpecification
                     authorQuery));
         }
 
-        if (!search.AccessAllowed)
-        {
-            query = query.Where(DataUow.Permissions
-                .IsUserAllowedToAccessPlaylistOrPlaylistIsPublic(search.UserId, true));
-        }
-
         return query;
     }
 }

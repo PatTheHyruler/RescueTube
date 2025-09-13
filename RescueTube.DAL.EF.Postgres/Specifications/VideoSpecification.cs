@@ -57,12 +57,6 @@ public class VideoSpecification : BaseDbService, IVideoSpecification
             query = query.AsExpandable().Where(FilterVideos(search.Filter));
         }
 
-        if (!search.AccessAllowed)
-        {
-            query = query.AsExpandable().Where(
-                DataUow.Permissions.IsUserAllowedToAccessVideoOrVideoIsPublic(search.UserId, true));
-        }
-
         switch (search.SortingOptions)
         {
             case EVideoSortingOptions.Duration:

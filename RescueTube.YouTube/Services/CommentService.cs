@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.Data;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.YouTube.Base;
@@ -11,14 +12,19 @@ namespace RescueTube.YouTube.Services;
 
 public class CommentService : BaseYouTubeService
 {
+    private readonly AppDbContext _dbCtx;
+    private readonly ILogger<CommentService> _logger;
     private readonly EntityUpdateService _entityUpdateService;
+    private readonly YouTubeUow _youTubeUow;
 
-    public CommentService(IServiceProvider services, ILogger<CommentService> logger,
-        EntityUpdateService entityUpdateService) : base(services, logger)
+    public CommentService(AppDbContext dbCtx, ILogger<CommentService> logger, EntityUpdateService entityUpdateService, YouTubeUow youTubeUow)
     {
+        _dbCtx = dbCtx;
+        _logger = logger;
         _entityUpdateService = entityUpdateService;
+        _youTubeUow = youTubeUow;
     }
-    
+
     private DataFetch AddDataFetch(Guid videoId, DateTimeOffset commentsFetched, bool success)
     {
         return new DataFetch
@@ -42,22 +48,22 @@ public class CommentService : BaseYouTubeService
     // TODO: Use this
     public async Task UpdateComments(Guid videoId, CancellationToken ct)
     {
-        var video = await DbCtx.Videos
+        var video = await _dbCtx.Videos
             .Where(v => v.Id == videoId)
             .Include(v => v.Comments!)
             .ThenInclude(v => v.CommentStatisticSnapshots)
             .SingleAsync(cancellationToken: ct);
         
-        var videoData = await YouTubeUow.VideoService.FetchVideoDataYtdlAsync(video.IdOnPlatform, true, ct);
+        var videoData = await _youTubeUow.VideoService.FetchVideoDataYtdlAsync(video.IdOnPlatform, true, ct);
         if (videoData?.Comments == null)
         {
             AddDataFetch(video, DateTimeOffset.UtcNow, false);
-            Logger.LogError("Failed to fetch comments for video {VideoId}", videoId);
+            _logger.LogError("Failed to fetch comments for video {VideoId}", videoId);
             return;
         }
 
         var commentsFetched = DateTimeOffset.UtcNow;
-        Logger.LogInformation(
+        _logger.LogInformation(
             "Fetched {CommentsAmount} comments from YouTube for video {VideoId}",
             videoData.Comments.Length, video.Id
         );
@@ -65,7 +71,7 @@ public class CommentService : BaseYouTubeService
         if (videoData.Comments.Length == 0 && videoData.CommentCount != 0)
         {
             AddDataFetch(video, commentsFetched, false);
-            Logger.LogError(
+            _logger.LogError(
                 "Fetched 0 comments while reported comment count was {CommentCount}, assuming comments fetch error",
                 videoData.CommentCount);
             return;
@@ -85,8 +91,8 @@ public class CommentService : BaseYouTubeService
         }
 
         // TODO: What to do if video has 20000 comments? Memory issues?
-        var commentsWithoutParent = new List<(Domain.Entities.Comment Comment, string Parent)>();
-        var commentsWithoutRoot = new List<(Domain.Entities.Comment Comment, string Root)>();
+        var commentsWithoutParent = new List<(Comment Comment, string Parent)>();
+        var commentsWithoutRoot = new List<(Comment Comment, string Root)>();
 
         var authorFetchArgs = commentDatas.Where(c => video.Comments
                 .All(e => e.IdOnPlatform != c.ID))
@@ -94,7 +100,7 @@ public class CommentService : BaseYouTubeService
             .Select(c => new AuthorFetchArg(
                 c.AuthorID,
                 () => c.ToDomainAuthor(YouTubeConstants.FetchTypes.YtDlp.Comments)));
-        var addedOrFetchedAuthors = await YouTubeUow.AuthorService.AddOrGetAuthors(authorFetchArgs);
+        var addedOrFetchedAuthors = await _youTubeUow.AuthorService.AddOrGetAuthors(authorFetchArgs);
 
         var commentOrderIndex = 0L;
 
@@ -136,7 +142,7 @@ public class CommentService : BaseYouTubeService
             }
 
             video.Comments.Add(comment);
-            DbCtx.AddIfTracked(comment);
+            _dbCtx.AddIfTracked(comment);
         }
 
         foreach (var commentWithoutParent in commentsWithoutParent)

@@ -31,7 +31,6 @@ public static class BuilderExtensions
         services.AddScoped<ServiceUow>();
 
         services.AddScoped<SubmissionService>();
-        services.AddScoped<AuthorizationService>();
         services.AddScoped<ImageService>();
         services.AddScoped<VideoPresentationService>();
         services.AddScoped<AuthorPresentationService>();
@@ -51,7 +50,6 @@ public static class BuilderExtensions
 
         services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<SubmissionService>(); });
 
-        services.AddScoped<SubmissionAddEntityAccessPermissionJob>();
         services.AddScoped<UpdateImagesResolutionJob>();
         services.Configure<JobsConfiguration>(c => c.RegisterJobs(
             new JobDefinition<DownloadImageJob>

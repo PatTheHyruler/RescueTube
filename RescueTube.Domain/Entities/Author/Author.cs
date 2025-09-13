@@ -44,7 +44,6 @@ public class Author : BaseIdDbEntity, IMainArchiveEntity
     public ICollection<VideoCategory>? AssignedVideoCategories { get; set; }
 
     public ICollection<StatusChangeEvent>? StatusChangeEvents { get; set; }
-    public ICollection<EntityAccessPermission>? EntityAccessPermissions { get; set; }
 
     public ICollection<AuthorHistory>? AuthorHistories { get; set; }
 }

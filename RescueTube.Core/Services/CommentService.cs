@@ -1,7 +1,6 @@
 ﻿using LinqKit;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using RescueTube.Core.Base;
+using RescueTube.Core.Data;
 using RescueTube.Core.Data.Mappers;
 using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.DTO.Entities;
@@ -9,17 +8,19 @@ using RescueTube.Core.Utils.Pagination;
 
 namespace RescueTube.Core.Services;
 
-public class CommentService : BaseService
+public class CommentService
 {
-    public CommentService(IServiceProvider services, ILogger<CommentService> logger) : base(services,
-        logger)
+    private readonly AppDbContext _dbCtx;
+
+    public CommentService(AppDbContext dbCtx)
     {
+        _dbCtx = dbCtx;
     }
 
     public async Task<PaginationResponse<VideoComments>?> GetVideoComments(Guid videoId, IPaginationQuery paginationQuery,
         CancellationToken ct = default)
     {
-        var videoData = await DbCtx.Videos
+        var videoData = await _dbCtx.Videos
             .Where(v => v.Id == videoId)
             .Select(v => new
             {
@@ -32,7 +33,7 @@ public class CommentService : BaseService
         }
 
         paginationQuery = paginationQuery.ToClamped();
-        var commentRootsQuery = DbCtx.Comments
+        var commentRootsQuery = _dbCtx.Comments
             .Where(c => c.VideoId == videoId && c.ConversationRootId == null)
             .OrderByDescending(c => c.CreatedAt)
             .ThenByDescending(c => c.OrderIndex)

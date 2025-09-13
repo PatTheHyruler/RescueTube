@@ -11,7 +11,6 @@ public interface IVideoSpecification
     {
         public VideoSearchFilter? Filter { get; init; }
         public Guid? UserId { get; init; }
-        public bool AccessAllowed { get; init; }
         public EVideoSortingOptions SortingOptions { get; init; }
         public bool Descending { get; init; }
     }

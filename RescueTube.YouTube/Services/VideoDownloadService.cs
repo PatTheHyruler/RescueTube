@@ -15,23 +15,26 @@ namespace RescueTube.YouTube.Services;
 
 public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDownloadService
 {
+    private readonly ILogger<VideoDownloadService> _logger;
     private readonly AppPaths _appPaths;
     private readonly CookieService _cookieService;
     private readonly SettingService _settingService;
+    private readonly YouTubeUow _youTubeUow;
 
     private static ThrottlingAssessmentWithValidity? LatestThrottlingAssessment { get; set; }
 
     public VideoDownloadService(
-        IServiceProvider services,
         ILogger<VideoDownloadService> logger,
         AppPaths appPaths,
         CookieService cookieService,
-        SettingService settingService
-    ) : base(services, logger)
+        SettingService settingService,
+        YouTubeUow youTubeUow)
     {
+        _logger = logger;
         _appPaths = appPaths;
         _cookieService = cookieService;
         _settingService = settingService;
+        _youTubeUow = youTubeUow;
     }
 
     public bool IsLikelyThrottled()
@@ -43,17 +46,17 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
 
     public async Task<string> DownloadVideoAsync(Video video, CancellationToken ct = default)
     {
-        Logger.LogInformation("Started downloading video {IdOnPlatform} on platform {Platform}",
+        _logger.LogInformation("Started downloading video {IdOnPlatform} on platform {Platform}",
             video.IdOnPlatform, video.Platform);
 
-        var downloadSpeedMonitor = new DownloadSpeedMonitor(Logger);
+        var downloadSpeedMonitor = new DownloadSpeedMonitor(_logger);
         var downloadProgressHandler = new AggregateProgressHandler<DownloadProgress>(
-            new DownloadProgressLogger(Logger),
+            new DownloadProgressLogger(_logger),
             downloadSpeedMonitor
         );
         // TODO: Add way to see download progress on the video page itself
 
-        var options = YouTubeUow.CreateDownloadOptions();
+        var options = _youTubeUow.CreateDownloadOptions();
         var shouldUseCookieFile = await _settingService.GetValueAsync(YouTubeSettingDefinitions.UseCookieFile, ct)
                                   ?? YouTubeSettingDefinitions.UseCookieFile.DefaultValue;
         if (shouldUseCookieFile)
@@ -64,13 +67,13 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
                 options.Cookies = cookieFilePath;
             }
         }
-        var result = await YouTubeUow.YoutubeDl.RunVideoDownload(
+        var result = await _youTubeUow.YoutubeDl.RunVideoDownload(
             url: Url.ToVideoUrl(video.IdOnPlatform),
             ct: ct,
             overrideOptions: options,
             progress: downloadProgressHandler);
         var throttlingAssessment = downloadSpeedMonitor.GetThrottlingAssessment();
-        Logger.LogInformation("Video download finished, average download speed: {DownloadSpeed} B/s",
+        _logger.LogInformation("Video download finished, average download speed: {DownloadSpeed} B/s",
             downloadSpeedMonitor.AverageDownloadSpeed);
         LatestThrottlingAssessment = new ThrottlingAssessmentWithValidity(throttlingAssessment, DateTimeOffset.UtcNow);
 
@@ -89,7 +92,7 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
         }
         catch (Exception e)
         {
-            Logger.LogError(e, "Failed to set video info JSON for video {VideoId}", video.Id);
+            _logger.LogError(e, "Failed to set video info JSON for video {VideoId}", video.Id);
         }
 
         return videoFilePath;

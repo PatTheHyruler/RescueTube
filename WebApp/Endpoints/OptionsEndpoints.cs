@@ -9,7 +9,6 @@ public static class OptionsEndpoints
         var optionsGroup = app.MapGroup("options").WithTags("Options");
 
         optionsGroup.MapGet("SupportedPlatforms", () => TypedResults.Ok(Enum.GetValues<EPlatform>()))
-            .AllowAnonymous()
             .HasApiVersion(1);
     }
 }
