@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApp", "WebApp\WebApp.csproj", "{04A3610A-CD2D-4D44-BA26-EEE0BEB6B1CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RescueTube.WebApi", "RescueTube.WebApi\RescueTube.WebApi.csproj", "{04A3610A-CD2D-4D44-BA26-EEE0BEB6B1CA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RescueTube.DAL.EF", "RescueTube.DAL.EF\RescueTube.DAL.EF.csproj", "{BFAE2818-603F-4DAA-96C8-B007DEDB6B96}"
 EndProject

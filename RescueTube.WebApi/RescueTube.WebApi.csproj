@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <UserSecretsId>836b5279-2b83-47e8-852b-cf4165055fd6</UserSecretsId>
+        <RootNamespace>WebApp</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
