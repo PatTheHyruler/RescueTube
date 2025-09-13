@@ -1,18 +1,20 @@
-using Microsoft.Extensions.Logging;
-using RescueTube.Core.Base;
+using RescueTube.Core.Data;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
 
-public class StatusChangeService : BaseService
+public class StatusChangeService
 {
-    public StatusChangeService(IServiceProvider services, ILogger<StatusChangeService> logger) : base(services, logger)
+    private readonly AppDbContext _dbCtx;
+
+    public StatusChangeService(AppDbContext dbCtx)
     {
+        _dbCtx = dbCtx;
     }
 
     public void Push(StatusChangeEvent statusChangeEvent)
     {
         // TODO: Notifications
-        DbCtx.StatusChangeEvents.Add(statusChangeEvent);
+        _dbCtx.StatusChangeEvents.Add(statusChangeEvent);
     }
 }

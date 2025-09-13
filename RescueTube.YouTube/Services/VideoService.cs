@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RescueTube.Core.Data;
 using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.DataFetches;
 using RescueTube.Core.Events;
@@ -15,19 +16,26 @@ namespace RescueTube.YouTube.Services;
 
 public class VideoService : BaseYouTubeService
 {
+    private readonly AppDbContext _dbCtx;
+    private readonly EntityUpdateService _entityUpdateService;
+    private readonly ILogger<VideoService> _logger;
     private readonly IMediator _mediator;
     private readonly DataFetchContext _dataFetchContext;
+    private readonly YouTubeServices _youTubeServices;
 
-    public VideoService(IServiceProvider services, ILogger<VideoService> logger, IMediator mediator, DataFetchContext dataFetchContext)
-        : base(services, logger)
+    public VideoService(ILogger<VideoService> logger, IMediator mediator, DataFetchContext dataFetchContext, AppDbContext dbCtx, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices)
     {
+        _logger = logger;
         _mediator = mediator;
         _dataFetchContext = dataFetchContext;
+        _dbCtx = dbCtx;
+        _entityUpdateService = entityUpdateService;
+        _youTubeServices = youTubeServices;
     }
 
     public async Task<VideoData?> FetchVideoDataYtdlAsync(string id, bool fetchComments, CancellationToken ct = default)
     {
-        var videoResult = await YouTubeUow.YoutubeDl.RunVideoDataFetch(
+        var videoResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(
             Url.ToVideoUrl(id), fetchComments: fetchComments, ct: ct);
         if (videoResult is not { Success: true })
         {
@@ -41,12 +49,12 @@ public class VideoService : BaseYouTubeService
 
     public async Task UpdateVideoAsync(Guid videoId, CancellationToken ct)
     {
-        var idOnPlatform = await DbCtx.Videos
+        var idOnPlatform = await _dbCtx.Videos
             .Where(v => v.Id == videoId && v.Platform == EPlatform.YouTube)
             .Select(v => v.IdOnPlatform).FirstAsync(ct);
         if (_dataFetchContext.IsFetching(YouTubeConstants.DataFetches.YtDlp.VideoPage, idOnPlatform))
         {
-            Logger.LogInformation("Already fetching {Platform} video {VideoIdOnPlatform}, skipping duplicate fetch", EPlatform.YouTube, idOnPlatform);
+            _logger.LogInformation("Already fetching {Platform} video {VideoIdOnPlatform}, skipping duplicate fetch", EPlatform.YouTube, idOnPlatform);
             return;
         }
         await AddOrUpdateVideoAsync(idOnPlatform, ct); // TODO: add failed data fetch
@@ -67,7 +75,7 @@ public class VideoService : BaseYouTubeService
     public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, Author? author,
         CancellationToken ct = default)
     {
-        var video = await DbCtx.Videos
+        var video = await _dbCtx.Videos
             .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoData.ID)
             .Include(v => v.Title)
             .ThenInclude(t => t!.Translations)
@@ -89,8 +97,7 @@ public class VideoService : BaseYouTubeService
             ArchivalSettings = VideoArchivalSettings.CreateDefaultArchivedVideoSettings(),
         };
         var newVideoData = videoData.ToDomainVideo(fetchType);
-        ServiceUow.EntityUpdateService.UpdateVideo(video, newVideoData, isNew,
-            EntityUpdateService.EImageUpdateOptions.OnlyAdd);
+        _entityUpdateService.UpdateVideo(video, newVideoData, isNew, EntityUpdateService.EImageUpdateOptions.OnlyAdd);
 
         if (author == null)
         {
@@ -100,17 +107,17 @@ public class VideoService : BaseYouTubeService
         {
             if (isNew)
             {
-                DbCtx.VideoAuthors.SetVideoAuthor(video.Id, author.Id);
+                _dbCtx.VideoAuthors.SetVideoAuthor(video.Id, author.Id);
             }
             else
             {
-                await YouTubeUow.AuthorService.AddAndSetAuthor(video, author, ct);
+                await _youTubeServices.AuthorService.AddAndSetAuthor(video, author, ct);
             }
         }
 
         if (isNew)
         {
-            DbCtx.Videos.Add(video);
+            _dbCtx.Videos.Add(video);
             await _mediator.Publish(new VideoAddedEvent(video.Id, EPlatform.YouTube, video.IdOnPlatform), ct);
         }
 
@@ -132,7 +139,7 @@ public class VideoService : BaseYouTubeService
     {
         if (depth > 1)
         {
-            Logger.LogCritical("Unexpectedly large recursion depth, skipping. Title: {VideoDataTitle}",
+            _logger.LogCritical("Unexpectedly large recursion depth, skipping. Title: {VideoDataTitle}",
                 fakePlaylistOrVideoData.Title);
             return;
         }
@@ -165,8 +172,8 @@ public class VideoService : BaseYouTubeService
     {
         try
         {
-            await YouTubeUow.AuthorService.AddAndSetAuthor(video, videoData, fetchType, ct);
-            DbCtx.DataFetches.Add(new DataFetch
+            await _youTubeServices.AuthorService.AddAndSetAuthor(video, videoData, fetchType, ct);
+            _dbCtx.DataFetches.Add(new DataFetch
             {
                 VideoId = video.Id,
                 Video = video,
@@ -179,7 +186,7 @@ public class VideoService : BaseYouTubeService
         }
         catch (Exception e)
         {
-            DbCtx.DataFetches.Add(new DataFetch
+            _dbCtx.DataFetches.Add(new DataFetch
             {
                 VideoId = video.Id,
                 Video = video,
@@ -189,7 +196,7 @@ public class VideoService : BaseYouTubeService
                 ShouldAffectValidity = false,
                 Success = false,
             });
-            Logger.LogError(e, "Failed to add author for YouTube video {VideoId}, Author ID {AuthorId} ({AuthorName})",
+            _logger.LogError(e, "Failed to add author for YouTube video {VideoId}, Author ID {AuthorId} ({AuthorName})",
                 videoData.ID, videoData.ChannelID, videoData.Channel);
         }
     }

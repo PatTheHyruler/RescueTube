@@ -2,29 +2,32 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using RescueTube.Core.Base;
+using RescueTube.Core.Data;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
 
-public class ImageService : BaseService
+public class ImageService
 {
+    private readonly AppDbContext _dbCtx;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly AppPaths _appPaths;
     private readonly TimeProvider _timeProvider;
+    private readonly ILogger<ImageService> _logger;
 
-    public ImageService(IServiceProvider services, ILogger<ImageService> logger, IHttpClientFactory httpClientFactory,
-        AppPaths appPaths, TimeProvider timeProvider) : base(services, logger)
+    public ImageService(AppDbContext dbCtx, IHttpClientFactory httpClientFactory, AppPaths appPaths, TimeProvider timeProvider, ILogger<ImageService> logger)
     {
+        _dbCtx = dbCtx;
         _httpClientFactory = httpClientFactory;
         _appPaths = appPaths;
         _timeProvider = timeProvider;
+        _logger = logger;
     }
 
     public async Task TryUpdateResolutionFromFileAsync(Guid imageId, CancellationToken ct)
     {
-        var image = await DbCtx.Images
+        var image = await _dbCtx.Images
             .Where(e => e.Id == imageId)
             .FirstOrDefaultAsync(cancellationToken: ct);
         if (image == null) return;
@@ -44,7 +47,7 @@ public class ImageService : BaseService
         }
         catch (Exception e)
         {
-            Logger.LogError(e, "Failed to update resolution from file for image {ImageId}", image.Id);
+            _logger.LogError(e, "Failed to update resolution from file for image {ImageId}", image.Id);
         }
     }
 
@@ -147,7 +150,7 @@ public class ImageService : BaseService
             Width = image.Width,
             Height = image.Height,
         };
-        DbCtx.Images.Add(newImage);
+        _dbCtx.Images.Add(newImage);
 
         var currentTime = _timeProvider.GetUtcNow();
 
@@ -156,7 +159,7 @@ public class ImageService : BaseService
             foreach (var videoImage in image.VideoImages)
             {
                 videoImage.ValidUntil = currentTime;
-                DbCtx.VideoImages.Add(new VideoImage
+                _dbCtx.VideoImages.Add(new VideoImage
                 {
                     ImageType = videoImage.ImageType,
                     ValidSince = currentTime,
@@ -173,7 +176,7 @@ public class ImageService : BaseService
             foreach (var authorImage in image.AuthorImages)
             {
                 authorImage.ValidUntil = currentTime;
-                DbCtx.AuthorImages.Add(new AuthorImage
+                _dbCtx.AuthorImages.Add(new AuthorImage
                 {
                     ImageType = authorImage.ImageType,
                     ValidSince = currentTime,
@@ -189,7 +192,7 @@ public class ImageService : BaseService
             foreach (var playlistImage in image.PlaylistImages)
             {
                 playlistImage.ValidUntil = currentTime;
-                DbCtx.PlaylistImages.Add(new PlaylistImage
+                _dbCtx.PlaylistImages.Add(new PlaylistImage
                 {
                     ImageType = playlistImage.ImageType,
                     ValidSince = currentTime,

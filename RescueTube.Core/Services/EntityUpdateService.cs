@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
-using RescueTube.Core.Base;
 using RescueTube.Core.Data;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.ExpressionUtils;
@@ -11,14 +10,19 @@ using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Services;
 
-public class EntityUpdateService : BaseService
+public class EntityUpdateService
 {
+    private readonly AppDbContext _dbCtx;
     private readonly IDataUow _dataUow;
+    private readonly ILogger<EntityUpdateService> _logger;
+    private readonly StatusChangeService _statusChangeService;
 
-    public EntityUpdateService(IServiceProvider services, ILogger<EntityUpdateService> logger, IDataUow dataUow) : base(
-        services, logger)
+    public EntityUpdateService(ILogger<EntityUpdateService> logger, IDataUow dataUow, AppDbContext dbCtx, StatusChangeService statusChangeService)
     {
+        _logger = logger;
         _dataUow = dataUow;
+        _dbCtx = dbCtx;
+        _statusChangeService = statusChangeService;
     }
 
     public void UpdateVideo(Video video, Video newVideoData, bool isNew, EImageUpdateOptions imageUpdateOptions)
@@ -41,7 +45,7 @@ public class EntityUpdateService : BaseService
                 videoStatisticSnapshot.Video = video;
                 videoStatisticSnapshot.VideoId = video.Id;
                 video.VideoStatisticSnapshots.Add(videoStatisticSnapshot);
-                DbCtx.Add(videoStatisticSnapshot);
+                _dbCtx.Add(videoStatisticSnapshot);
             }
         }
 
@@ -77,7 +81,7 @@ public class EntityUpdateService : BaseService
                 else
                 {
                     video.VideoTags.Add(newVideoTag);
-                    DbCtx.Add(newVideoTag);
+                    _dbCtx.Add(newVideoTag);
                 }
             }
         }
@@ -117,7 +121,7 @@ public class EntityUpdateService : BaseService
                 playlistStatisticSnapshot.Playlist = playlist;
                 playlistStatisticSnapshot.PlaylistId = playlist.Id;
                 playlist.PlaylistStatisticSnapshots.Add(playlistStatisticSnapshot);
-                DbCtx.Add(playlistStatisticSnapshot);
+                _dbCtx.Add(playlistStatisticSnapshot);
             }
         }
 
@@ -160,7 +164,7 @@ public class EntityUpdateService : BaseService
                 authorStatisticSnapshot.Author = author;
                 authorStatisticSnapshot.AuthorId = author.Id;
                 author.AuthorStatisticSnapshots.Add(authorStatisticSnapshot);
-                DbCtx.Add(authorStatisticSnapshot);
+                _dbCtx.Add(authorStatisticSnapshot);
             }
         }
 
@@ -246,7 +250,7 @@ public class EntityUpdateService : BaseService
                 newEntityImage.ValidSince ??= currentTime;
                 validEntityImages.Add(newEntityImage);
                 entityImages.Add(newEntityImage);
-                DbCtx.Add(newEntityImage);
+                _dbCtx.Add(newEntityImage);
             }
         }
 
@@ -267,7 +271,7 @@ public class EntityUpdateService : BaseService
         switch (imageUpdateOptions)
         {
             case EImageUpdateOptions.OnlyAddSkipIfNotLoaded:
-                Logger.LogInformation(
+                _logger.LogInformation(
                     "Skipping images ({ImagesProperty}) update for {EntityType} with ID {EntityId}, navigation not loaded",
                     memberName, entity.GetType().FullName, entity.Id
                 );
@@ -288,7 +292,7 @@ public class EntityUpdateService : BaseService
         {
             existingTranslationKey = new TextTranslationKey();
             setter(entity, existingTranslationKey);
-            DbCtx.Add(existingTranslationKey);
+            _dbCtx.Add(existingTranslationKey);
         }
 
         existingTranslationKey.Translations ??= new List<TextTranslation>();
@@ -305,7 +309,7 @@ public class EntityUpdateService : BaseService
             }
 
             existingTranslationKey.Translations.Add(newTranslation);
-            DbCtx.Add(newTranslation);
+            _dbCtx.Add(newTranslation);
             if (existingTranslation != null)
             {
                 var validityChangeTime = newTranslation.ValidSince ?? DateTimeOffset.UtcNow;
@@ -325,7 +329,7 @@ public class EntityUpdateService : BaseService
         var newStats = newCommentData.CommentStatisticSnapshots?.SingleOrDefault();
         if (newStats == null)
         {
-            Logger.LogWarning("New data for comment {Id} didn't have any associated statistics", comment.Id);
+            _logger.LogWarning("New data for comment {Id} didn't have any associated statistics", comment.Id);
         }
         else
         {
@@ -339,7 +343,7 @@ public class EntityUpdateService : BaseService
             newStats.CommentId = comment.Id;
 
             comment.CommentStatisticSnapshots.Add(newStats);
-            DbCtx.Add(newStats);
+            _dbCtx.Add(newStats);
         }
 
         comment.AuthorIsCreator ??= newCommentData.AuthorIsCreator;
@@ -378,7 +382,7 @@ public class EntityUpdateService : BaseService
 
             if (statusChangeEvent != null)
             {
-                ServiceUow.StatusChangeService.Push(statusChangeEvent);
+                _statusChangeService.Push(statusChangeEvent);
             }
         }
 
@@ -404,7 +408,7 @@ public class EntityUpdateService : BaseService
                 entity.DataFetches = newEntityData.DataFetches;
                 foreach (var dataFetch in newEntityData.DataFetches)
                 {
-                    DbCtx.Add(dataFetch);
+                    _dbCtx.Add(dataFetch);
                 }
             }
             else
@@ -412,7 +416,7 @@ public class EntityUpdateService : BaseService
                 foreach (var dataFetch in newEntityData.DataFetches)
                 {
                     entity.DataFetches.Add(dataFetch);
-                    DbCtx.Add(dataFetch);
+                    _dbCtx.Add(dataFetch);
                 }
             }
         }
@@ -421,15 +425,6 @@ public class EntityUpdateService : BaseService
     private static void UpdateChanged(ref bool changed, bool addition)
     {
         changed = changed || addition;
-    }
-
-    private static T? UpdateValueIgnoreNull<T>(T? oldValue, T? newValue, ref bool changed,
-        Func<T, T, bool> customChangedFunc)
-    {
-        if (newValue == null) return oldValue;
-        if (oldValue == null) return newValue;
-        UpdateChanged(ref changed, customChangedFunc(oldValue, newValue));
-        return newValue;
     }
 
     private static T? UpdateValueIgnoreNull<T>(T? oldValue, T? newValue, ref bool changed,

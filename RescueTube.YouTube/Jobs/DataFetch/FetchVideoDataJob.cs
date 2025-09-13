@@ -10,13 +10,13 @@ namespace RescueTube.YouTube.Jobs.DataFetch;
 public class FetchVideoDataJob : EntityDataFetchJobBase<Video>, IEntityDataFetchJobWithDefinition
 {
     private readonly IDataUow _dataUow;
-    private readonly YouTubeUow _youTubeUow;
+    private readonly YouTubeServices _youTubeServices;
 
-    public FetchVideoDataJob(IDataUow dataUow, YouTubeUow youTubeUow, ILogger<FetchVideoDataJob> logger)
+    public FetchVideoDataJob(IDataUow dataUow, YouTubeServices youTubeServices, ILogger<FetchVideoDataJob> logger)
         : base(dataUow, logger, JobDefinition.DataFetchDefinition)
     {
         _dataUow = dataUow;
-        _youTubeUow = youTubeUow;
+        _youTubeServices = youTubeServices;
     }
 
     public static DataFetchJobDefinition JobDefinition { get; } = new()
@@ -33,7 +33,7 @@ public class FetchVideoDataJob : EntityDataFetchJobBase<Video>, IEntityDataFetch
     public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
-        await _youTubeUow.VideoService.UpdateVideoAsync(entityId, ct);
+        await _youTubeServices.VideoService.UpdateVideoAsync(entityId, ct);
         await _dataUow.SaveChangesAsync(ct);
         transaction.Complete();
     }

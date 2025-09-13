@@ -1,55 +1,50 @@
 using System.Security.Claims;
-using System.Security.Principal;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using RescueTube.Core.Base;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.Data;
 using RescueTube.Core.Events;
 using RescueTube.Core.Exceptions;
-using RescueTube.Core.Identity;
 using RescueTube.Core.Identity.Services;
-using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
-using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Services;
 
-public class SubmissionService : BaseService
+public class SubmissionService
 {
+    private readonly AppDbContext _dbContext;
+    private readonly IEnumerable<IPlatformSubmissionHandler> _submissionHandlers;
+    private readonly ILogger<SubmissionService> _logger;
     private readonly IMediator _mediator;
 
-    public SubmissionService(IServiceProvider services, ILogger<SubmissionService> logger, IMediator mediator)
-        : base(services, logger)
+    public SubmissionService(AppDbContext dbContext, IEnumerable<IPlatformSubmissionHandler> submissionHandlers, ILogger<SubmissionService> logger, IMediator mediator)
     {
+        _dbContext = dbContext;
+        _submissionHandlers = submissionHandlers;
+        _logger = logger;
         _mediator = mediator;
-    }
-
-    private IEnumerable<IPlatformSubmissionHandler> SubmissionHandlers =>
-        Services.GetRequiredService<IEnumerable<IPlatformSubmissionHandler>>();
-
-    private static bool IsAllowedToAutoSubmit(IPrincipal user)
-    {
-        return RoleNames.AllowedToAutoSubmitRolesList.Any(user.IsInRole);
     }
 
     /// <exception cref="UnrecognizedUrlException">URL was not recognized and can't be archived.</exception>
     public async Task<Submission> SubmitGenericLinkAsync(
         string url, ClaimsPrincipal user, CancellationToken ct = default)
     {
-        return await SubmitGenericLinkAsync(url, user.GetUserId(), IsAllowedToAutoSubmit(user), ct);
+        return await SubmitGenericLinkAsync(url, user.GetUserId(), autoSubmit: true, ct);
     }
 
     private async Task<Submission> SubmitGenericLinkAsync(
         string url, Guid submitterId, bool autoSubmit, CancellationToken ct = default)
     {
-        foreach (var submissionHandler in SubmissionHandlers)
+        foreach (var submissionHandler in _submissionHandlers)
         {
-            if (!submissionHandler.IsPlatformUrl(url, out var recognizedPlatformUrl)) continue;
+            if (!submissionHandler.IsPlatformUrl(url, out var recognizedPlatformUrl))
+            {
+                continue;
+            }
 
             var submission = new Submission(recognizedPlatformUrl, submitterId, autoSubmit);
-            DbCtx.Submissions.Add(submission);
+            _dbContext.Submissions.Add(submission);
             await _mediator.Publish(new SubmissionAddedEvent
             {
                 EntityType = submission.EntityType,
@@ -63,62 +58,28 @@ public class SubmissionService : BaseService
         throw new UnrecognizedUrlException(url);
     }
 
-    public async Task SubmissionAddEntityAccessPermissionAsync(Guid submissionId, CancellationToken ct = default)
-    {
-        var submission = await DbCtx.Submissions
-            .FirstOrDefaultAsync(e => e.Id == submissionId, cancellationToken: ct);
-
-        submission = submission switch
-        {
-            null => throw new ApplicationException($"Submission {submissionId} not found"),
-            { ApprovedAt: null } => throw new ApplicationException("Submission not approved"),
-            _ => submission,
-        };
-
-        switch (submission.EntityType)
-        {
-            case EEntityType.Video:
-                await ServiceUow.AuthorizationService.AuthorizeVideoIfNotAuthorized(
-                    submission.AddedById,
-                    submission.VideoId.AssertNotNull(), ct);
-                break;
-            case EEntityType.Playlist:
-                await ServiceUow.AuthorizationService.AuthorizePlaylistIfNotAuthorized(
-                    submission.AddedById,
-                    submission.PlaylistId.AssertNotNull(), ct);
-                break;
-            case EEntityType.Author:
-                await ServiceUow.AuthorizationService.AuthorizeAuthorIfNotAuthorized(
-                    submission.AddedById,
-                    submission.AuthorId.AssertNotNull(), ct);
-                break;
-            default:
-                throw new ApplicationException($"Unsupported entity type {submission.EntityType}");
-        }
-    }
-
     public async Task HandleSubmissionAsync(Guid submissionId, CancellationToken ct)
     {
-        var submission = await DbCtx.Submissions
+        var submission = await _dbContext.Submissions
             .Where(s => s.Id == submissionId)
             .FirstAsync(cancellationToken: ct);
 
         if (submission.ApprovedAt is null)
         {
-            throw new ApplicationException($"Submission {submissionId} not approved");
+            throw new InvalidOperationException($"Submission {submissionId} not approved");
         }
 
         if (submission.CompletedAt != null)
         {
-            Logger.LogInformation("Submission {SubmissionId} already handled at {CompletedAt}, skipping",
+            _logger.LogInformation("Submission {SubmissionId} already handled at {CompletedAt}, skipping",
                 submissionId, submission.CompletedAt);
             return;
         }
 
-        var submissionHandler = SubmissionHandlers.FirstOrDefault(x => x.Platform == submission.Platform);
+        var submissionHandler = _submissionHandlers.FirstOrDefault(x => x.Platform == submission.Platform);
         if (submissionHandler is null)
         {
-            throw new ApplicationException($"No submission handler for platform {submission.Platform}");
+            throw new NotSupportedException($"No submission handler for platform {submission.Platform}");
         }
 
         await submissionHandler.HandleSubmissionAsync(submission, ct);

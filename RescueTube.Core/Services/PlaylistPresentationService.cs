@@ -1,8 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using RescueTube.Core.Base;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.Data;
 using RescueTube.Core.Data.Mappers;
 using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.Data.Specifications;
@@ -12,18 +11,19 @@ using RescueTube.Core.Utils.Pagination;
 
 namespace RescueTube.Core.Services;
 
-public class PlaylistPresentationService : BaseService
+public class PlaylistPresentationService
 {
     private readonly IEnumerable<IPlatformPresentationHandler> _presentationHandlers;
     private readonly EntityMapper _mapper;
     private readonly VideoPresentationService _videoPresentationService;
+    private readonly IDataUow _dataUow;
 
-    public PlaylistPresentationService(IServiceProvider services, ILogger<PlaylistPresentationService> logger,
-        IEnumerable<IPlatformPresentationHandler> presentationHandlers, EntityMapper mapper, VideoPresentationService videoPresentationService) : base(services, logger)
+    public PlaylistPresentationService(IEnumerable<IPlatformPresentationHandler> presentationHandlers, EntityMapper mapper, VideoPresentationService videoPresentationService, IDataUow dataUow)
     {
         _presentationHandlers = presentationHandlers;
         _mapper = mapper;
         _videoPresentationService = videoPresentationService;
+        _dataUow = dataUow;
     }
 
     public class PlaylistSearchParams
@@ -35,15 +35,13 @@ public class PlaylistPresentationService : BaseService
         IPaginationQuery paginationQuery, ClaimsPrincipal user)
     {
         var userId = user.GetUserIdIfExists();
-        var accessAllowed = AuthorizationService.IsAllowedToAccessAnyContentByRole(user);
         paginationQuery = paginationQuery.ToClamped();
 
-        var playlistQuery = DataUow.Playlists.SearchPlaylists(new IPlaylistSpecification.PlaylistSearchParams
+        var playlistQuery = _dataUow.Playlists.SearchPlaylists(new IPlaylistSpecification.PlaylistSearchParams
             {
                 Name = filter.Name,
                 Author = null,
                 UserId = userId,
-                AccessAllowed = accessAllowed,
             })
             .Paginate(paginationQuery)
             .Select(_mapper.ToPlaylistSimpleDto);
@@ -61,7 +59,7 @@ public class PlaylistPresentationService : BaseService
 
     public async Task<PlaylistDto?> GetPlaylistByIdAsync(Guid playlistId, CancellationToken ct)
     {
-        var playlist = await DataUow.Ctx.Playlists
+        var playlist = await _dataUow.Ctx.Playlists
             .Where(p => p.Id == playlistId)
             .Select(_mapper.ToPlaylistDto)
             .FirstOrDefaultAsync(ct);
@@ -79,7 +77,7 @@ public class PlaylistPresentationService : BaseService
     public async Task<PaginationResponse<PlaylistItemDto<VideoSimple>[]>> GetPlaylistItemsAsync(
         Guid playlistId, IPaginationQuery paginationQuery, CancellationToken ct)
     {
-        var query = DataUow.Ctx.PlaylistItems
+        var query = _dataUow.Ctx.PlaylistItems
             .Where(pi => pi.PlaylistId == playlistId);
 
         var playlistItems = await query

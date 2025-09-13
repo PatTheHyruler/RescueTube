@@ -62,7 +62,7 @@ jobs:
           ref: ${{ steps.determine-backend-ref.outputs.ref }}
 
       - name: Copy frontend dist to backend
-        run: mkdir -p ./backend/WebApp/ClientApp && cp -r ./frontend/dist/* ./backend/WebApp/ClientApp
+        run: mkdir -p ./backend/RescueTube.WebApi/ClientApp && cp -r ./frontend/dist/* ./backend/RescueTube.WebApi/ClientApp
 
       - name: Log in to Docker Hub
         uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446
@@ -92,7 +92,7 @@ jobs:
         uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
         with:
           context: ./backend
-          file: ./backend/WebApp/Dockerfile
+          file: ./backend/RescueTube.WebApi/Dockerfile
           push: true
           tags: ${{ steps.custom-docker-tags.outputs.tags || steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

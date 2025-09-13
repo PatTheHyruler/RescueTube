@@ -17,7 +17,6 @@ public class ServiceUow
     public IDataUow DataUow => _dataUow ??= _services.GetRequiredService<IDataUow>();
 
     public SubmissionService SubmissionService => _services.GetRequiredService<SubmissionService>();
-    public AuthorizationService AuthorizationService => _services.GetRequiredService<AuthorizationService>();
 
     public ImageService ImageService => _services.GetRequiredService<ImageService>();
     public StatusChangeService StatusChangeService => _services.GetRequiredService<StatusChangeService>();

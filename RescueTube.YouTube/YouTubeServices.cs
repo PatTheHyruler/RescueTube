@@ -9,11 +9,11 @@ using YoutubeExplode;
 
 namespace RescueTube.YouTube;
 
-public class YouTubeUow
+public class YouTubeServices
 {
     private readonly IServiceProvider _services;
 
-    public YouTubeUow(IServiceProvider services)
+    public YouTubeServices(IServiceProvider services)
     {
         _services = services;
     }

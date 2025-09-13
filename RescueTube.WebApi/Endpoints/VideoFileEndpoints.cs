@@ -33,14 +33,13 @@ public static class VideoFileEndpoints
     /// </summary>
     /// <returns>The file data.</returns>
     /// <response code="200">File data fetched successfully.</response>
-    /// <response code="403">Access to video file forbidden.</response>
+    /// <response code="401">Invalid access token.</response>
     /// <response code="404">File (or video) not found.</response>
     private static async Task<Results<
-        FileStreamHttpResult, NotFound<ErrorResponseDto>, ForbidHttpResult
+        FileStreamHttpResult, NotFound<ErrorResponseDto>, UnauthorizedHttpResult
     >> ServeVideoFileAsync(
         [FromRoute] Guid videoId,
         [FromServices] TokenService tokenService,
-        [FromServices] AuthorizationService authorizationService,
         [FromServices] VideoPresentationService videoPresentationService,
         [FromServices] IWebHostEnvironment environment,
         [FromServices] IOptions<AppPathOptions> appPathOptions,
@@ -66,9 +65,9 @@ public static class VideoFileEndpoints
             }
         }
 
-        if (!tokenValidated && !await authorizationService.IsVideoAccessAllowedAsync(videoId, ct: ct))
+        if (!tokenValidated)
         {
-            return TypedResults.Forbid();
+            return TypedResults.Unauthorized();
         }
 
         var videoFile = await videoPresentationService.GetVideoFileAsync(videoId, ct);
@@ -107,19 +106,12 @@ public static class VideoFileEndpoints
     /// </summary>
     /// <returns>The token (also sets the token to a cookie).</returns>
     /// <response code="200">Token created successfully.</response>
-    /// <response code="403">Authenticated user doesn't have permission to access the video or video not found.</response>
     private static async Task<Results<Ok<AccessTokenDtoV1>, ForbidHttpResult>> GetNewVideoAccessTokenAsync(
         [FromRoute] Guid videoId,
-        [FromServices] AuthorizationService authorizationService,
         [FromServices] TokenService tokenService,
         HttpContext httpContext,
         CancellationToken ct)
     {
-        if (!await authorizationService.IsVideoAccessAllowedAsync(videoId, httpContext.User, ct))
-        {
-            return TypedResults.Forbid();
-        }
-
         var (token, expiresAt) = CreateVideoAccessTokenAsync(tokenService, videoId, httpContext.User);
 
         SetResponseVideoAccessToken(httpContext.Response, videoId, token, expiresAt);

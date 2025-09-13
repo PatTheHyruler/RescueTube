@@ -1,8 +1,7 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using RescueTube.Core.Base;
 using RescueTube.Core.Contracts;
+using RescueTube.Core.Data;
 using RescueTube.Core.Data.Mappers;
 using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.Data.Specifications;
@@ -15,10 +14,20 @@ using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
 
-public class VideoPresentationService : BaseService
+public class VideoPresentationService
 {
+    private readonly AppDbContext _dbCtx;
+    private readonly IDataUow _dataUow;
     private readonly EntityMapper _mapper;
     private readonly IEnumerable<IPlatformPresentationHandler> _presentationHandlers;
+
+    public VideoPresentationService(AppDbContext dbCtx, IDataUow dataUow, EntityMapper mapper, IEnumerable<IPlatformPresentationHandler> presentationHandlers)
+    {
+        _dbCtx = dbCtx;
+        _dataUow = dataUow;
+        _mapper = mapper;
+        _presentationHandlers = presentationHandlers;
+    }
 
     public async Task<PaginationResponse<List<VideoSimple>>> SearchVideosAsync(
         VideoSearchFilter filter,
@@ -28,13 +37,11 @@ public class VideoPresentationService : BaseService
         CancellationToken ct)
     {
         var userId = user.GetUserIdIfExists();
-        var accessAllowed = AuthorizationService.IsAllowedToAccessAnyContentByRole(user);
         paginationQuery = paginationQuery.ToClamped();
-        var videos = await DataUow.Videos.SearchVideos(new IVideoSpecification.VideoSearchParams
+        var videos = await _dataUow.Videos.SearchVideos(new IVideoSpecification.VideoSearchParams
             {
                 Filter = filter,
                 UserId = userId,
-                AccessAllowed = accessAllowed,
                 SortingOptions = sortingOptions, Descending = descending,
             })
             .Paginate(paginationQuery)
@@ -52,7 +59,7 @@ public class VideoPresentationService : BaseService
 
     public async Task<VideoSimple?> GetVideoSimpleAsync(Guid videoId, CancellationToken ct)
     {
-        var video = await DbCtx.Videos
+        var video = await _dbCtx.Videos
             .Where(v => v.Id == videoId)
             .Select(_mapper.ToVideoSimple)
             .FirstOrDefaultAsync(ct);
@@ -62,7 +69,7 @@ public class VideoPresentationService : BaseService
 
     public async Task<VideoFile?> GetVideoFileAsync(Guid videoId, CancellationToken ct = default)
     {
-        return await DbCtx.VideoFiles
+        return await _dbCtx.VideoFiles
             .Where(e => e.VideoId == videoId)
             .OrderByDescending(e => e.ValidSince)
             .FirstOrDefaultAsync(ct);
@@ -89,13 +96,5 @@ public class VideoPresentationService : BaseService
             presentationHandler.Handle(video);
             break;
         }
-    }
-
-    public VideoPresentationService(IServiceProvider services, ILogger<VideoPresentationService> logger,
-        IEnumerable<IPlatformPresentationHandler> presentationHandlers, EntityMapper mapper) : base(services,
-        logger)
-    {
-        _presentationHandlers = presentationHandlers;
-        _mapper = mapper;
     }
 }

@@ -6,16 +6,6 @@ namespace RescueTube.Core.Data.Extensions;
 
 public static class VideoAuthorExtensions
 {
-    public static async Task SetVideoAuthorIfNotSet(this DbSet<VideoAuthor> dbSet, Guid videoId, Guid authorId, EAuthorRole role = EAuthorRole.Publisher)
-    {
-        if (await dbSet.Filter(videoId, authorId, role).AnyAsync())
-        {
-            return;
-        }
-
-        dbSet.SetVideoAuthor(videoId, authorId, role);
-    }
-
     public static void SetVideoAuthor(this DbSet<VideoAuthor> dbSet, Guid videoId, Guid authorId,
         EAuthorRole role = EAuthorRole.Publisher)
     {
