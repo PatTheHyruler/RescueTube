@@ -67,9 +67,7 @@ public class VideoService : BaseYouTubeService
         var dataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.VideoPage;
         using var _ = _dataFetchContext.StartDataFetch(dataFetchDefinition, idOnPlatform);
 
-        var dataFetch = _dataFetchService.AddDataFetch(dataFetchDefinition);
-        dataFetch.VideoIdOnPlatform = idOnPlatform;
-        await _dbCtx.SaveChangesAsync(ct);
+        var dataFetch = await _dataFetchService.AddDataFetchAsync(dataFetchDefinition, idOnPlatform, ct);
 
         var videoResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(
             Url.ToVideoUrl(idOnPlatform), fetchComments: false, ct: ct);

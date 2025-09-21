@@ -21,14 +21,25 @@ public class DataFetchService
 
     public async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, Author author, CancellationToken ct)
     {
-        var dataFetch = AddDataFetch(definition);
-        dataFetch.AuthorIdOnPlatform = author.IdOnPlatform;
-        await _dbCtx.SaveChangesAsync(ct);
+        if (definition.EntityType is not EEntityType.Author)
+        {
+            throw new ArgumentException($"DataFetch definition must be for {EEntityType.Author} - {definition}", nameof(definition));
+        }
 
-        return dataFetch;
+        return await AddDataFetchAsync(definition, author.IdOnPlatform, ct);
     }
 
-    public DataFetch AddDataFetch(DataFetchDefinition definition)
+    public async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, Video video, CancellationToken ct)
+    {
+        if (definition.EntityType is not EEntityType.Video)
+        {
+            throw new ArgumentException($"DataFetch definition must be for {EEntityType.Video} - {definition}", nameof(definition));
+        }
+
+        return await AddDataFetchAsync(definition, video.IdOnPlatform, ct);
+    }
+
+    public async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
     {
         var dataFetch = new DataFetch
         {
@@ -40,7 +51,23 @@ public class DataFetchService
             DataFetchResults = [],
         };
 
+        switch (definition.EntityType)
+        {
+            case EEntityType.Video:
+                dataFetch.VideoIdOnPlatform = idOnPlatform;
+                break;
+            case EEntityType.Author:
+                dataFetch.AuthorIdOnPlatform = idOnPlatform;
+                break;
+            case EEntityType.Playlist:
+                dataFetch.PlaylistIdOnPlatform = idOnPlatform;
+                break;
+            default:
+                throw new ArgumentException($"Unknown/unsupported entity type {definition.EntityType} in DataFetch definition {definition}", nameof(definition));
+        }
+
         _dbCtx.DataFetches.Add(dataFetch);
+        await _dbCtx.SaveChangesAsync(ct);
 
         return dataFetch;
     }

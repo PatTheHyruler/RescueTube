@@ -118,9 +118,7 @@ public class DownloadVideoJob
 
             var dataFetchDefinition = platformVideoDownloadService.DataFetchDefinition;
 
-            var dataFetch = _dataFetchService.AddDataFetch(dataFetchDefinition);
-            dataFetch.VideoIdOnPlatform = video.IdOnPlatform;
-            await _dataUow.SaveChangesAsync(ct);
+            var dataFetch = await _dataFetchService.AddDataFetchAsync(dataFetchDefinition, video, ct);
 
             var downloadTime = dataFetch.OccurredAt;
             try

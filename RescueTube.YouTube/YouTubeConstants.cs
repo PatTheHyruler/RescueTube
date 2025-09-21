@@ -52,7 +52,7 @@ public static class YouTubeConstants
 
         public static class YouTubeExplode
         {
-            public static DataFetchDefinition Channel = new()
+            public static readonly DataFetchDefinition Channel = new()
             {
                 Source = FetchTypes.YouTubeExplode.Source,
                 Type = FetchTypes.YouTubeExplode.Channel,

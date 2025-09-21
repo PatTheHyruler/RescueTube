@@ -51,9 +51,7 @@ public class PlaylistService : BaseYouTubeService
     {
         using var _ = _dataFetchContext.StartDataFetch(YouTubeConstants.DataFetches.YtDlp.Playlist, idOnPlatform);
 
-        var dataFetch = _dataFetchService.AddDataFetch(YouTubeConstants.DataFetches.YtDlp.Playlist);
-        dataFetch.PlaylistIdOnPlatform = idOnPlatform;
-        await _dbCtx.SaveChangesAsync(ct);
+        var dataFetch = await _dataFetchService.AddDataFetchAsync(YouTubeConstants.DataFetches.YtDlp.Playlist, idOnPlatform, ct);
 
         var playlistResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(Url.ToPlaylistUrl(idOnPlatform), ct);
         if (playlistResult is not { Success: true, Data: not null })
