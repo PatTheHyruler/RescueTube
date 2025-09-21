@@ -22,8 +22,9 @@ public class VideoService : BaseYouTubeService
     private readonly IMediator _mediator;
     private readonly DataFetchContext _dataFetchContext;
     private readonly YouTubeServices _youTubeServices;
+    private readonly DataFetchService _dataFetchService;
 
-    public VideoService(ILogger<VideoService> logger, IMediator mediator, DataFetchContext dataFetchContext, AppDbContext dbCtx, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices)
+    public VideoService(ILogger<VideoService> logger, IMediator mediator, DataFetchContext dataFetchContext, AppDbContext dbCtx, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices, DataFetchService dataFetchService)
     {
         _logger = logger;
         _mediator = mediator;
@@ -31,6 +32,7 @@ public class VideoService : BaseYouTubeService
         _dbCtx = dbCtx;
         _entityUpdateService = entityUpdateService;
         _youTubeServices = youTubeServices;
+        _dataFetchService = dataFetchService;
     }
 
     public async Task<VideoData?> FetchVideoDataYtdlAsync(string id, bool fetchComments, CancellationToken ct = default)
@@ -57,22 +59,37 @@ public class VideoService : BaseYouTubeService
             _logger.LogInformation("Already fetching {Platform} video {VideoIdOnPlatform}, skipping duplicate fetch", EPlatform.YouTube, idOnPlatform);
             return;
         }
-        await AddOrUpdateVideoAsync(idOnPlatform, ct); // TODO: add failed data fetch
+        await AddOrUpdateVideoAsync(idOnPlatform, ct);
     }
 
     public async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, CancellationToken ct)
     {
-        using var _ = _dataFetchContext.StartDataFetch(YouTubeConstants.DataFetches.YtDlp.VideoPage, idOnPlatform);
-        var videoData = await FetchVideoDataYtdlAsync(idOnPlatform, false, ct);
-        return videoData == null
-            ? null
-            : await AddOrUpdateVideoAsync(videoData, YouTubeConstants.FetchTypes.YtDlp.VideoPage, ct);
+        var dataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.VideoPage;
+        using var _ = _dataFetchContext.StartDataFetch(dataFetchDefinition, idOnPlatform);
+
+        var dataFetch = _dataFetchService.AddDataFetch(dataFetchDefinition);
+        dataFetch.VideoIdOnPlatform = idOnPlatform;
+        await _dbCtx.SaveChangesAsync(ct);
+
+        var videoResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(
+            Url.ToVideoUrl(idOnPlatform), fetchComments: false, ct: ct);
+        if (videoResult is not { Success: true, Data: not null })
+        {
+            // TODO: Add status change if video exists in archive
+            await _dataFetchService.UpdateDataFetchStatusAsync(dataFetch, DataFetchStatus.Failed,
+                message: videoResult?.ErrorOutputToString());
+            return null;
+        }
+
+        dataFetch.Status = DataFetchStatus.Succeeded;
+
+        return await AddOrUpdateVideoAsync(videoResult.Data, dataFetch, ct);
     }
 
-    public Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, CancellationToken ct) =>
-        AddOrUpdateVideoAsync(videoData: videoData, fetchType: fetchType, author: null, ct: ct);
+    public Task<Video> AddOrUpdateVideoAsync(VideoData videoData, DataFetch dataFetch, CancellationToken ct) =>
+        AddOrUpdateVideoAsync(videoData, dataFetch, author: null, ct: ct);
 
-    public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, string fetchType, Author? author,
+    public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, DataFetch dataFetch, Author? author,
         CancellationToken ct = default)
     {
         var video = await _dbCtx.Videos
@@ -96,12 +113,15 @@ public class VideoService : BaseYouTubeService
             IdOnPlatform = videoData.ID,
             ArchivalSettings = VideoArchivalSettings.CreateDefaultArchivedVideoSettings(),
         };
-        var newVideoData = videoData.ToDomainVideo(fetchType);
+
+        dataFetch.DataFetchResults.Add(new DataFetchResult { Video = video, VideoId = video.Id });
+
+        var newVideoData = videoData.ToDomainVideo();
         _entityUpdateService.UpdateVideo(video, newVideoData, isNew, EntityUpdateService.EImageUpdateOptions.OnlyAdd);
 
         if (author == null)
         {
-            await TryAddAuthorAsync(video, videoData, fetchType, ct);
+            await TryAddAuthorAsync(video, videoData, dataFetch, ct);
         }
         else
         {
@@ -125,17 +145,27 @@ public class VideoService : BaseYouTubeService
     }
 
     public async Task AddOrUpdateVideosFromAuthorVideosFetchAsync(VideoData authorData, Author author,
-        string fetchType, CancellationToken ct)
+        DataFetch dataFetch, CancellationToken ct)
     {
         foreach (var fakePlaylistOrVideoData in authorData.Entries)
         {
-            await HandleVideoDataFromAuthorVideosFetchAsync(fakePlaylistOrVideoData, author, fetchType, ct);
+            await HandleVideoDataFromAuthorVideosFetchAsync(fakePlaylistOrVideoData, author, dataFetch, ct);
         }
     }
 
+    private Task HandleVideoDataFromAuthorVideosFetchAsync(
+        VideoData fakePlaylistOrVideoData, Author author,
+        DataFetch dataFetch,
+        CancellationToken ct = default)
+    {
+        return HandleVideoDataFromAuthorVideosFetchAsync(
+            fakePlaylistOrVideoData, author, dataFetch, parentVideoType: null, depth: 0, ct: ct);
+    }
+
     private async Task HandleVideoDataFromAuthorVideosFetchAsync(VideoData fakePlaylistOrVideoData, Author author,
-        string fetchType,
-        CancellationToken ct = default, EVideoType? parentVideoType = null, uint depth = 0)
+        DataFetch dataFetch,
+        EVideoType? parentVideoType, uint depth,
+        CancellationToken ct)
     {
         if (depth > 1)
         {
@@ -154,12 +184,12 @@ public class VideoService : BaseYouTubeService
 
             foreach (var data in fakePlaylistOrVideoData.Entries)
             {
-                await HandleVideoDataFromAuthorVideosFetchAsync(data, author, fetchType, ct, videoType, depth + 1);
+                await HandleVideoDataFromAuthorVideosFetchAsync(data, author, dataFetch, videoType, depth + 1, ct);
             }
         }
         else
         {
-            var video = await AddOrUpdateVideoAsync(fakePlaylistOrVideoData, fetchType, author, ct);
+            var video = await AddOrUpdateVideoAsync(fakePlaylistOrVideoData, dataFetch, author, ct);
             if (parentVideoType != null)
             {
                 video.Type ??= parentVideoType;
@@ -167,35 +197,15 @@ public class VideoService : BaseYouTubeService
         }
     }
 
-    private async Task TryAddAuthorAsync(Video video, VideoData videoData, string fetchType,
+    private async Task TryAddAuthorAsync(Video video, VideoData videoData, DataFetch dataFetch,
         CancellationToken ct = default)
     {
         try
         {
-            await _youTubeServices.AuthorService.AddAndSetAuthor(video, videoData, fetchType, ct);
-            _dbCtx.DataFetches.Add(new DataFetch
-            {
-                VideoId = video.Id,
-                Video = video,
-                OccurredAt = DateTimeOffset.UtcNow,
-                Source = YouTubeConstants.FetchTypes.General.Source,
-                Type = YouTubeConstants.FetchTypes.General.VideoAuthor,
-                ShouldAffectValidity = false,
-                Success = true,
-            });
+            await _youTubeServices.AuthorService.AddAndSetAuthor(video, videoData, dataFetch, ct);
         }
         catch (Exception e)
         {
-            _dbCtx.DataFetches.Add(new DataFetch
-            {
-                VideoId = video.Id,
-                Video = video,
-                OccurredAt = DateTimeOffset.UtcNow,
-                Source = YouTubeConstants.FetchTypes.General.Source,
-                Type = YouTubeConstants.FetchTypes.General.VideoAuthor,
-                ShouldAffectValidity = false,
-                Success = false,
-            });
             _logger.LogError(e, "Failed to add author for YouTube video {VideoId}, Author ID {AuthorId} ({AuthorName})",
                 videoData.ID, videoData.ChannelID, videoData.Channel);
         }

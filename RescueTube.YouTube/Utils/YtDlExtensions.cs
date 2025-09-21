@@ -31,7 +31,7 @@ public static class YtDlExtensions
         };
     }
 
-    private static Author ToAuthorBase(this VideoData videoData, string fetchType)
+    private static Author ToAuthorBase(this VideoData videoData)
     {
         return new Author
         {
@@ -53,27 +53,15 @@ public static class YtDlExtensions
                     }
                 },
 
-            DataFetches = new List<DataFetch>
-            {
-                new()
-                {
-                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
-                    Type = fetchType,
-                    OccurredAt = DateTimeOffset.UtcNow,
-                    ShouldAffectValidity = true,
-                    Success = true,
-                },
-            },
-
             PrivacyStatusOnPlatform = EPrivacyStatus.Public,
 
             AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
     }
 
-    public static Author ToDomainAuthorFromChannel(this VideoData channelData, string fetchType)
+    public static Author ToDomainAuthorFromChannel(this VideoData channelData)
     {
-        var author = channelData.ToAuthorBase(fetchType);
+        var author = channelData.ToAuthorBase();
         if (!string.IsNullOrWhiteSpace(channelData.Description))
         {
             author.Bio = GetValueAsTextTranslationKey(channelData.Description);
@@ -104,12 +92,12 @@ public static class YtDlExtensions
         return author;
     }
 
-    public static Author ToDomainAuthorFromVideo(this VideoData videoData, string fetchType)
+    public static Author ToDomainAuthorFromVideo(this VideoData videoData)
     {
-        return videoData.ToAuthorBase(fetchType);
+        return videoData.ToAuthorBase();
     }
 
-    public static Author ToDomainAuthor(this CommentData commentData, string fetchType)
+    public static Author ToDomainAuthor(this CommentData commentData)
     {
         var domainAuthor = new Author
         {
@@ -134,17 +122,6 @@ public static class YtDlExtensions
                 }
             },
 
-            DataFetches = new List<DataFetch>
-            {
-                new()
-                {
-                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
-                    Type = fetchType,
-                    OccurredAt = DateTimeOffset.UtcNow,
-                    ShouldAffectValidity = true,
-                    Success = true,
-                }
-            },
             AddedToArchiveAt = DateTimeOffset.UtcNow,
         };
 
@@ -174,22 +151,11 @@ public static class YtDlExtensions
 
             CreatedAt = commentData.Timestamp.ToUniversalTime(),
 
-            DataFetches = new List<DataFetch>
-            {
-                new()
-                {
-                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
-                    Type = fetchType,
-                    OccurredAt = DateTimeOffset.UtcNow,
-                    ShouldAffectValidity = true,
-                    Success = true,
-                }
-            },
             AddedToArchiveAt = DateTimeOffset.UtcNow
         };
     }
 
-    public static Video ToDomainVideo(this VideoData videoData, string fetchType)
+    public static Video ToDomainVideo(this VideoData videoData)
     {
         var liveStatus = videoData.GetLiveStatus();
         var video = new Video
@@ -248,17 +214,6 @@ public static class YtDlExtensions
 
             PrivacyStatusOnPlatform = videoData.Availability.ToPrivacyStatus(),
 
-            DataFetches =
-            [
-                new()
-                {
-                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
-                    Type = fetchType,
-                    OccurredAt = DateTimeOffset.UtcNow,
-                    Success = true,
-                    ShouldAffectValidity = true,
-                }
-            ],
             AddedToArchiveAt = DateTimeOffset.UtcNow,
             // TODO: Categories, etc
         };
@@ -266,7 +221,7 @@ public static class YtDlExtensions
         return video;
     }
 
-    public static Playlist ToDomainPlaylist(this VideoData playlistData, string fetchType)
+    public static Playlist ToDomainPlaylist(this VideoData playlistData)
     {
         var playlist = new Playlist
         {
@@ -280,17 +235,6 @@ public static class YtDlExtensions
             PrivacyStatusOnPlatform = playlistData.Availability.ToPrivacyStatus(),
 
             AddedToArchiveAt = DateTimeOffset.UtcNow,
-            DataFetches = new List<DataFetch>
-            {
-                new()
-                {
-                    OccurredAt = DateTimeOffset.UtcNow,
-                    Success = true,
-                    Type = fetchType,
-                    ShouldAffectValidity = true,
-                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
-                },
-            },
 
             PlaylistItems = new List<PlaylistItem>(),
             PlaylistImages = playlistData.Thumbnails.Select(e => e.ToPlaylistImage()).ToList(),
@@ -323,6 +267,7 @@ public static class YtDlExtensions
             LiveStatus.WasLive => ELiveStatus.WasLive,
             LiveStatus.NotLive => ELiveStatus.NotLive,
             LiveStatus.PostLive => ELiveStatus.PostLive,
+            // ReSharper disable once RedundantSwitchExpressionArms
             LiveStatus.None => videoData.GetFallbackLiveStatus(),
             _ => videoData.GetFallbackLiveStatus(),
         };

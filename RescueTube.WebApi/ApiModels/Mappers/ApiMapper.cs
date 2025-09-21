@@ -3,6 +3,7 @@ using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
+using RescueTube.Domain.Enums;
 using RescueTube.WebApi.ApiModels.Playlists;
 using RescueTube.WebApi.ApiModels.Statistics;
 using RescueTube.WebApi.Utils;
@@ -97,8 +98,6 @@ public static class ApiMapper
             Platform = src.Platform,
             IdOnPlatform = src.IdOnPlatform,
             PrivacyStatusOnPlatform = src.PrivacyStatusOnPlatform,
-            LastSuccessfulFetch = src.LastSuccessfulFetch?.MapDataFetchDtoV1(),
-            LastUnSuccessfulFetch = src.LastUnSuccessfulFetch?.MapDataFetchDtoV1(),
             AddedToArchiveAt = src.AddedToArchiveAt,
             Author = src.Author.MapAuthorSimpleDtoV1(baseUrl),
             ConversationReplies = src.ConversationReplies?
@@ -122,14 +121,14 @@ public static class ApiMapper
     {
         Id = src.Id,
         OccurredAt = src.OccurredAt,
-        ShouldAffectValidity = src.ShouldAffectValidity,
         Source = src.Source,
-        Success = src.Success,
+        Success = src.Status == DataFetchStatus.Succeeded,
         Type = src.Type,
+        Platform = src.Platform,
 
-        VideoId = src.VideoId,
-        AuthorId = src.AuthorId,
-        PlaylistId = src.PlaylistId,
+        VideoIdOnPlatform = src.VideoIdOnPlatform,
+        AuthorIdOnPlatform = src.AuthorIdOnPlatform,
+        PlaylistIdOnPlatform = src.PlaylistIdOnPlatform,
     };
 
     public static CommentStatisticSnapshotDtoV1 MapCommentStatisticSnapshotDtoV1(this CommentStatisticSnapshotDto src)

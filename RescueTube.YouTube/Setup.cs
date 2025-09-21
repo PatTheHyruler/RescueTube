@@ -16,7 +16,6 @@ using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Services;
 using YoutubeDLSharp;
-using YouTubeCommentService = RescueTube.YouTube.Services.CommentService;
 
 namespace RescueTube.YouTube;
 
@@ -49,7 +48,6 @@ public static class Setup
         services.AddPlatformVideoDownloadService<VideoDownloadService>(EPlatform.YouTube);
         services.AddScoped<PlaylistService>();
         services.AddScoped<AuthorService>();
-        services.AddScoped<YouTubeCommentService>();
         services.AddScoped<CookieService>();
 
         services.AddScoped<IThumbnailComparer, ThumbnailComparer>();

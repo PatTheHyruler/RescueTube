@@ -11,7 +11,7 @@ using RescueTube.Domain.Enums;
 namespace RescueTube.Core.DataFetches;
 
 public abstract class EntityDataFetchJobBase<TEntity> : IJob, IEntityDataFetchJob
-    where TEntity : class, IIdDatabaseEntity, IPlatformEntity, IFetchable
+    where TEntity : class, IIdDatabaseEntity, IPlatformEntity
 {
     protected readonly IDataUow DataUow;
     protected readonly ILogger Logger;

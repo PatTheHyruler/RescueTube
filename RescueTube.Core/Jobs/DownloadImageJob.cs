@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Services;
-using RescueTube.Core.Utils;
 
 namespace RescueTube.Core.Jobs;
 
@@ -19,8 +18,6 @@ public class DownloadImageJob : IJob
 
     public async Task<JobExecutionResult> RunAsync(CancellationToken ct)
     {
-        using var transaction = TransactionUtils.NewTransactionScope();
-
         var images = await _dataUow.Ctx.Images
             .Where(i =>
                     i.LocalFilePath == null
@@ -41,7 +38,6 @@ public class DownloadImageJob : IJob
         await _imageService.DownloadImageAsync(image, ct);
 
         await _dataUow.SaveChangesAsync(ct);
-        transaction.Complete();
 
         return nextImages.Length != 0
             ? JobExecutionResult.HasMoreToProcess

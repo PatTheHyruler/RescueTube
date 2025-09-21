@@ -9,6 +9,7 @@ using RescueTube.Core.DataFetches;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils.Pagination;
+using RescueTube.Domain.Enums;
 using RescueTube.WebApi.ApiModels;
 using RescueTube.WebApi.ApiModels.Mappers;
 
@@ -43,7 +44,9 @@ public static class DataFetchEndpoints
             .Where(x => request.Type == null || x.Type == request.Type)
             .Where(x => request.OccurredAtFrom == null || x.OccurredAt >= request.OccurredAtFrom)
             .Where(x => request.OccurredAtTo == null || x.OccurredAt <= request.OccurredAtTo)
-            .Where(x => request.Success == null || x.Success == request.Success);
+            .Where(x => request.Success == null || (request.Success.Value
+                ? x.Status == DataFetchStatus.Succeeded
+                : x.Status != DataFetchStatus.Succeeded));
 
         var orderedQuery = (request.OrderByDescending ?? true) switch
         {

@@ -50,6 +50,7 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     public DbSet<PlaylistImage> PlaylistImages => Set<PlaylistImage>();
 
     public DbSet<DataFetch> DataFetches => Set<DataFetch>();
+    public DbSet<DataFetchResult> DataFetchResults => Set<DataFetchResult>();
 
     public DbSet<Setting> Settings => Set<Setting>();
     public DbSet<Setting.Long> LongSettings => Set<Setting.Long>();
@@ -66,31 +67,6 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     {
         _loggerFactory = loggerFactory;
         _dbLoggingOptions = dbLoggingOptions.Value;
-    }
-
-    protected override void OnModelCreating(ModelBuilder builder)
-    {
-        base.OnModelCreating(builder);
-
-        foreach (var foreignKey in builder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
-        {
-            foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
-        }
-
-        builder.ReconfigureIdentity();
-
-        builder.Entity<Author>()
-            .HasOne(e => e.ArchivalSettings)
-            .WithOne(e => e.Author)
-            .HasForeignKey<Author>(e => e.ArchivalSettingsId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        builder.Entity<Author>()
-            .HasIndex(e => e.ArchivalSettingsId)
-            .IsUnique();
-
-        builder.Entity<Setting>()
-            .HasDiscriminator<string>("SettingType");
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -112,53 +88,5 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
         }
 
         return entry;
-    }
-}
-
-internal static class DbContextConfigurationExtensions
-{
-    public static void ReconfigureIdentity(this ModelBuilder builder)
-    {
-        builder.Entity<UserRole>()
-            .HasOne(e => e.User)
-            .WithMany(e => e.UserRoles)
-            .HasForeignKey(e => e.UserId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<UserRole>()
-            .HasOne(e => e.Role)
-            .WithMany(e => e.UserRoles)
-            .HasForeignKey(e => e.RoleId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<UserClaim>()
-            .HasOne(e => e.User)
-            .WithMany(e => e.UserClaims)
-            .HasForeignKey(e => e.UserId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<RoleClaim>()
-            .HasOne(e => e.Role)
-            .WithMany(e => e.RoleClaims)
-            .HasForeignKey(e => e.RoleId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<UserLogin>()
-            .HasOne(e => e.User)
-            .WithMany(e => e.UserLogins)
-            .HasForeignKey(e => e.UserId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.Entity<UserToken>()
-            .HasOne(e => e.User)
-            .WithMany(e => e.UserTokens)
-            .HasForeignKey(e => e.UserId)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
     }
 }
