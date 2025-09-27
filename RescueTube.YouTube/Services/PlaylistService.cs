@@ -18,16 +18,14 @@ public class PlaylistService : BaseYouTubeService
 {
     private readonly AppDbContext _dbCtx;
     private readonly ILogger<PlaylistService> _logger;
-    private readonly DataFetchContext _dataFetchContext;
     private readonly EntityUpdateService _entityUpdateService;
     private readonly YouTubeServices _youTubeServices;
     private readonly DataFetchService _dataFetchService;
 
-    public PlaylistService(AppDbContext dbCtx, ILogger<PlaylistService> logger, DataFetchContext dataFetchContext, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices, DataFetchService dataFetchService)
+    public PlaylistService(AppDbContext dbCtx, ILogger<PlaylistService> logger, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices, DataFetchService dataFetchService)
     {
         _dbCtx = dbCtx;
         _logger = logger;
-        _dataFetchContext = dataFetchContext;
         _entityUpdateService = entityUpdateService;
         _youTubeServices = youTubeServices;
         _dataFetchService = dataFetchService;
@@ -39,7 +37,7 @@ public class PlaylistService : BaseYouTubeService
             .Where(p => p.Id == id && p.Platform == EPlatform.YouTube)
             .Select(p => p.IdOnPlatform)
             .FirstAsync(ct);
-        if (_dataFetchContext.IsFetching(YouTubeConstants.DataFetches.YtDlp.Playlist, idOnPlatform))
+        if (await _dataFetchService.IsFetchingAsync(YouTubeConstants.DataFetches.YtDlp.Playlist, idOnPlatform, ct))
         {
             _logger.LogInformation("Already fetching {Platform} playlist {PlaylistIdOnPlatform}, skipping duplicate fetch", EPlatform.YouTube, idOnPlatform);
             return;
@@ -49,9 +47,11 @@ public class PlaylistService : BaseYouTubeService
 
     public async Task<Playlist?> AddOrUpdatePlaylistAsync(string idOnPlatform, CancellationToken ct = default)
     {
-        using var _ = _dataFetchContext.StartDataFetch(YouTubeConstants.DataFetches.YtDlp.Playlist, idOnPlatform);
+        await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
+            YouTubeConstants.DataFetches.YtDlp.Playlist, idOnPlatform, ct);
+        dataFetchScope.ThrowIfAlreadyFetching();
 
-        var dataFetch = await _dataFetchService.AddDataFetchAsync(YouTubeConstants.DataFetches.YtDlp.Playlist, idOnPlatform, ct);
+        var dataFetch = dataFetchScope.DataFetch;
 
         var playlistResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(Url.ToPlaylistUrl(idOnPlatform), ct);
         if (playlistResult is not { Success: true, Data: not null })

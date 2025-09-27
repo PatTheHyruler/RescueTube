@@ -21,19 +21,17 @@ public class AuthorService : BaseYouTubeService
     private readonly ILogger<AuthorService> _logger;
     private readonly EntityUpdateService _entityUpdateService;
     private readonly IMediator _mediator;
-    private readonly DataFetchContext _dataFetchContext;
     private readonly YouTubeServices _youTubeServices;
     private readonly DataFetchService _dataFetchService;
 
     private readonly Dictionary<string, Author> _cachedAuthors = new();
 
-    public AuthorService(AppDbContext dbCtx, ILogger<AuthorService> logger, EntityUpdateService entityUpdateService, IMediator mediator, DataFetchContext dataFetchContext, YouTubeServices youTubeServices, DataFetchService dataFetchService)
+    public AuthorService(AppDbContext dbCtx, ILogger<AuthorService> logger, EntityUpdateService entityUpdateService, IMediator mediator, YouTubeServices youTubeServices, DataFetchService dataFetchService)
     {
         _dbCtx = dbCtx;
         _logger = logger;
         _entityUpdateService = entityUpdateService;
         _mediator = mediator;
-        _dataFetchContext = dataFetchContext;
         _youTubeServices = youTubeServices;
         _dataFetchService = dataFetchService;
     }
@@ -55,17 +53,17 @@ public class AuthorService : BaseYouTubeService
             .ThenInclude(ai => ai.Image)
             .FirstAsync(ct);
 
-        using var fetchContext = _dataFetchContext.StartDataFetch(
-            dataFetchDefinition, author.IdOnPlatform, throwOnConflict: false);
-        if (fetchContext is null)
+        await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
+            dataFetchDefinition, author, ct);
+        if (dataFetchScope is null)
         {
             _logger.LogWarning("Channel videos data fetch for author {AuthorId} is already ongoing, skipping duplicate fetch", authorId);
             return;
         }
 
-        _logger.LogInformation("Fetching videos for author {AuthorId}", authorId);
+        var dataFetch = dataFetchScope.DataFetch;
 
-        var dataFetch = await _dataFetchService.AddDataFetchAsync(dataFetchDefinition, author, ct);
+        _logger.LogInformation("Fetching videos for author {AuthorId}", authorId);
 
         var authorResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
 
@@ -214,9 +212,11 @@ public class AuthorService : BaseYouTubeService
             .ThenInclude(ai => ai.Image!)
             .FirstAsync(cancellationToken: ct);
         var dataFetchDefinition = YouTubeConstants.DataFetches.YouTubeExplode.Channel;
-        using var _ = _dataFetchContext.StartDataFetch(dataFetchDefinition, author.IdOnPlatform);
+        await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
+            dataFetchDefinition, author, ct);
+        dataFetchScope.ThrowIfAlreadyFetching();
 
-        var dataFetch = await _dataFetchService.AddDataFetchAsync(dataFetchDefinition, author, ct);
+        var dataFetch = dataFetchScope.DataFetch;
 
         try
         {

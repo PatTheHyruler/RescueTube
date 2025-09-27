@@ -107,18 +107,21 @@ public class DownloadVideoJob
 
     private async Task DownloadVideoAsync(Video video, CancellationToken ct)
     {
+        var platformVideoDownloadService = _serviceProvider.GetRequiredKeyedService<IPlatformVideoDownloadService>(video.Platform);
+        if (platformVideoDownloadService.IsLikelyThrottled())
+        {
+            _logger.LogInformation("Skipping video download due to likely throttling");
+            return;
+        }
+
+        var dataFetchDefinition = platformVideoDownloadService.DataFetchDefinition;
+
+        await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(dataFetchDefinition, video, ct);
+        dataFetchScope.ThrowIfAlreadyFetching();
+
         try
         {
-            var platformVideoDownloadService = _serviceProvider.GetRequiredKeyedService<IPlatformVideoDownloadService>(video.Platform);
-            if (platformVideoDownloadService.IsLikelyThrottled())
-            {
-                _logger.LogInformation("Skipping video download due to likely throttling");
-                return;
-            }
-
-            var dataFetchDefinition = platformVideoDownloadService.DataFetchDefinition;
-
-            var dataFetch = await _dataFetchService.AddDataFetchAsync(dataFetchDefinition, video, ct);
+            var dataFetch = dataFetchScope.DataFetch;
 
             var downloadTime = dataFetch.OccurredAt;
             try

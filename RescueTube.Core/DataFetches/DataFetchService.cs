@@ -1,5 +1,8 @@
+using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
@@ -11,35 +14,72 @@ public class DataFetchService
     private readonly AppDbContext _dbCtx;
     private readonly TimeProvider _timeProvider;
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly ILogger<DataFetchService> _logger;
 
-    public DataFetchService(AppDbContext dbCtx, TimeProvider timeProvider, IServiceScopeFactory serviceScopeFactory)
+    public DataFetchService(AppDbContext dbCtx, TimeProvider timeProvider, IServiceScopeFactory serviceScopeFactory, ILogger<DataFetchService> logger)
     {
         _dbCtx = dbCtx;
         _timeProvider = timeProvider;
         _serviceScopeFactory = serviceScopeFactory;
+        _logger = logger;
     }
 
-    public async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, Author author, CancellationToken ct)
+    private static readonly ConcurrentDictionary<(DataFetchDefinition Definition, string IdOnPlatform), byte>
+        DataFetchStartLocks = [];
+
+    public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Author author, CancellationToken ct)
     {
         if (definition.EntityType is not EEntityType.Author)
         {
             throw new ArgumentException($"DataFetch definition must be for {EEntityType.Author} - {definition}", nameof(definition));
         }
 
-        return await AddDataFetchAsync(definition, author.IdOnPlatform, ct);
+        return await StartDataFetchAsync(definition, author.IdOnPlatform, ct);
     }
 
-    public async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, Video video, CancellationToken ct)
+    public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Video video, CancellationToken ct)
     {
         if (definition.EntityType is not EEntityType.Video)
         {
             throw new ArgumentException($"DataFetch definition must be for {EEntityType.Video} - {definition}", nameof(definition));
         }
 
-        return await AddDataFetchAsync(definition, video.IdOnPlatform, ct);
+        return await StartDataFetchAsync(definition, video.IdOnPlatform, ct);
     }
 
-    public async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
+    public async Task<DataFetchScope?> StartDataFetchAsync(
+        DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
+    {
+        // Short-lived lock, used to avoid race condition between IsFetching check and adding new DataFetch.
+        // Not a distributed-safe check, and assumes that this is the only place that adds "Starting" DataFetches.
+        var lockSuccessfullyAcquired = DataFetchStartLocks.TryAdd((definition, idOnPlatform), byte.MinValue);
+        if (!lockSuccessfullyAcquired)
+        {
+            return null;
+        }
+
+        try
+        {
+            var hasStartedDataFetch = await IsFetchingAsync(definition, idOnPlatform, ct);
+            if (hasStartedDataFetch)
+            {
+                return null;
+            }
+
+            var dataFetch = await AddDataFetchAsync(definition, idOnPlatform, ct);
+            return new DataFetchScope(dataFetch, this);
+        }
+        finally
+        {
+            var lockSuccessfullyReleased = DataFetchStartLocks.TryRemove((definition, idOnPlatform), out _);
+            if (!lockSuccessfullyReleased)
+            {
+                _logger.LogError("Failed to release lock for {DataFetchDefinition}, {IdOnPlatform}", definition, idOnPlatform);
+            }
+        }
+    }
+
+    private async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
     {
         var dataFetch = new DataFetch
         {
@@ -88,5 +128,32 @@ public class DataFetchService
 
         dataFetch.Message = message;
         _dbCtx.Entry(dataFetch).Property(x => x.Message).IsModified = false;
+    }
+
+    public async Task<bool> IsFetchingAsync(DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
+    {
+        var pendingDataFetchInvalidationCutoff = _timeProvider.GetUtcNow().AddDays(-1);
+        return await _dbCtx.DataFetches
+            .Where(df =>
+                df.Platform == definition.Platform &&
+                df.Source == definition.Source &&
+                df.Type == definition.Type &&
+                df.Status == DataFetchStatus.Starting &&
+                df.OccurredAt <= pendingDataFetchInvalidationCutoff)
+            .Where(IsEntityDataFetch(definition, idOnPlatform))
+            .AnyAsync(ct);
+    }
+
+    private static Expression<Func<DataFetch, bool>> IsEntityDataFetch(DataFetchDefinition definition, string idOnPlatform)
+    {
+#pragma warning disable CS8524 // The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value.
+        Expression<Func<DataFetch, bool>> isEntityDataFetch = definition.EntityType switch
+#pragma warning restore CS8524 // The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value.
+        {
+            EEntityType.Video => df => df.VideoIdOnPlatform == idOnPlatform,
+            EEntityType.Author => df => df.AuthorIdOnPlatform == idOnPlatform,
+            EEntityType.Playlist => df => df.PlaylistIdOnPlatform == idOnPlatform,
+        };
+        return isEntityDataFetch;
     }
 }

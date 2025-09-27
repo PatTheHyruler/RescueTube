@@ -93,7 +93,11 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         var addedOrExistingAuthor = existingAuthor;
         if (addedOrExistingAuthor == null)
         {
-            var dataFetch = await _dataFetchService.AddDataFetchAsync(YouTubeConstants.DataFetches.YouTubeExplode.Channel, idOnPlatform, ct);
+            await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
+                YouTubeConstants.DataFetches.YouTubeExplode.Channel, idOnPlatform, ct);
+            dataFetchScope.ThrowIfAlreadyFetching();
+
+            var dataFetch = dataFetchScope.DataFetch;
 
             var channel = await _youTubeServices.AuthorService.FetchYouTubeExplodeChannelAsync(idOnPlatform, idType, ct);
 

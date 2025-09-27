@@ -11,13 +11,11 @@ namespace RescueTube.DAL.EF.Specifications;
 
 public class DataFetchSpecification : IDataFetchSpecification
 {
-    private readonly DataFetchContext _dataFetchContext;
     private readonly TimeProvider _timeProvider;
     private readonly AppDbContext _dbContext;
 
-    public DataFetchSpecification(DataFetchContext dataFetchContext, TimeProvider timeProvider, AppDbContext dbContext)
+    public DataFetchSpecification(TimeProvider timeProvider, AppDbContext dbContext)
     {
-        _dataFetchContext = dataFetchContext;
         _timeProvider = timeProvider;
         _dbContext = dbContext;
     }
@@ -44,7 +42,7 @@ public class DataFetchSpecification : IDataFetchSpecification
     public Expression<Func<Video, bool>> ShouldFetchVideoData(
         DataFetchJobDefinition jobDefinition, Expression<Func<Video, bool>> allowRegularFetchesPredicate)
     {
-        return IsDataFetchAllowed<Video>(jobDefinition).And(
+        return IsDataFetchAllowed(IsVideoDataFetch, jobDefinition).And(
             allowRegularFetchesPredicate.And(HasNoTooRecentDataFetches(IsVideoDataFetch, jobDefinition))
                 .Or(HasNoSuccessDataFetchesAndNotBlockedByFailure(IsVideoDataFetch, jobDefinition)));
     }
@@ -54,18 +52,21 @@ public class DataFetchSpecification : IDataFetchSpecification
         DataFetchJobDefinition jobDefinition)
         where TEntity : IIdDatabaseEntity, IPlatformEntity
     {
-        return IsDataFetchAllowed<TEntity>(jobDefinition)
+        return IsDataFetchAllowed(isEntityDataFetch, jobDefinition)
             .And(HasNoTooRecentDataFetches(isEntityDataFetch, jobDefinition));
     }
 
-    private Expression<Func<TEntity, bool>> IsDataFetchAllowed<TEntity>(DataFetchJobDefinition jobDefinition)
+    private Expression<Func<TEntity, bool>> IsDataFetchAllowed<TEntity>(
+        Expression<Func<DataFetch, TEntity, bool>> isEntityDataFetch, DataFetchJobDefinition jobDefinition)
         where TEntity : IPlatformEntity
     {
-        var currentlyProcessingIdsOnPlatform = _dataFetchContext.GetCurrentlyFetchingEntityIdsOnPlatform(jobDefinition.DataFetchDefinition)
-            .AsEnumerable();
+        var pendingDataFetchCutoff = _timeProvider.GetUtcNow().AddDays(-1);
         return e =>
             e.Platform == jobDefinition.DataFetchDefinition.Platform
-            && !currentlyProcessingIdsOnPlatform.Contains(e.IdOnPlatform);
+            && !_dbContext.DataFetches.Any(df =>
+                isEntityDataFetch.Invoke(df, e) &&
+                df.Status == DataFetchStatus.Starting &&
+                df.OccurredAt >= pendingDataFetchCutoff);
     }
 
     private Expression<Func<TEntity, bool>> HasNoTooRecentDataFetches<TEntity>(

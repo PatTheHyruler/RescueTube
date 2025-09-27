@@ -20,15 +20,13 @@ public class VideoService : BaseYouTubeService
     private readonly EntityUpdateService _entityUpdateService;
     private readonly ILogger<VideoService> _logger;
     private readonly IMediator _mediator;
-    private readonly DataFetchContext _dataFetchContext;
     private readonly YouTubeServices _youTubeServices;
     private readonly DataFetchService _dataFetchService;
 
-    public VideoService(ILogger<VideoService> logger, IMediator mediator, DataFetchContext dataFetchContext, AppDbContext dbCtx, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices, DataFetchService dataFetchService)
+    public VideoService(ILogger<VideoService> logger, IMediator mediator, AppDbContext dbCtx, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices, DataFetchService dataFetchService)
     {
         _logger = logger;
         _mediator = mediator;
-        _dataFetchContext = dataFetchContext;
         _dbCtx = dbCtx;
         _entityUpdateService = entityUpdateService;
         _youTubeServices = youTubeServices;
@@ -54,7 +52,7 @@ public class VideoService : BaseYouTubeService
         var idOnPlatform = await _dbCtx.Videos
             .Where(v => v.Id == videoId && v.Platform == EPlatform.YouTube)
             .Select(v => v.IdOnPlatform).FirstAsync(ct);
-        if (_dataFetchContext.IsFetching(YouTubeConstants.DataFetches.YtDlp.VideoPage, idOnPlatform))
+        if (await _dataFetchService.IsFetchingAsync(YouTubeConstants.DataFetches.YtDlp.VideoPage, idOnPlatform, ct))
         {
             _logger.LogInformation("Already fetching {Platform} video {VideoIdOnPlatform}, skipping duplicate fetch", EPlatform.YouTube, idOnPlatform);
             return;
@@ -65,9 +63,12 @@ public class VideoService : BaseYouTubeService
     public async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, CancellationToken ct)
     {
         var dataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.VideoPage;
-        using var _ = _dataFetchContext.StartDataFetch(dataFetchDefinition, idOnPlatform);
 
-        var dataFetch = await _dataFetchService.AddDataFetchAsync(dataFetchDefinition, idOnPlatform, ct);
+        await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
+            dataFetchDefinition, idOnPlatform, ct);
+        dataFetchScope.ThrowIfAlreadyFetching();
+
+        var dataFetch = dataFetchScope.DataFetch;
 
         var videoResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(
             Url.ToVideoUrl(idOnPlatform), fetchComments: false, ct: ct);
