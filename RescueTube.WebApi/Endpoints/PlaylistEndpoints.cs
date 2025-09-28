@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core.Services;
+using RescueTube.Domain.Entities;
 using RescueTube.WebApi.ApiModels;
 using RescueTube.WebApi.ApiModels.Mappers;
 using RescueTube.WebApi.ApiModels.Playlists;
+using RescueTube.WebApi.Endpoints.Common;
 using RescueTube.WebApi.Utils;
 
 namespace RescueTube.WebApi.Endpoints;
@@ -21,6 +23,9 @@ public static class PlaylistEndpoints
 
         playlistsGroup.MapGet("{playlistId:guid}/items", GetPlaylistItemsAsync)
             .HasApiVersion(1);
+
+        playlistsGroup.MapGet("{platform}/{idOnPlatform}", PlatformEntityEndpoints<Playlist>.GetIdByPlatformIdAsync)
+            .MapToApiVersion(1);
     }
 
     private static async Task<Ok<PlaylistSearchResponseDtoV1>> SearchPlaylistsAsync(
