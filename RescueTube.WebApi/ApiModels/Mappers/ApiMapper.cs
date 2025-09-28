@@ -3,7 +3,6 @@ using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
-using RescueTube.Domain.Enums;
 using RescueTube.WebApi.ApiModels.Playlists;
 using RescueTube.WebApi.ApiModels.Statistics;
 using RescueTube.WebApi.Utils;
@@ -122,7 +121,7 @@ public static class ApiMapper
         Id = src.Id,
         OccurredAt = src.OccurredAt,
         Source = src.Source,
-        Success = src.Status == DataFetchStatus.Succeeded,
+        Status = src.Status,
         Type = src.Type,
         Platform = src.Platform,
 
