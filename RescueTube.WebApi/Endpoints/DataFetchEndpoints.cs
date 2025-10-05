@@ -44,6 +44,8 @@ public static class DataFetchEndpoints
             .Where(x => request.Type == null || x.Type == request.Type)
             .Where(x => request.OccurredAtFrom == null || x.OccurredAt >= request.OccurredAtFrom)
             .Where(x => request.OccurredAtTo == null || x.OccurredAt <= request.OccurredAtTo)
+            .Where(x => request.Statuses == null || request.Statuses.Length == 0 ||
+                        request.Statuses.Contains(x.Status))
             .Where(x => request.Success == null || (request.Success.Value
                 ? x.Status == DataFetchStatus.Succeeded
                 : x.Status != DataFetchStatus.Succeeded));

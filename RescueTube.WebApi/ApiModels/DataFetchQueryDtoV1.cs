@@ -1,3 +1,5 @@
+using RescueTube.Domain.Enums;
+
 namespace RescueTube.WebApi.ApiModels;
 
 public sealed record DataFetchQueryDtoV1 : IPaginationQueryOptionalDtoV1
@@ -19,4 +21,6 @@ public sealed record DataFetchQueryDtoV1 : IPaginationQueryOptionalDtoV1
     public string? Source { get; init; }
 
     public bool? Success { get; init; }
+
+    public DataFetchStatus[]? Statuses { get; init; }
 }
