@@ -23,7 +23,7 @@ public static class VideoFileEndpoints
             .AllowAnonymous()
             .HasApiVersion(1);
 
-        videoFileGroup.MapGet("AccessToken", GetNewVideoAccessTokenAsync)
+        videoFileGroup.MapGet("AccessToken", GetNewVideoAccessToken)
             .RequireCors(AuthHelpers.CorsPolicies.CorsAllowCredentials)
             .HasApiVersion(1);
     }
@@ -56,7 +56,7 @@ public static class VideoFileEndpoints
                     audienceSuffix: GetAudienceSuffix(videoId)
                 );
                 tokenValidated = true;
-                var (token, expiresAt) = CreateVideoAccessTokenAsync(tokenService, videoId, requestClaims);
+                var (token, expiresAt) = CreateVideoAccessToken(tokenService, videoId, requestClaims);
                 SetResponseVideoAccessToken(httpContext.Response, videoId, token, expiresAt);
             }
             catch (InvalidJwtException)
@@ -106,13 +106,13 @@ public static class VideoFileEndpoints
     /// </summary>
     /// <returns>The token (also sets the token to a cookie).</returns>
     /// <response code="200">Token created successfully.</response>
-    private static async Task<Results<Ok<AccessTokenDtoV1>, ForbidHttpResult>> GetNewVideoAccessTokenAsync(
+    private static Results<Ok<AccessTokenDtoV1>, ForbidHttpResult> GetNewVideoAccessToken(
         [FromRoute] Guid videoId,
         [FromServices] TokenService tokenService,
         HttpContext httpContext,
         CancellationToken ct)
     {
-        var (token, expiresAt) = CreateVideoAccessTokenAsync(tokenService, videoId, httpContext.User);
+        var (token, expiresAt) = CreateVideoAccessToken(tokenService, videoId, httpContext.User);
 
         SetResponseVideoAccessToken(httpContext.Response, videoId, token, expiresAt);
         return TypedResults.Ok(new AccessTokenDtoV1
@@ -127,7 +127,7 @@ public static class VideoFileEndpoints
     private static string GetAudienceSuffix(Guid videoId) => $"/Videos/File/{videoId}";
     private const int ExpiresInSeconds = 60;
 
-    private static (string Token, DateTimeOffset ExpiresAt) CreateVideoAccessTokenAsync(TokenService tokenService, Guid videoId, ClaimsPrincipal claims)
+    private static (string Token, DateTimeOffset ExpiresAt) CreateVideoAccessToken(TokenService tokenService, Guid videoId, ClaimsPrincipal claims)
     {
         var token = tokenService.GenerateJwt(
             claims.Claims.Where(c => c.Type != "aud"),

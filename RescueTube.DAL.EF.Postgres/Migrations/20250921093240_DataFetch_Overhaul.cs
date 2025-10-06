@@ -409,6 +409,7 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
         {
             throw new NotImplementedException("Down migration for datafetch overhaul not implemented");
 
+#pragma warning disable CS0162 // Unreachable code detected
             migrationBuilder.DropTable(
                 name: "DataFetchResults");
 
@@ -533,6 +534,7 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
                 principalTable: "Videos",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
+#pragma warning restore CS0162 // Unreachable code detected
         }
     }
 }
