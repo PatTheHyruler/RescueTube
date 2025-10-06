@@ -10,9 +10,9 @@ using RescueTube.DAL.EF.Postgres;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
 
-namespace RescueTube.Tests;
+namespace RescueTube.Tests.Core.Services;
 
-public class EntityUpdateServiceTest
+public class EntityUpdateServiceTests
 {
     private readonly IServiceCollection _serviceCollection;
 
@@ -23,7 +23,7 @@ public class EntityUpdateServiceTest
         AutoAdvanceAmount = TimeSpan.FromSeconds(1),
     };
 
-    public EntityUpdateServiceTest()
+    public EntityUpdateServiceTests()
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new List<KeyValuePair<string, string?>>
