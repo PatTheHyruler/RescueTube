@@ -3,13 +3,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Time.Testing;
+using RescueTube.Core;
 using RescueTube.Core.Data;
 using RescueTube.Core.Services;
 using RescueTube.DAL.EF.Postgres;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Localization;
 
-namespace RescueTube.Core.Tests;
+namespace RescueTube.Tests;
 
 public class EntityUpdateServiceTest
 {

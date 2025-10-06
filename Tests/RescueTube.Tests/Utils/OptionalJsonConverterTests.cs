@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using RescueTube.Core.Utils;
 
-namespace RescueTube.Core.Tests.Utils;
+namespace RescueTube.Tests.Utils;
 
 public class OptionalJsonConverterTests
 {
