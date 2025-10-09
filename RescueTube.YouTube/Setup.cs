@@ -8,13 +8,13 @@ using RescueTube.Core.Contracts;
 using RescueTube.Core.DataFetches;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Services;
-using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.EventHandlers;
 using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Services;
+using RescueTube.YouTube.Services.External;
 using YoutubeDLSharp;
 
 namespace RescueTube.YouTube;
@@ -57,21 +57,7 @@ public static class Setup
 
         services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<VideoAddedCommentFetchHandler>(); });
 
-        services.AddScoped(s =>
-        {
-            var youTubeOptions = s.GetService<IOptions<YouTubeOptions>>()?.Value;
-            var binariesDirectory = GetBinariesDirectory(youTubeOptions?.BinariesDirectory);
-
-            return new YoutubeDL
-            {
-                OutputFolder = s.GetRequiredService<AppPaths>().GetVideosDirectory(EPlatform.YouTube),
-                RestrictFilenames = true,
-                YoutubeDLPath = Path.Combine(binariesDirectory, YoutubeDLSharp.Utils.YtDlpBinaryName),
-                FFmpegPath = Path.Combine(binariesDirectory, YoutubeDLSharp.Utils.FfmpegBinaryName),
-                // Can't set ffprobe path??
-                OverwriteFiles = false,
-            };
-        });
+        services.AddScoped<IYouTubeDlClient, YouTubeDlClient>();
 
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
         services.RegisterYouTubeRecurringJobs();
@@ -120,7 +106,7 @@ public static class Setup
         }
     }
 
-    private static string GetBinariesDirectory(string? binariesDirectory)
+    public static string GetBinariesDirectory(string? binariesDirectory)
     {
         if (binariesDirectory != null)
         {

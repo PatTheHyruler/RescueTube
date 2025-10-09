@@ -65,7 +65,7 @@ public class AuthorService : BaseYouTubeService
 
         _logger.LogInformation("Fetching videos for author {AuthorId}", authorId);
 
-        var authorResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
+        var authorResult = await _youTubeServices.YoutubeDl.RunVideoDataFetchAsync(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
 
         _logger.LogInformation("Fetched videos for author {AuthorId}", authorId);
 

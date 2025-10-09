@@ -35,7 +35,7 @@ public class VideoService : BaseYouTubeService
 
     public async Task<VideoData?> FetchVideoDataYtdlAsync(string id, bool fetchComments, CancellationToken ct = default)
     {
-        var videoResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(
+        var videoResult = await _youTubeServices.YoutubeDl.RunVideoDataFetchAsync(
             Url.ToVideoUrl(id), fetchComments: fetchComments, ct: ct);
         if (videoResult is not { Success: true })
         {
@@ -70,7 +70,7 @@ public class VideoService : BaseYouTubeService
 
         var dataFetch = dataFetchScope.DataFetch;
 
-        var videoResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(
+        var videoResult = await _youTubeServices.YoutubeDl.RunVideoDataFetchAsync(
             Url.ToVideoUrl(idOnPlatform), fetchComments: false, ct: ct);
         if (videoResult is not { Success: true, Data: not null })
         {

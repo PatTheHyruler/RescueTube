@@ -53,7 +53,7 @@ public class PlaylistService : BaseYouTubeService
 
         var dataFetch = dataFetchScope.DataFetch;
 
-        var playlistResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(Url.ToPlaylistUrl(idOnPlatform), ct);
+        var playlistResult = await _youTubeServices.YoutubeDl.RunVideoDataFetchAsync(Url.ToPlaylistUrl(idOnPlatform), ct);
         if (playlistResult is not { Success: true, Data: not null })
         {
             await _dataFetchService.UpdateDataFetchStatusAsync(dataFetch, DataFetchStatus.Failed,
