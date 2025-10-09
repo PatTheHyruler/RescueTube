@@ -11,7 +11,8 @@ using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
 using RescueTube.YouTube.Utils;
 using YoutubeDLSharp.Metadata;
-using YoutubeExplode.Channels;
+
+using YouTubeExplodeChannel = YoutubeExplode.Channels.Channel;
 
 namespace RescueTube.YouTube.Services;
 
@@ -93,7 +94,7 @@ public class AuthorService : BaseYouTubeService
         await _dbCtx.SaveChangesAsync(ct);
     }
 
-    public async Task<Author> AddOrGetAuthor(Channel channel, DataFetch dataFetch, CancellationToken ct = default)
+    public async Task<Author> AddOrGetAuthor(YouTubeExplodeChannel channel, DataFetch dataFetch, CancellationToken ct = default)
     {
         return await AddOrGetAuthor(channel.Id, channel.ToDomainAuthor, dataFetch, ct);
     }
@@ -191,7 +192,7 @@ public class AuthorService : BaseYouTubeService
         return authors;
     }
 
-    public async Task<Channel?> FetchYouTubeExplodeChannelAsync(
+    public async Task<YouTubeExplodeChannel?> FetchYouTubeExplodeChannelAsync(
         string idOnPlatform, string? idType, CancellationToken ct = default)
     {
         var channel = idType switch

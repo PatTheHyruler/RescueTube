@@ -5,7 +5,6 @@ using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Services;
 using RescueTube.YouTube.Services.External;
 using YoutubeDLSharp.Options;
-using YoutubeExplode;
 
 namespace RescueTube.YouTube;
 
@@ -23,8 +22,8 @@ public class YouTubeServices
     public IYouTubeDlClient YoutubeDl =>
         _youtubeDl ??= _services.GetRequiredService<IYouTubeDlClient>();
 
-    private YoutubeClient? _youTubeExplodeClient;
-    public YoutubeClient YouTubeExplodeClient => _youTubeExplodeClient ??= new YoutubeClient();
+    private IYouTubeExplodeClient? _youTubeExplodeClient;
+    public IYouTubeExplodeClient YouTubeExplodeClient => _youTubeExplodeClient ??= _services.GetRequiredService<IYouTubeExplodeClient>();
 
     private string GetUniqueFileIdentifier() => $"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}_{Guid.NewGuid()
         .ToString().Replace("-", "")[..8]}";

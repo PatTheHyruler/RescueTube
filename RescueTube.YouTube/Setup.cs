@@ -58,6 +58,7 @@ public static class Setup
         services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<VideoAddedCommentFetchHandler>(); });
 
         services.AddScoped<IYouTubeDlClient, YouTubeDlClient>();
+        services.AddScoped<IYouTubeExplodeClient, YouTubeExplodeClient>();
 
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
         services.RegisterYouTubeRecurringJobs();
