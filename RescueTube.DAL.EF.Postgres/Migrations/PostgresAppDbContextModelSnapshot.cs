@@ -26,7 +26,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Author", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedToArchiveAt")
@@ -77,7 +76,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.AuthorArchivalSettings", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<bool>("ArchiveClips")
@@ -100,7 +98,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.AuthorHistory", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
@@ -137,7 +134,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.AuthorImage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("AuthorId")
@@ -173,7 +169,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.AuthorStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("AuthorId")
@@ -198,7 +193,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Caption", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Culture")
@@ -249,7 +243,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("CreatorId")
@@ -283,7 +276,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Comment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedToArchiveAt")
@@ -346,7 +338,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.CommentHistory", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Content")
@@ -383,7 +374,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.CommentStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("CommentId")
@@ -414,7 +404,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.DataFetch", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("AuthorIdOnPlatform")
@@ -462,7 +451,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.DataFetchResult", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("AuthorId")
@@ -498,7 +486,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Identity.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
@@ -723,7 +710,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Image", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Etag")
@@ -777,7 +763,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslation", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Content")
@@ -806,7 +791,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslationKey", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -817,7 +801,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Playlist", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedToArchiveAt")
@@ -863,7 +846,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.PlaylistImage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ImageId")
@@ -897,7 +879,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.PlaylistItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("AddedAt")
@@ -927,7 +908,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.PlaylistItemPositionHistory", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("PlaylistItemId")
@@ -952,7 +932,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.PlaylistStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<long?>("CommentCount")
@@ -983,7 +962,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Setting", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Key")
@@ -1010,7 +988,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.StatusChangeEvent", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("AuthorId")
@@ -1045,7 +1022,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Submission", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedAt")
@@ -1111,7 +1087,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Video", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedToArchiveAt")
@@ -1203,7 +1178,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoAuthor", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("AuthorId")
@@ -1228,7 +1202,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoCategory", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("AssignedById")
@@ -1254,7 +1227,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoFile", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<int?>("BitrateBps")
@@ -1298,7 +1270,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoImage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ImageId")
@@ -1335,7 +1306,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<long?>("CommentCount")
@@ -1366,7 +1336,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoTag", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("NormalizedTag")

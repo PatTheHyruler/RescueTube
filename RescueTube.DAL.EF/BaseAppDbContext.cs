@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Logging;
@@ -6,6 +7,7 @@ using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.DAL.EF.Converters;
 using RescueTube.Domain;
+using RescueTube.Domain.Base;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Identity;
 using RescueTube.Domain.Enums;
@@ -52,7 +54,23 @@ public abstract class BaseAppDbContext : AppDbContext
         builder.Entity<Setting>()
             .HasDiscriminator<string>("SettingType");
 
+        var configureBaseIdDbEntityMethod = typeof(BaseAppDbContext).GetTypeInfo().DeclaredMethods
+            .Single(m => m.Name == nameof(ConfigureBaseIdDbEntity));
+        foreach (var entityType in builder.Model.GetEntityTypes())
+        {
+            if (entityType.ClrType.IsAssignableTo(typeof(BaseIdDbEntity)))
+                configureBaseIdDbEntityMethod.MakeGenericMethod(entityType.ClrType).Invoke(null, [builder]);
+        }
+
         builder.ApplyConfigurationsFromAssembly(typeof(BaseAppDbContext).Assembly);
+    }
+
+    private static void ConfigureBaseIdDbEntity<TEntity>(ModelBuilder modelBuilder) where TEntity : BaseIdDbEntity
+    {
+        modelBuilder.Entity<TEntity>(builder =>
+        {
+            builder.Property(e => e.Id).ValueGeneratedNever();
+        });
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
