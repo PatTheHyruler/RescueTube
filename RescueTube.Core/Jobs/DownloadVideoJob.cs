@@ -81,7 +81,7 @@ public class DownloadVideoJob
             .Where(v => _dataUow.Ctx.DataFetches
                 .Where(d => _dataUow.DataFetches.IsVideoDataFetch.Invoke(d, v))
                 .Where(d => d.Type == DataFetchTypes.VideoFileDownload)
-                .OrderByDescending(d => d.OccurredAt)
+                .OrderByDescending(d => d.StartedAt)
                 .Take(3)
                 .Count(d => d.Status != DataFetchStatus.Succeeded) < 3)
             .Where(v => !downloadingVideoIds.Contains(v.Id))
@@ -123,12 +123,12 @@ public class DownloadVideoJob
         {
             var dataFetch = dataFetchScope.DataFetch;
 
-            var downloadTime = dataFetch.OccurredAt;
+            var downloadTime = dataFetch.StartedAt;
             try
             {
                 var videoFilePath = await platformVideoDownloadService.DownloadVideoAsync(video, ct);
 
-                dataFetch.Status = DataFetchStatus.Succeeded;
+                _dataFetchService.CompleteDataFetch(dataFetch);
                 _dataUow.Ctx.DataFetchResults.Add(new DataFetchResult { Video = video, DataFetch = dataFetch });
 
                 foreach (var videoFile in video.VideoFiles.AssertNotNull()

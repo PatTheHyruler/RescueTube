@@ -2,7 +2,7 @@ namespace RescueTube.Domain.Enums;
 
 public enum DataFetchStatus
 {
-    Starting,
+    Started,
     Succeeded,
     Failed,
 }

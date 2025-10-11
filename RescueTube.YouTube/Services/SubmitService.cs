@@ -108,7 +108,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
                 throw new ApplicationException("Author not found on platform");
             }
 
-            dataFetch.Status = DataFetchStatus.Succeeded;
+            _dataFetchService.CompleteDataFetch(dataFetch);
 
             addedOrExistingAuthor = await _youTubeServices.AuthorService.AddOrGetAuthor(channel, dataFetch, ct);
         }

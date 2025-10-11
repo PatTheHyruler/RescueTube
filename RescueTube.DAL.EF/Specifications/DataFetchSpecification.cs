@@ -60,13 +60,14 @@ public class DataFetchSpecification : IDataFetchSpecification
         Expression<Func<DataFetch, TEntity, bool>> isEntityDataFetch, DataFetchJobDefinition jobDefinition)
         where TEntity : IPlatformEntity
     {
-        var pendingDataFetchCutoff = _timeProvider.GetUtcNow().AddDays(-1);
+        var pendingDataFetchCutoff = _timeProvider.GetUtcNow().AddMinutes(-5);
         return e =>
             e.Platform == jobDefinition.DataFetchDefinition.Platform
             && !_dbContext.DataFetches.Any(df =>
                 isEntityDataFetch.Invoke(df, e) &&
-                df.Status == DataFetchStatus.Starting &&
-                df.OccurredAt >= pendingDataFetchCutoff);
+                df.Status == DataFetchStatus.Started &&
+                df.LastHeartbeatReceivedAt != null &&
+                df.LastHeartbeatReceivedAt >= pendingDataFetchCutoff);
     }
 
     private Expression<Func<TEntity, bool>> HasNoTooRecentDataFetches<TEntity>(
@@ -109,8 +110,8 @@ public class DataFetchSpecification : IDataFetchSpecification
             d.Source == source
             && d.Type == type
             && (
-                (d.Status != DataFetchStatus.Failed && d.OccurredAt > successCutoff)
-                || (d.Status == DataFetchStatus.Failed && d.OccurredAt > failureCutoff)
+                (d.Status != DataFetchStatus.Failed && d.StartedAt > successCutoff)
+                || (d.Status == DataFetchStatus.Failed && d.StartedAt > failureCutoff)
             );
     }
 }

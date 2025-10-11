@@ -42,8 +42,8 @@ public static class DataFetchEndpoints
         var query = dataUow.Ctx.DataFetches
             .Where(x => request.Source == null || x.Source == request.Source)
             .Where(x => request.Type == null || x.Type == request.Type)
-            .Where(x => request.OccurredAtFrom == null || x.OccurredAt >= request.OccurredAtFrom)
-            .Where(x => request.OccurredAtTo == null || x.OccurredAt <= request.OccurredAtTo)
+            .Where(x => request.OccurredAtFrom == null || x.StartedAt >= request.OccurredAtFrom)
+            .Where(x => request.OccurredAtTo == null || x.StartedAt <= request.OccurredAtTo)
             .Where(x => request.Statuses == null || request.Statuses.Length == 0 ||
                         request.Statuses.Contains(x.Status))
             .Where(x => request.Success == null || (request.Success.Value
@@ -52,8 +52,8 @@ public static class DataFetchEndpoints
 
         var orderedQuery = (request.OrderByDescending ?? true) switch
         {
-            true => query.OrderByDescending(x => x.OccurredAt),
-            false => query.OrderBy(x => x.OccurredAt),
+            true => query.OrderByDescending(x => x.StartedAt),
+            false => query.OrderBy(x => x.StartedAt),
         };
         var dataFetches = await orderedQuery
             .Paginate(request)

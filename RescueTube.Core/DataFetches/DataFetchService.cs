@@ -67,7 +67,7 @@ public class DataFetchService
             }
 
             var dataFetch = await AddDataFetchAsync(definition, idOnPlatform, ct);
-            return new DataFetchScope(dataFetch, this);
+            return new DataFetchScope(dataFetch, this, ct);
         }
         finally
         {
@@ -81,13 +81,16 @@ public class DataFetchService
 
     private async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
     {
+        var now = _timeProvider.GetUtcNow();
+
         var dataFetch = new DataFetch
         {
             Platform = definition.Platform,
             Source = definition.Source,
             Type = definition.Type,
-            OccurredAt = _timeProvider.GetUtcNow(),
-            Status = DataFetchStatus.Starting,
+            StartedAt = now,
+            LastHeartbeatReceivedAt = now,
+            Status = DataFetchStatus.Started,
             DataFetchResults = [],
         };
 
@@ -117,11 +120,14 @@ public class DataFetchService
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
         var dbCtx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
+        var now = _timeProvider.GetUtcNow();
+
         await dbCtx.DataFetches
             .Where(x => x.Id == dataFetch.Id)
             .ExecuteUpdateAsync(x => x
                 .SetProperty(d => d.Status, status)
-                .SetProperty(d => d.Message, message));
+                .SetProperty(d => d.Message, message)
+                .SetProperty(d => d.StatusUpdatedAt, now));
 
         dataFetch.Status = status;
         _dbCtx.Entry(dataFetch).Property(x => x.Status).IsModified = false;
@@ -130,16 +136,35 @@ public class DataFetchService
         _dbCtx.Entry(dataFetch).Property(x => x.Message).IsModified = false;
     }
 
+    public async Task SendDataFetchHeartbeatAsync(DataFetch dataFetch, CancellationToken ct)
+    {
+        if (dataFetch.Status is not DataFetchStatus.Started)
+        {
+            return;
+        }
+
+        await using var scope = _serviceScopeFactory.CreateAsyncScope();
+        var dbCtx = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var now = _timeProvider.GetUtcNow();
+        await dbCtx.DataFetches
+            .Where(x => x.Id == dataFetch.Id)
+            .Where(x => x.Status == DataFetchStatus.Started)
+            .Where(x => x.LastHeartbeatReceivedAt == null || x.LastHeartbeatReceivedAt <= now)
+            .ExecuteUpdateAsync(x => x.SetProperty(df => df.LastHeartbeatReceivedAt, now), ct);
+    }
+
     public async Task<bool> IsFetchingAsync(DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
     {
-        var pendingDataFetchInvalidationCutoff = _timeProvider.GetUtcNow().AddDays(-1);
+        var pendingDataFetchCutoff = _timeProvider.GetUtcNow().AddMinutes(-5);
         return await _dbCtx.DataFetches
             .Where(df =>
                 df.Platform == definition.Platform &&
                 df.Source == definition.Source &&
                 df.Type == definition.Type &&
-                df.Status == DataFetchStatus.Starting &&
-                df.OccurredAt <= pendingDataFetchInvalidationCutoff)
+                df.Status == DataFetchStatus.Started &&
+                df.LastHeartbeatReceivedAt != null &&
+                df.LastHeartbeatReceivedAt >= pendingDataFetchCutoff)
             .Where(IsEntityDataFetch(definition, idOnPlatform))
             .AnyAsync(ct);
     }
@@ -155,5 +180,11 @@ public class DataFetchService
             EEntityType.Playlist => df => df.PlaylistIdOnPlatform == idOnPlatform,
         };
         return isEntityDataFetch;
+    }
+
+    public void CompleteDataFetch(DataFetch dataFetch)
+    {
+        dataFetch.Status = DataFetchStatus.Succeeded;
+        dataFetch.StatusUpdatedAt = _timeProvider.GetUtcNow();
     }
 }

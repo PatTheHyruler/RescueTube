@@ -61,7 +61,7 @@ public class PlaylistService : BaseYouTubeService
             return null;
         }
 
-        dataFetch.Status = DataFetchStatus.Succeeded;
+        _dataFetchService.CompleteDataFetch(dataFetch);
 
         return await AddOrUpdatePlaylistAsync(playlistResult.Data, dataFetch, ct);
     }
@@ -146,7 +146,7 @@ public class PlaylistService : BaseYouTubeService
                 Position = index,
                 VideoId = video.Id,
                 Video = video,
-                AddedAt = dataFetch.OccurredAt,
+                AddedAt = dataFetch.StartedAt,
                 Playlist = playlist,
                 PlaylistId = playlist.Id,
             };
@@ -173,7 +173,7 @@ public class PlaylistService : BaseYouTubeService
                              .AssertNotNull($"Video {pi.VideoId} not loaded for PlaylistItem {pi.Id}")
                              .IdOnPlatform, out var occurrences) || occurrences == 0))
         {
-            playlistItem.RemovedAt = dataFetch.OccurredAt;
+            playlistItem.RemovedAt = dataFetch.StartedAt;
         }
     }
 

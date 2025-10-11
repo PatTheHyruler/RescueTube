@@ -119,7 +119,7 @@ public static class ApiMapper
     public static DataFetchDtoV1 MapDataFetchDtoV1(this DataFetch src) => new()
     {
         Id = src.Id,
-        OccurredAt = src.OccurredAt,
+        OccurredAt = src.StartedAt,
         Source = src.Source,
         Status = src.Status,
         Type = src.Type,

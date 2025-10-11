@@ -28,7 +28,7 @@ public class DataFetchesKillSwitchJob
             await _settingService.GetValueAsync(SettingDefinitions.DataFetchKillSwitchCutoffMinutes, ct);
         var cutoffFrom = now.Subtract(TimeSpan.FromMinutes(-Math.Abs(offsetMinutes)));
         var dataFetchCount = await _dataUow.Ctx.DataFetches
-            .Where(x => x.OccurredAt >= cutoffFrom)
+            .Where(x => x.StartedAt >= cutoffFrom)
             .CountAsync(ct);
 
         var dataFetchLimit = await _settingService.GetValueAsync(SettingDefinitions.DataFetchKillSwitchLimit, ct);

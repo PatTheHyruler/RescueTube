@@ -80,7 +80,7 @@ public class VideoService : BaseYouTubeService
             return null;
         }
 
-        dataFetch.Status = DataFetchStatus.Succeeded;
+        _dataFetchService.CompleteDataFetch(dataFetch);
 
         return await AddOrUpdateVideoAsync(videoResult.Data, dataFetch, ct);
     }

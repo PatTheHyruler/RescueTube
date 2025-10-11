@@ -78,7 +78,7 @@ public class AuthorService : BaseYouTubeService
             return;
         }
 
-        dataFetch.Status = DataFetchStatus.Succeeded;
+        _dataFetchService.CompleteDataFetch(dataFetch);
         _dbCtx.DataFetchResults.Add(new DataFetchResult { Author = author, DataFetch = dataFetch });
 
         var domainAuthorData = authorResult.Data.ToDomainAuthorFromChannel();
@@ -223,7 +223,7 @@ public class AuthorService : BaseYouTubeService
         {
             var newAuthorData = await FetchExtraYouTubeExplodeAuthorDataAsync(author.IdOnPlatform, ct);
 
-            dataFetch.Status = DataFetchStatus.Succeeded;
+            _dataFetchService.CompleteDataFetch(dataFetch);
             _dbCtx.DataFetchResults.Add(new DataFetchResult { Author = author, DataFetch = dataFetch });
 
             _entityUpdateService.UpdateAuthor(author, newAuthorData, isNew: false, new()
