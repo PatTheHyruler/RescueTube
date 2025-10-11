@@ -79,7 +79,7 @@ public class AuthorService : BaseYouTubeService
         }
 
         dataFetch.Status = DataFetchStatus.Succeeded;
-        dataFetch.DataFetchResults.Add(new DataFetchResult { Author = author, AuthorId = authorId });
+        _dbCtx.DataFetchResults.Add(new DataFetchResult { Author = author, DataFetch = dataFetch });
 
         var domainAuthorData = authorResult.Data.ToDomainAuthorFromChannel();
         _entityUpdateService.UpdateAuthor(author, domainAuthorData, false,
@@ -180,7 +180,7 @@ public class AuthorService : BaseYouTubeService
 
                 _dbCtx.Authors.Add(author);
 
-                dataFetch.DataFetchResults.Add(new DataFetchResult { Author = author, AuthorId = author.Id });
+                _dbCtx.DataFetchResults.Add(new DataFetchResult { Author = author, DataFetch = dataFetch });
 
                 await _mediator.Publish(new AuthorAddedEvent(
                         author.Id, EPlatform.YouTube, author.IdOnPlatform), ct);
@@ -224,7 +224,7 @@ public class AuthorService : BaseYouTubeService
             var newAuthorData = await FetchExtraYouTubeExplodeAuthorDataAsync(author.IdOnPlatform, ct);
 
             dataFetch.Status = DataFetchStatus.Succeeded;
-            dataFetch.DataFetchResults.Add(new DataFetchResult { Author = author, AuthorId = author.Id });
+            _dbCtx.DataFetchResults.Add(new DataFetchResult { Author = author, DataFetch = dataFetch });
 
             _entityUpdateService.UpdateAuthor(author, newAuthorData, isNew: false, new()
             {

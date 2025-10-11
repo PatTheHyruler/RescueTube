@@ -113,7 +113,7 @@ public class VideoService : BaseYouTubeService
             ArchivalSettings = VideoArchivalSettings.CreateDefaultArchivedVideoSettings(),
         };
 
-        dataFetch.DataFetchResults.Add(new DataFetchResult { Video = video, VideoId = video.Id });
+        _dbCtx.DataFetchResults.Add(new DataFetchResult { Video = video, DataFetch = dataFetch });
 
         var newVideoData = videoData.ToDomainVideo();
         _entityUpdateService.UpdateVideo(video, newVideoData, isNew, EntityUpdateService.EImageUpdateOptions.OnlyAdd);

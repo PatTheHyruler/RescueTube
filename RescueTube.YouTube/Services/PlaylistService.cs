@@ -91,7 +91,7 @@ public class PlaylistService : BaseYouTubeService
         var isNew = playlist == null;
         playlist ??= new Playlist { IdOnPlatform = playlistData.ID, PlaylistItems = new List<PlaylistItem>() };
 
-        dataFetch.DataFetchResults.Add(new DataFetchResult { Playlist = playlist, PlaylistId = playlist.Id });
+        _dbCtx.DataFetchResults.Add(new DataFetchResult { Playlist = playlist, DataFetch = dataFetch });
 
         var newPlaylistData = playlistData.ToDomainPlaylist();
         _entityUpdateService.UpdatePlaylist(playlist, newPlaylistData, isNew,

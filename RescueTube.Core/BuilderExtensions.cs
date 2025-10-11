@@ -48,7 +48,7 @@ public static class BuilderExtensions
 
         services.AddScoped<EntityMapper>();
 
-        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<SubmissionService>(); });
+        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<ICoreAssemblyMarker>(); });
 
         services.AddScoped<UpdateImagesResolutionJob>();
         services.Configure<JobsConfiguration>(c => c.RegisterJobs(

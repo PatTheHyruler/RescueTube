@@ -129,7 +129,7 @@ public class DownloadVideoJob
                 var videoFilePath = await platformVideoDownloadService.DownloadVideoAsync(video, ct);
 
                 dataFetch.Status = DataFetchStatus.Succeeded;
-                dataFetch.DataFetchResults.Add(new DataFetchResult { Video = video, VideoId = video.Id });
+                _dataUow.Ctx.DataFetchResults.Add(new DataFetchResult { Video = video, DataFetch = dataFetch });
 
                 foreach (var videoFile in video.VideoFiles.AssertNotNull()
                              .Where(vf => vf.ValidUntil is null || vf.ValidUntil > downloadTime))

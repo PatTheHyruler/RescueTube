@@ -32,7 +32,6 @@ public class BaseEfPostgresTest
         ServiceCollection.AddSingleton<IConfiguration>(config);
         ServiceCollection.AddLogging(b => b.AddConsole());
         ServiceCollection.AddDbPersistenceEfPostgres(config);
-        ServiceCollection.AddBll();
 
         await using var sp = ServiceCollection.BuildServiceProvider();
         await using var scope = sp.CreateAsyncScope();

@@ -10,7 +10,6 @@ using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
-using RescueTube.YouTube.EventHandlers;
 using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Services;
@@ -55,7 +54,7 @@ public static class Setup
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
         services.AddScoped<IPlatformPresentationHandler, PresentationHandler>();
 
-        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<VideoAddedCommentFetchHandler>(); });
+        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<IYouTubeAssemblyMarker>(); });
 
         services.AddScoped<IYouTubeDlClient, YouTubeDlClient>();
         services.AddScoped<IYouTubeExplodeClient, YouTubeExplodeClient>();
