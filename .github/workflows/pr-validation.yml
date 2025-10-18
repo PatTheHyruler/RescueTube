@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
-          cache: false
+          cache: true
       
       - name: Run tests
-        run: dotnet test -c Release -- --timeout 2m --report-trx --coverage
+        run: dotnet test -c Release -- --timeout 2m
