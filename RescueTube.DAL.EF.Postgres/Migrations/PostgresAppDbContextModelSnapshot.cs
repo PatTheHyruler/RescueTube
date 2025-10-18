@@ -21,6 +21,7 @@ namespace DAL.EF.Migrations
                 .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pgcrypto");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("RescueTube.Domain.Entities.Author", b =>
@@ -406,8 +407,8 @@ namespace DAL.EF.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("AuthorIdOnPlatform")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("AuthorId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("LastHeartbeatReceivedAt")
                         .HasColumnType("timestamp with time zone");
@@ -419,8 +420,8 @@ namespace DAL.EF.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("PlaylistIdOnPlatform")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("PlaylistId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -440,16 +441,16 @@ namespace DAL.EF.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("VideoIdOnPlatform")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("VideoId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Platform", "AuthorIdOnPlatform");
+                    b.HasIndex("AuthorId");
 
-                    b.HasIndex("Platform", "PlaylistIdOnPlatform");
+                    b.HasIndex("PlaylistId");
 
-                    b.HasIndex("Platform", "VideoIdOnPlatform");
+                    b.HasIndex("VideoId");
 
                     b.ToTable("DataFetches");
                 });
@@ -1571,6 +1572,30 @@ namespace DAL.EF.Migrations
                         .IsRequired();
 
                     b.Navigation("Comment");
+                });
+
+            modelBuilder.Entity("RescueTube.Domain.Entities.DataFetch", b =>
+                {
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("RescueTube.Domain.Entities.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Playlist");
+
+                    b.Navigation("Video");
                 });
 
             modelBuilder.Entity("RescueTube.Domain.Entities.DataFetchResult", b =>

@@ -17,6 +17,9 @@ public class PostgresAppDbContext : BaseAppDbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.HasPostgresExtension("pgcrypto");
+
         builder.Entity<Video>().Property(v => v.InfoJson).HasColumnType("jsonb");
     }
 }

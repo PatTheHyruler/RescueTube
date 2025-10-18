@@ -13,8 +13,8 @@ using RescueTube.DAL.EF.Postgres;
 namespace RescueTube.DAL.EF.Postgres.Migrations
 {
     [DbContext(typeof(PostgresAppDbContext))]
-    [Migration("20250921093240_DataFetch_Overhaul")]
-    partial class DataFetch_Overhaul
+    [Migration("20251018150030_Remove_DataFetchesThatShouldHaveBeenResults")]
+    partial class Remove_DataFetchesThatShouldHaveBeenResults
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,12 +24,12 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
                 .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pgcrypto");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("RescueTube.Domain.Entities.Author", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedToArchiveAt")
@@ -80,7 +80,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.AuthorArchivalSettings", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<bool>("ArchiveClips")
@@ -103,7 +102,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.AuthorHistory", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
@@ -140,7 +138,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.AuthorImage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("AuthorId")
@@ -176,7 +173,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.AuthorStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("AuthorId")
@@ -201,7 +197,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Caption", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Culture")
@@ -252,7 +247,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("CreatorId")
@@ -286,7 +280,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Comment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedToArchiveAt")
@@ -349,7 +342,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.CommentHistory", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Content")
@@ -386,7 +378,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.CommentStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("CommentId")
@@ -417,47 +408,52 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.DataFetch", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("AuthorIdOnPlatform")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("LastHeartbeatReceivedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Message")
                         .HasColumnType("text");
-
-                    b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Platform")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("PlaylistIdOnPlatform")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("PlaylistId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("StatusUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("VideoIdOnPlatform")
-                        .HasColumnType("text");
+                    b.Property<Guid?>("VideoId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Platform", "AuthorIdOnPlatform");
+                    b.HasIndex("AuthorId");
 
-                    b.HasIndex("Platform", "PlaylistIdOnPlatform");
+                    b.HasIndex("PlaylistId");
 
-                    b.HasIndex("Platform", "VideoIdOnPlatform");
+                    b.HasIndex("VideoId");
 
                     b.ToTable("DataFetches");
                 });
@@ -465,7 +461,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.DataFetchResult", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("AuthorId")
@@ -501,7 +496,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Identity.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
@@ -726,7 +720,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Image", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Etag")
@@ -780,7 +773,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslation", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Content")
@@ -809,7 +801,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslationKey", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -820,7 +811,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Playlist", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedToArchiveAt")
@@ -866,7 +856,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.PlaylistImage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ImageId")
@@ -900,7 +889,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.PlaylistItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset?>("AddedAt")
@@ -930,7 +918,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.PlaylistItemPositionHistory", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("PlaylistItemId")
@@ -955,7 +942,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.PlaylistStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<long?>("CommentCount")
@@ -986,7 +972,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Setting", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("Key")
@@ -1013,7 +998,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.StatusChangeEvent", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("AuthorId")
@@ -1048,7 +1032,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Submission", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedAt")
@@ -1114,7 +1097,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Video", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("AddedToArchiveAt")
@@ -1206,7 +1188,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoAuthor", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("AuthorId")
@@ -1231,7 +1212,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoCategory", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("AssignedById")
@@ -1257,7 +1237,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoFile", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<int?>("BitrateBps")
@@ -1301,7 +1280,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoImage", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ImageId")
@@ -1338,7 +1316,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoStatisticSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<long?>("CommentCount")
@@ -1369,7 +1346,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.VideoTag", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("NormalizedTag")
@@ -1599,6 +1575,30 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
                         .IsRequired();
 
                     b.Navigation("Comment");
+                });
+
+            modelBuilder.Entity("RescueTube.Domain.Entities.DataFetch", b =>
+                {
+                    b.HasOne("RescueTube.Domain.Entities.Author", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("RescueTube.Domain.Entities.Playlist", "Playlist")
+                        .WithMany()
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("RescueTube.Domain.Entities.Video", "Video")
+                        .WithMany()
+                        .HasForeignKey("VideoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Playlist");
+
+                    b.Navigation("Video");
                 });
 
             modelBuilder.Entity("RescueTube.Domain.Entities.DataFetchResult", b =>
