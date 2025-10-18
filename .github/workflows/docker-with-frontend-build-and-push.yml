@@ -28,7 +28,7 @@ jobs:
         run: echo "ref=${{ github.event.inputs.frontend_tag && format('refs/tags/{0}', github.event.inputs.frontend_tag) || '' }}" >> $GITHUB_OUTPUT
 
       - name: Frontend - Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ vars.FRONTEND_SOLIDJS_REPO }}
           ssh-key: ${{ secrets.FRONTEND_SOLIDJS_REPO_SSH_KEY }}
@@ -36,9 +36,9 @@ jobs:
           ref: ${{ steps.determine-frontend-ref.outputs.ref }}
 
       - name: Frontend - Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '20.x'
+          node-version-file: '.node-version'
 
       - name: Frontend - Install pnpm
         run: npm install -g pnpm
@@ -56,7 +56,7 @@ jobs:
         run: echo "ref=${{ github.event.inputs.backend_tag && format('refs/tags/{0}', github.event.inputs.backend_tag) || github.ref || '' }}" >> $GITHUB_OUTPUT
 
       - name: Backend - Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: ./backend
           ref: ${{ steps.determine-backend-ref.outputs.ref }}
