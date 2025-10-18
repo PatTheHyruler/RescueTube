@@ -43,8 +43,9 @@ jobs:
       - name: Frontend - Set up Node.js
         uses: actions/setup-node@v6
         with:
-          node-version-file: './frontend/.node-version'
+          node-version-file: '.node-version'
           cache: 'pnpm'
+        working-directory: ./frontend
 
       - name: Frontend - Install dependencies
         run: pnpm install --frozen-lockfile
