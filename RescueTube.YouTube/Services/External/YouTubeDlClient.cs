@@ -9,6 +9,8 @@ namespace RescueTube.YouTube.Services.External;
 
 public interface IYouTubeDlClient
 {
+    string YouTubeDlPath { get; }
+
     Task<RunResult<VideoData?>?> RunVideoDataFetchAsync(
         string url,
         CancellationToken ct = default,
@@ -46,6 +48,8 @@ public class YouTubeDlClient : IYouTubeDlClient
             OverwriteFiles = false,
         };
     }
+
+    public string YouTubeDlPath => _youtubeDl.YoutubeDLPath;
 
     public Task<RunResult<VideoData?>?> RunVideoDataFetchAsync(
         string url,

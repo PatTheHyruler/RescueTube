@@ -14,7 +14,6 @@ using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Services;
 using RescueTube.YouTube.Services.External;
-using YoutubeDLSharp;
 
 namespace RescueTube.YouTube;
 
@@ -98,10 +97,10 @@ public static class Setup
 
         if (!overwriteExistingBinaries)
         {
-            var ytdl = services.GetRequiredService<YoutubeDL>();
-            if (Path.Exists(ytdl.YoutubeDLPath))
+            var ytdl = services.GetRequiredService<IYouTubeDlClient>();
+            if (Path.Exists(ytdl.YouTubeDlPath))
             {
-                await ytdl.RunUpdate();
+                await ytdl.RunUpdateAsync();
             }
         }
     }
