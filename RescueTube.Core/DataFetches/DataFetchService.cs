@@ -1,9 +1,11 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
+using RescueTube.Core.Data.Specifications;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 
@@ -12,13 +14,15 @@ namespace RescueTube.Core.DataFetches;
 public class DataFetchService
 {
     private readonly AppDbContext _dbCtx;
+    private readonly IDataFetchSpecification _dataFetchSpecification;
     private readonly TimeProvider _timeProvider;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<DataFetchService> _logger;
 
-    public DataFetchService(AppDbContext dbCtx, TimeProvider timeProvider, IServiceScopeFactory serviceScopeFactory, ILogger<DataFetchService> logger)
+    public DataFetchService(AppDbContext dbCtx, IDataFetchSpecification dataFetchSpecification, TimeProvider timeProvider, IServiceScopeFactory serviceScopeFactory, ILogger<DataFetchService> logger)
     {
         _dbCtx = dbCtx;
+        _dataFetchSpecification = dataFetchSpecification;
         _timeProvider = timeProvider;
         _serviceScopeFactory = serviceScopeFactory;
         _logger = logger;
@@ -154,15 +158,13 @@ public class DataFetchService
 
     private async Task<bool> IsFetchingAsync(DataFetchDefinition definition, Guid entityId, CancellationToken ct)
     {
-        var pendingDataFetchCutoff = _timeProvider.GetUtcNow().AddMinutes(-5);
+        var currentTime = _timeProvider.GetUtcNow();
         return await _dbCtx.DataFetches
             .Where(df =>
                 df.Platform == definition.Platform &&
                 df.Source == definition.Source &&
                 df.Type == definition.Type &&
-                df.Status == DataFetchStatus.Started &&
-                df.LastHeartbeatReceivedAt != null &&
-                df.LastHeartbeatReceivedAt >= pendingDataFetchCutoff)
+                _dataFetchSpecification.IsOngoing(currentTime).Invoke(df))
             .Where(IsEntityDataFetch(definition, entityId))
             .AnyAsync(ct);
     }

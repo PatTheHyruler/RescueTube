@@ -56,18 +56,24 @@ public class DataFetchSpecification : IDataFetchSpecification
             .And(HasNoTooRecentDataFetches(isEntityDataFetch, jobDefinition));
     }
 
+    public Expression<Func<DataFetch, bool>> IsOngoing(DateTimeOffset currentTime)
+    {
+        var pendingDataFetchCutoff = currentTime.AddMinutes(-5);
+        return df => df.Status == DataFetchStatus.Started &&
+                     df.LastHeartbeatReceivedAt != null &&
+                     df.LastHeartbeatReceivedAt >= pendingDataFetchCutoff;
+    }
+
     private Expression<Func<TEntity, bool>> IsDataFetchAllowed<TEntity>(
         Expression<Func<DataFetch, TEntity, bool>> isEntityDataFetch, DataFetchJobDefinition jobDefinition)
         where TEntity : IPlatformEntity
     {
-        var pendingDataFetchCutoff = _timeProvider.GetUtcNow().AddMinutes(-5);
+        var currentTime = _timeProvider.GetUtcNow();
         return e =>
             e.Platform == jobDefinition.DataFetchDefinition.Platform
             && !_dbContext.DataFetches.Any(df =>
                 isEntityDataFetch.Invoke(df, e) &&
-                df.Status == DataFetchStatus.Started &&
-                df.LastHeartbeatReceivedAt != null &&
-                df.LastHeartbeatReceivedAt >= pendingDataFetchCutoff);
+                IsOngoing(currentTime).Invoke(df));
     }
 
     private Expression<Func<TEntity, bool>> HasNoTooRecentDataFetches<TEntity>(
@@ -110,7 +116,7 @@ public class DataFetchSpecification : IDataFetchSpecification
             d.Source == source
             && d.Type == type
             && (
-                (d.Status != DataFetchStatus.Failed && d.StartedAt > successCutoff)
+                (d.Status == DataFetchStatus.Succeeded && d.StartedAt > successCutoff)
                 || (d.Status == DataFetchStatus.Failed && d.StartedAt > failureCutoff)
             );
     }
