@@ -122,18 +122,18 @@ public class SubmitServiceTests : BaseEfPostgresTest
                 .Include(x => x.Title!.Translations!)
                 .SingleAsync(ct);
             await Assert.That(video)
-                .HasMember(x => x.IdOnPlatform).EqualTo(videoIdOnPlatform)
-                .HasMember(x => x.Title!.Translations!.Single().Content).EqualTo("Test video title");
+                .Member(x => x.IdOnPlatform, x => x.EqualTo(videoIdOnPlatform))
+                .And.Member(x => x.Title!.Translations!.Single().Content, x => x.EqualTo("Test video title"));
 
             var dataFetch = await dbContext.DataFetches
                 .Include(x => x.DataFetchResults)
                 .SingleAsync(ct);
             await Assert.That(dataFetch)
-                .HasMember(x => x.Platform).EqualTo(EPlatform.YouTube)
-                .HasMember(x => x.VideoId).EqualTo(video.Id)
-                .HasMember(x => x.Status).EqualTo(DataFetchStatus.Succeeded);
+                .Member(x => x.Platform, x => x.EqualTo(EPlatform.YouTube))
+                .And.Member(x => x.VideoId, x => x.EqualTo(video.Id))
+                .And.Member(x => x.Status, x => x.EqualTo(DataFetchStatus.Succeeded));
             await Assert.That(dataFetch.DataFetchResults.Single())
-                .HasMember(x => x.VideoId).EqualTo(video.Id);
+                .Member(x => x.VideoId, x => x.EqualTo(video.Id));
         }
     }
 }

@@ -83,9 +83,11 @@ public class EntityUpdateServiceTests
         await Assert.That(newTranslationKey.Id).IsNotEqualTo(video.Title.Id);
         await Assert.That(originalTranslationKey).IsSameReferenceAs(video.Title);
 
-        await Assert.That(video.Title.Translations.Count).IsEqualTo(2);
-        await Assert.That(video.Title.Translations).Contains(t => t.Content == firstTranslationContent);
-        await Assert.That(video.Title.Translations).Contains(t => t.Content == secondTranslationContent);
+        await Assert.That(video.Title.Translations)
+            .IsNotNull()
+            .And.HasCount(2)
+            .And.Contains((TextTranslation t) => t.Content == firstTranslationContent)
+            .And.Contains((TextTranslation t) => t.Content == secondTranslationContent);
 
         var firstTranslationValidUntil =
             video.Title.Translations
@@ -147,9 +149,11 @@ public class EntityUpdateServiceTests
         await Assert.That(newTranslationKey.Id).IsNotEqualTo(video.Title.Id);
         await Assert.That(originalTranslationKey).IsSameReferenceAs(video.Title);
 
-        await Assert.That(video.Title.Translations.Count).IsEqualTo(2);
-        await Assert.That(video.Title.Translations).Contains(t => t.Content == firstTranslationContent);
-        await Assert.That(video.Title.Translations).Contains(t => t.Content == secondTranslationContent);
+        await Assert.That(video.Title.Translations)
+            .IsNotNull()
+            .And.HasCount(2)
+            .And.Contains((TextTranslation t) => t.Content == firstTranslationContent)
+            .And.Contains((TextTranslation t) => t.Content == secondTranslationContent);
 
         var firstTranslationValidUntil =
             video.Title.Translations
@@ -207,8 +211,9 @@ public class EntityUpdateServiceTests
         await Assert.That(newTranslationKey.Id).IsNotEqualTo(video.Title.Id);
         await Assert.That(originalTranslationKey).IsSameReferenceAs(video.Title);
 
-        await Assert.That(video.Title.Translations).HasSingleItem();
-        await Assert.That(video.Title.Translations).ContainsOnly(t => t.Content == translationContent);
+        await Assert.That(video.Title.Translations)
+            .HasCount(1)
+            .And.ContainsOnly((TextTranslation t) => t.Content == translationContent);
 
         var translationValidUntil =
             video.Title.Translations
@@ -243,11 +248,10 @@ public class EntityUpdateServiceTests
         var entityUpdateService = scope.ServiceProvider.GetRequiredService<EntityUpdateService>();
         entityUpdateService.UpdateTranslations(video, v => v.Title, newTranslationKey);
 
-        await Assert.That(video.Title).IsNotNull();
-        await Assert.That(video.Title!.Translations)
+        await Assert.That(video.Title?.Translations)
             .IsNotNull()
-            .And.HasSingleItem();
-        await Assert.That(video.Title.Translations!.Single().Content).IsEqualTo(translationContent);
+            .And.HasCount(1)
+            .And.ContainsOnly((TextTranslation t) => t.Content == translationContent);
     }
 
     [Test]

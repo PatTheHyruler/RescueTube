@@ -54,8 +54,8 @@ public class DataFetchServiceTests : BaseEfPostgresTest
             // Assert
             await Assert.That(dataFetchScope).IsNotNull();
             await Assert.That(dataFetchScope!.DataFetch)
-                .HasMember(x => x.Status).EqualTo(DataFetchStatus.Started)
-                .HasMember(x => x.VideoId).EqualTo(videoId);
+                .Member(x => x.Status, x => x.EqualTo(DataFetchStatus.Started))
+                .And.Member(x => x.VideoId, x => x.EqualTo(videoId));
         }
     }
 }

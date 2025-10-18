@@ -41,10 +41,10 @@ public class DataFetchScopeTests : BaseEfPostgresTest
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var dataFetch = await dbContext.DataFetches.SingleAsync(ct);
             await Assert.That(dataFetch)
-                .HasMember(x => x.Status).EqualTo(DataFetchStatus.Failed)
-                .HasMember(x => x.Platform).EqualTo(definition.Platform)
-                .HasMember(x => x.Source).EqualTo(definition.Source)
-                .HasMember(x => x.Type).EqualTo(definition.Type);
+                .Member(x => x.Status, x => x.EqualTo(DataFetchStatus.Failed))
+                .And.Member(x => x.Platform, x => x.EqualTo(definition.Platform))
+                .And.Member(x => x.Source, x => x.EqualTo(definition.Source))
+                .And.Member(x => x.Type, x => x.EqualTo(definition.Type));
         }
     }
 }
