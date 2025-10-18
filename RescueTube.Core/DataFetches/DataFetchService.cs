@@ -160,6 +160,7 @@ public class DataFetchService
     {
         var currentTime = _timeProvider.GetUtcNow();
         return await _dbCtx.DataFetches
+            .AsExpandable()
             .Where(df =>
                 df.Platform == definition.Platform &&
                 df.Source == definition.Source &&
