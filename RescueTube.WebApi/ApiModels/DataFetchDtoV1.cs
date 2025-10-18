@@ -11,7 +11,7 @@ public class DataFetchDtoV1
     public required string Source { get; set; }
     public required EPlatform Platform { get; init; }
 
-    public required string? VideoIdOnPlatform { get; init; }
-    public required string? AuthorIdOnPlatform { get; init; }
-    public required string? PlaylistIdOnPlatform { get; init; }
+    public required Guid? VideoId { get; init; }
+    public required Guid? AuthorId { get; init; }
+    public required Guid? PlaylistId { get; init; }
 }

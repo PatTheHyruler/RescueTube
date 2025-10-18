@@ -94,7 +94,7 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         if (addedOrExistingAuthor == null)
         {
             await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
-                YouTubeConstants.DataFetches.YouTubeExplode.Channel, idOnPlatform, ct);
+                YouTubeConstants.DataFetches.YouTubeExplode.Channel, entityId: null, ct);
             dataFetchScope.ThrowIfAlreadyFetching();
 
             var dataFetch = dataFetchScope.DataFetch;
@@ -111,6 +111,9 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             _dataFetchService.CompleteDataFetch(dataFetch);
 
             addedOrExistingAuthor = await _youTubeServices.AuthorService.AddOrGetAuthor(channel, dataFetch, ct);
+
+            dataFetch.AuthorId ??= addedOrExistingAuthor.Id;
+            dataFetch.Author ??= addedOrExistingAuthor;
         }
 
         if (addedOrExistingAuthor.ArchivalSettings == null)

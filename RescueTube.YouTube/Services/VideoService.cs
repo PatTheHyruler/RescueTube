@@ -51,21 +51,20 @@ public class VideoService : BaseYouTubeService
     {
         var idOnPlatform = await _dbCtx.Videos
             .Where(v => v.Id == videoId && v.Platform == EPlatform.YouTube)
-            .Select(v => v.IdOnPlatform).FirstAsync(ct);
-        if (await _dataFetchService.IsFetchingAsync(YouTubeConstants.DataFetches.YtDlp.VideoPage, idOnPlatform, ct))
-        {
-            _logger.LogInformation("Already fetching {Platform} video {VideoIdOnPlatform}, skipping duplicate fetch", EPlatform.YouTube, idOnPlatform);
-            return;
-        }
-        await AddOrUpdateVideoAsync(idOnPlatform, ct);
+            .Select(v => v.IdOnPlatform)
+            .FirstAsync(ct);
+        await AddOrUpdateVideoAsync(idOnPlatform, videoId, ct);
     }
 
-    public async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, CancellationToken ct)
+    public Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, CancellationToken ct)
+        => AddOrUpdateVideoAsync(idOnPlatform, videoId: null, ct);
+
+    private async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, Guid? videoId, CancellationToken ct)
     {
         var dataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.VideoPage;
 
         await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
-            dataFetchDefinition, idOnPlatform, ct);
+            dataFetchDefinition, videoId, ct);
         dataFetchScope.ThrowIfAlreadyFetching();
 
         var dataFetch = dataFetchScope.DataFetch;
@@ -82,13 +81,18 @@ public class VideoService : BaseYouTubeService
 
         _dataFetchService.CompleteDataFetch(dataFetch);
 
-        return await AddOrUpdateVideoAsync(videoResult.Data, dataFetch, ct);
+        var video = await AddOrUpdateVideoAsync(videoResult.Data, dataFetch, ct);
+
+        dataFetch.VideoId ??= videoId;
+        dataFetch.Video ??= video;
+
+        return video;
     }
 
     public Task<Video> AddOrUpdateVideoAsync(VideoData videoData, DataFetch dataFetch, CancellationToken ct) =>
         AddOrUpdateVideoAsync(videoData, dataFetch, author: null, ct: ct);
 
-    public async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, DataFetch dataFetch, Author? author,
+    private async Task<Video> AddOrUpdateVideoAsync(VideoData videoData, DataFetch dataFetch, Author? author,
         CancellationToken ct = default)
     {
         var video = await _dbCtx.Videos

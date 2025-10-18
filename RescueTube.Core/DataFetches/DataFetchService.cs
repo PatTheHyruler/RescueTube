@@ -24,8 +24,7 @@ public class DataFetchService
         _logger = logger;
     }
 
-    private static readonly ConcurrentDictionary<(DataFetchDefinition Definition, string IdOnPlatform), byte>
-        DataFetchStartLocks = [];
+    private static readonly ConcurrentDictionary<DataFetchDefinition, byte> DataFetchStartLocks = [];
 
     public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Author author, CancellationToken ct)
     {
@@ -34,7 +33,7 @@ public class DataFetchService
             throw new ArgumentException($"DataFetch definition must be for {EEntityType.Author} - {definition}", nameof(definition));
         }
 
-        return await StartDataFetchAsync(definition, author.IdOnPlatform, ct);
+        return await StartDataFetchAsync(definition, author.Id, ct);
     }
 
     public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Video video, CancellationToken ct)
@@ -44,15 +43,14 @@ public class DataFetchService
             throw new ArgumentException($"DataFetch definition must be for {EEntityType.Video} - {definition}", nameof(definition));
         }
 
-        return await StartDataFetchAsync(definition, video.IdOnPlatform, ct);
+        return await StartDataFetchAsync(definition, video.Id, ct);
     }
 
-    public async Task<DataFetchScope?> StartDataFetchAsync(
-        DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
+    public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Guid? entityId, CancellationToken ct)
     {
         // Short-lived lock, used to avoid race condition between IsFetching check and adding new DataFetch.
         // Not a distributed-safe check, and assumes that this is the only place that adds "Starting" DataFetches.
-        var lockSuccessfullyAcquired = DataFetchStartLocks.TryAdd((definition, idOnPlatform), byte.MinValue);
+        var lockSuccessfullyAcquired = DataFetchStartLocks.TryAdd(definition, byte.MinValue);
         if (!lockSuccessfullyAcquired)
         {
             return null;
@@ -60,26 +58,26 @@ public class DataFetchService
 
         try
         {
-            var hasStartedDataFetch = await IsFetchingAsync(definition, idOnPlatform, ct);
+            var hasStartedDataFetch = entityId is not null && await IsFetchingAsync(definition, entityId.Value, ct);
             if (hasStartedDataFetch)
             {
                 return null;
             }
 
-            var dataFetch = await AddDataFetchAsync(definition, idOnPlatform, ct);
+            var dataFetch = await AddDataFetchAsync(definition, entityId, ct);
             return new DataFetchScope(dataFetch, this, ct);
         }
         finally
         {
-            var lockSuccessfullyReleased = DataFetchStartLocks.TryRemove((definition, idOnPlatform), out _);
+            var lockSuccessfullyReleased = DataFetchStartLocks.TryRemove(definition, out _);
             if (!lockSuccessfullyReleased)
             {
-                _logger.LogError("Failed to release lock for {DataFetchDefinition}, {IdOnPlatform}", definition, idOnPlatform);
+                _logger.LogError("Failed to release lock for {DataFetchDefinition}, {EntityId}", definition, entityId);
             }
         }
     }
 
-    private async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
+    private async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, Guid? entityId, CancellationToken ct)
     {
         var now = _timeProvider.GetUtcNow();
 
@@ -97,13 +95,13 @@ public class DataFetchService
         switch (definition.EntityType)
         {
             case EEntityType.Video:
-                dataFetch.VideoIdOnPlatform = idOnPlatform;
+                dataFetch.VideoId = entityId;
                 break;
             case EEntityType.Author:
-                dataFetch.AuthorIdOnPlatform = idOnPlatform;
+                dataFetch.AuthorId = entityId;
                 break;
             case EEntityType.Playlist:
-                dataFetch.PlaylistIdOnPlatform = idOnPlatform;
+                dataFetch.PlaylistId = entityId;
                 break;
             default:
                 throw new ArgumentException($"Unknown/unsupported entity type {definition.EntityType} in DataFetch definition {definition}", nameof(definition));
@@ -154,7 +152,7 @@ public class DataFetchService
             .ExecuteUpdateAsync(x => x.SetProperty(df => df.LastHeartbeatReceivedAt, now), ct);
     }
 
-    public async Task<bool> IsFetchingAsync(DataFetchDefinition definition, string idOnPlatform, CancellationToken ct)
+    private async Task<bool> IsFetchingAsync(DataFetchDefinition definition, Guid entityId, CancellationToken ct)
     {
         var pendingDataFetchCutoff = _timeProvider.GetUtcNow().AddMinutes(-5);
         return await _dbCtx.DataFetches
@@ -165,19 +163,19 @@ public class DataFetchService
                 df.Status == DataFetchStatus.Started &&
                 df.LastHeartbeatReceivedAt != null &&
                 df.LastHeartbeatReceivedAt >= pendingDataFetchCutoff)
-            .Where(IsEntityDataFetch(definition, idOnPlatform))
+            .Where(IsEntityDataFetch(definition, entityId))
             .AnyAsync(ct);
     }
 
-    private static Expression<Func<DataFetch, bool>> IsEntityDataFetch(DataFetchDefinition definition, string idOnPlatform)
+    private static Expression<Func<DataFetch, bool>> IsEntityDataFetch(DataFetchDefinition definition, Guid entityId)
     {
 #pragma warning disable CS8524 // The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value.
         Expression<Func<DataFetch, bool>> isEntityDataFetch = definition.EntityType switch
 #pragma warning restore CS8524 // The switch expression does not handle some values of its input type (it is not exhaustive) involving an unnamed enum value.
         {
-            EEntityType.Video => df => df.VideoIdOnPlatform == idOnPlatform,
-            EEntityType.Author => df => df.AuthorIdOnPlatform == idOnPlatform,
-            EEntityType.Playlist => df => df.PlaylistIdOnPlatform == idOnPlatform,
+            EEntityType.Video => df => df.VideoId == entityId,
+            EEntityType.Author => df => df.AuthorId == entityId,
+            EEntityType.Playlist => df => df.PlaylistId == entityId,
         };
         return isEntityDataFetch;
     }

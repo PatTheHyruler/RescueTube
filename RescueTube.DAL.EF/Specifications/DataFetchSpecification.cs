@@ -21,13 +21,13 @@ public class DataFetchSpecification : IDataFetchSpecification
     }
 
     public Expression<Func<DataFetch, Video, bool>> IsVideoDataFetch =>
-        (d, v) => d.Platform == v.Platform && d.VideoIdOnPlatform == v.IdOnPlatform;
+        (d, v) => d.VideoId == v.Id;
 
     private static Expression<Func<DataFetch, Playlist, bool>> IsPlaylistDataFetch =>
-        (d, p) => d.Platform == p.Platform && d.PlaylistIdOnPlatform == p.IdOnPlatform;
+        (d, p) => d.PlaylistId == p.Id;
 
     private static Expression<Func<DataFetch, Author, bool>> IsAuthorDataFetch =>
-        (d, v) => d.Platform == v.Platform && d.AuthorIdOnPlatform == v.IdOnPlatform;
+        (d, a) => d.AuthorId == a.Id;
 
     public Expression<Func<Author, bool>> ShouldFetchAuthorData(DataFetchJobDefinition jobDefinition)
     {

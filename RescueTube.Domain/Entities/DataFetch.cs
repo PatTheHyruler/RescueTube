@@ -12,11 +12,16 @@ public class DataFetch : BaseIdDbEntity
     public required string Source { get; set; }
     public string? Message { get; set; }
 
-    public required EPlatform Platform { get; init; }
+    public Guid? VideoId { get; set; }
+    public Video? Video { get; set; }
 
-    public string? VideoIdOnPlatform { get; set; }
-    public string? AuthorIdOnPlatform { get; set; }
-    public string? PlaylistIdOnPlatform { get; set; }
+    public Guid? AuthorId { get; set; }
+    public Author? Author { get; set; }
+
+    public Guid? PlaylistId { get; set; }
+    public Playlist? Playlist { get; set; }
+
+    public required EPlatform Platform { get; init; }
 
     public DateTimeOffset? LastHeartbeatReceivedAt { get; set; }
 

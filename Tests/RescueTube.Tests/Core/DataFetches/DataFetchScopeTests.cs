@@ -26,14 +26,13 @@ public class DataFetchScopeTests : BaseEfPostgresTest
             Source = "testsource",
             Type = "testtype",
         };
-        const string idOnPlatform = "abcdef12345";
 
         await Assert.ThrowsAsync<Exception>(async () =>
         {
             await using var scope = serviceProvider.CreateAsyncScope();
             var dataFetchService = scope.ServiceProvider.GetRequiredService<DataFetchService>();
 
-            await using var dataFetchScope = await dataFetchService.StartDataFetchAsync(definition, idOnPlatform, ct);
+            await using var dataFetchScope = await dataFetchService.StartDataFetchAsync(definition, entityId: null, ct);
             throw new Exception("An unhandled error occurred during the data fetch");
         });
 
@@ -44,7 +43,6 @@ public class DataFetchScopeTests : BaseEfPostgresTest
             await Assert.That(dataFetch)
                 .HasMember(x => x.Status).EqualTo(DataFetchStatus.Failed)
                 .HasMember(x => x.Platform).EqualTo(definition.Platform)
-                .HasMember(x => x.VideoIdOnPlatform).EqualTo(idOnPlatform)
                 .HasMember(x => x.Source).EqualTo(definition.Source)
                 .HasMember(x => x.Type).EqualTo(definition.Type);
         }

@@ -130,7 +130,7 @@ public class SubmitServiceTests : BaseEfPostgresTest
                 .SingleAsync(ct);
             await Assert.That(dataFetch)
                 .HasMember(x => x.Platform).EqualTo(EPlatform.YouTube)
-                .HasMember(x => x.VideoIdOnPlatform).EqualTo(videoIdOnPlatform)
+                .HasMember(x => x.VideoId).EqualTo(video.Id)
                 .HasMember(x => x.Status).EqualTo(DataFetchStatus.Succeeded);
             await Assert.That(dataFetch.DataFetchResults.Single())
                 .HasMember(x => x.VideoId).EqualTo(video.Id);

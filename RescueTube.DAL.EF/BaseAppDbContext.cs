@@ -32,15 +32,6 @@ public abstract class BaseAppDbContext : AppDbContext
 
         builder.ReconfigureIdentity();
 
-        builder.Entity<DataFetch>()
-            .HasIndex(e => new { e.Platform, e.VideoIdOnPlatform });
-
-        builder.Entity<DataFetch>()
-            .HasIndex(e => new { e.Platform, e.PlaylistIdOnPlatform });
-
-        builder.Entity<DataFetch>()
-            .HasIndex(e => new { e.Platform, e.AuthorIdOnPlatform });
-
         builder.Entity<Author>()
             .HasOne(e => e.ArchivalSettings)
             .WithOne(e => e.Author)

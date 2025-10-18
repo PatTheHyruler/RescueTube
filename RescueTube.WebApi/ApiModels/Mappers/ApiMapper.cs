@@ -125,9 +125,9 @@ public static class ApiMapper
         Type = src.Type,
         Platform = src.Platform,
 
-        VideoIdOnPlatform = src.VideoIdOnPlatform,
-        AuthorIdOnPlatform = src.AuthorIdOnPlatform,
-        PlaylistIdOnPlatform = src.PlaylistIdOnPlatform,
+        VideoId = src.VideoId,
+        AuthorId = src.AuthorId,
+        PlaylistId = src.PlaylistId,
     };
 
     public static CommentStatisticSnapshotDtoV1 MapCommentStatisticSnapshotDtoV1(this CommentStatisticSnapshotDto src)
