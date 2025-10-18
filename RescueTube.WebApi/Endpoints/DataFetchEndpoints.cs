@@ -42,8 +42,8 @@ public static class DataFetchEndpoints
         var query = dataUow.Ctx.DataFetches
             .Where(x => request.Source == null || x.Source == request.Source)
             .Where(x => request.Type == null || x.Type == request.Type)
-            .Where(x => request.OccurredAtFrom == null || x.StartedAt >= request.OccurredAtFrom)
-            .Where(x => request.OccurredAtTo == null || x.StartedAt <= request.OccurredAtTo)
+            .Where(x => request.StartedAtFrom == null || x.StartedAt >= request.StartedAtFrom)
+            .Where(x => request.StartedAtTo == null || x.StartedAt <= request.StartedAtTo)
             .Where(x => request.Statuses == null || request.Statuses.Length == 0 ||
                         request.Statuses.Contains(x.Status))
             .Where(x => request.Success == null || (request.Success.Value

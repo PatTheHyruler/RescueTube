@@ -14,8 +14,8 @@ public sealed record DataFetchQueryDtoV1 : IPaginationQueryOptionalDtoV1
 
     // TODO: Figure out how to use DateTimeRange for this
     // Currently nested DTOs don't seem to work for query params
-    public DateTimeOffset? OccurredAtFrom { get; init; }
-    public DateTimeOffset? OccurredAtTo { get; init; }
+    public DateTimeOffset? StartedAtFrom { get; init; }
+    public DateTimeOffset? StartedAtTo { get; init; }
 
     public string? Type { get; init; }
     public string? Source { get; init; }
