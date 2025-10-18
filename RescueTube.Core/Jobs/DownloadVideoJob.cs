@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using Hangfire;
-using MediatR;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,11 +9,12 @@ using Microsoft.Extensions.Options;
 using RescueTube.Core.Constants.DataFetches;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
+using RescueTube.Core.DataFetches;
 using RescueTube.Core.Jobs.Filters;
-using RescueTube.Core.Mediator;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
+using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Jobs;
 
@@ -25,10 +26,10 @@ public class DownloadVideoJob
     private readonly IServiceProvider _serviceProvider;
     private readonly TimeProvider _timeProvider;
     private readonly AppPaths _appPaths;
-    private readonly IMediator _mediator;
     private readonly ServiceRegistry _serviceRegistry;
+    private readonly DataFetchService _dataFetchService;
 
-    public DownloadVideoJob(ILogger<DownloadVideoJob> logger, StorageLimitService storageLimitService, IDataUow dataUow, IServiceProvider serviceProvider, TimeProvider timeProvider, AppPaths appPaths, IMediator mediator, IOptions<ServiceRegistry> serviceRegistry)
+    public DownloadVideoJob(ILogger<DownloadVideoJob> logger, StorageLimitService storageLimitService, IDataUow dataUow, IServiceProvider serviceProvider, TimeProvider timeProvider, AppPaths appPaths, IOptions<ServiceRegistry> serviceRegistry, DataFetchService dataFetchService)
     {
         _logger = logger;
         _storageLimitService = storageLimitService;
@@ -36,7 +37,7 @@ public class DownloadVideoJob
         _serviceProvider = serviceProvider;
         _timeProvider = timeProvider;
         _appPaths = appPaths;
-        _mediator = mediator;
+        _dataFetchService = dataFetchService;
         _serviceRegistry = serviceRegistry.Value;
     }
 
@@ -77,12 +78,12 @@ public class DownloadVideoJob
         var video = await _dataUow.Ctx.Videos
             .Where(v => supportedPlatforms.Contains(v.Platform))
             .Where(v => v.VideoFiles!.Count == 0)
-            .Where(v => v.DataFetches!
-                .Where(d =>
-                    d.Type == DataFetchTypes.VideoFileDownload)
-                .OrderByDescending(d => d.OccurredAt)
+            .Where(v => _dataUow.Ctx.DataFetches
+                .Where(d => _dataUow.DataFetches.IsVideoDataFetch.Invoke(d, v))
+                .Where(d => d.Type == DataFetchTypes.VideoFileDownload)
+                .OrderByDescending(d => d.StartedAt)
                 .Take(3)
-                .Count(d => !d.Success) < 3)
+                .Count(d => d.Status != DataFetchStatus.Succeeded) < 3)
             .Where(v => !downloadingVideoIds.Contains(v.Id))
             .Include(v => v.VideoFiles)
             .OrderByDescending(v => v.ArchivalSettings.DownloadPriority)
@@ -106,30 +107,29 @@ public class DownloadVideoJob
 
     private async Task DownloadVideoAsync(Video video, CancellationToken ct)
     {
+        var platformVideoDownloadService = _serviceProvider.GetRequiredKeyedService<IPlatformVideoDownloadService>(video.Platform);
+        if (platformVideoDownloadService.IsLikelyThrottled())
+        {
+            _logger.LogInformation("Skipping video download due to likely throttling");
+            return;
+        }
+
+        var dataFetchDefinition = platformVideoDownloadService.DataFetchDefinition;
+
+        await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(dataFetchDefinition, video, ct);
+        dataFetchScope.ThrowIfAlreadyFetching();
+
         try
         {
-            var platformVideoDownloadService = _serviceProvider.GetRequiredKeyedService<IPlatformVideoDownloadService>(video.Platform);
-            if (platformVideoDownloadService.IsLikelyThrottled())
-            {
-                _logger.LogInformation("Skipping video download due to likely throttling");
-                return;
-            }
+            var dataFetch = dataFetchScope.DataFetch;
 
-            var downloadTime = _timeProvider.GetUtcNow();
+            var downloadTime = dataFetch.StartedAt;
             try
             {
                 var videoFilePath = await platformVideoDownloadService.DownloadVideoAsync(video, ct);
 
-                _dataUow.Ctx.DataFetches.Add(new DataFetch
-                {
-                    Video = video,
-                    VideoId = video.Id,
-                    OccurredAt = downloadTime,
-                    Success = true,
-                    Type = platformVideoDownloadService.DataFetchDefinition.Type,
-                    Source = platformVideoDownloadService.DataFetchDefinition.Source,
-                    ShouldAffectValidity = false,
-                });
+                _dataFetchService.CompleteDataFetch(dataFetch);
+                _dataUow.Ctx.DataFetchResults.Add(new DataFetchResult { Video = video, DataFetch = dataFetch });
 
                 foreach (var videoFile in video.VideoFiles.AssertNotNull()
                              .Where(vf => vf.ValidUntil is null || vf.ValidUntil > downloadTime))
@@ -148,15 +148,9 @@ public class DownloadVideoJob
             }
             catch (Exception e)
             {
-                await _mediator.Send(new AddFailedDataFetchRequest
-                {
-                    VideoId = video.Id,
-                    OccurredAt = downloadTime,
-                    Message = e.Message,
-                    Type = platformVideoDownloadService.DataFetchDefinition.Type,
-                    Source = platformVideoDownloadService.DataFetchDefinition.Source,
-                    ShouldAffectValidity = false,
-                }, ct);
+                await _dataFetchService.UpdateDataFetchStatusAsync(dataFetch, DataFetchStatus.Failed,
+                    message: e.ToString());
+                return;
             }
 
             await _dataUow.SaveChangesAsync(CancellationToken.None); // Probably don't want to allow cancellation here because the video file is already downloaded

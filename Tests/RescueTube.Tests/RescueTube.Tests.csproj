@@ -9,12 +9,19 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.7.0" />
-    <PackageReference Include="TUnit" Version="0.25.21" />
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <PackageReference Include="NSubstitute.Analyzers.CSharp" Version="1.0.17">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.7.0" />
+    <PackageReference Include="TUnit" Version="0.67.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\RescueTube.Core\RescueTube.Core.csproj" />
     <ProjectReference Include="..\..\RescueTube.DAL.EF.Postgres\RescueTube.DAL.EF.Postgres.csproj" />
+    <ProjectReference Include="..\..\RescueTube.YouTube\RescueTube.YouTube.csproj" />
   </ItemGroup>
 
 </Project>

@@ -2,7 +2,6 @@ using System.Linq.Expressions;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
-using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 using RescueTube.YouTube.Services;
 
@@ -40,9 +39,6 @@ public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author>, 
             return;
         }
 
-        using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeServices.AuthorService.TryUpdateWithYouTubeExplodeDataAsync(entityId, ct);
-        await DataUow.SaveChangesAsync(ct);
-        transaction.Complete();
     }
 }

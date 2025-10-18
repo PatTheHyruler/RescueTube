@@ -18,18 +18,6 @@ public static class YouTubeExplodeExtensions
             PrivacyStatusOnPlatform = EPrivacyStatus.Public,
 
             AddedToArchiveAt = DateTimeOffset.UtcNow,
-
-            DataFetches = new List<DataFetch>
-            {
-                new()
-                {
-                    Source = YouTubeConstants.FetchTypes.YtDlp.Source,
-                    Type = YouTubeConstants.FetchTypes.YouTubeExplode.Channel,
-                    OccurredAt = DateTimeOffset.UtcNow,
-                    ShouldAffectValidity = true,
-                    Success = true,
-                },
-            },
         };
     }
 }

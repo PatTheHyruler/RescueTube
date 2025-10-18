@@ -10,6 +10,7 @@ using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.WebApi.ApiModels;
 using RescueTube.WebApi.ApiModels.Mappers;
+using RescueTube.WebApi.Endpoints.Common;
 using RescueTube.WebApi.Utils;
 
 namespace RescueTube.WebApi.Endpoints;
@@ -33,6 +34,9 @@ public static class VideoEndpoints
         videosGroup.MapPatch("archival-settings/bulk", UpsertVideoArchivalSettingsBulkAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
+
+        videosGroup.MapGet("{platform}/{idOnPlatform}", PlatformEntityEndpoints<Video>.GetIdByPlatformIdAsync)
+            .MapToApiVersion(1);
 
         videosGroup.MapPost("{videoId:guid}/enqueue-download", EnqueueManualVideoDownloadAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))

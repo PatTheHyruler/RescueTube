@@ -7,6 +7,7 @@ using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.WebApi.ApiModels;
 using RescueTube.WebApi.ApiModels.Mappers;
+using RescueTube.WebApi.Endpoints.Common;
 using RescueTube.WebApi.Utils;
 
 namespace RescueTube.WebApi.Endpoints;
@@ -27,6 +28,9 @@ public static class AuthorEndpoints
         authorsGroup.MapPut("{authorId:guid}/archival-settings", UpsertAuthorArchivalSettingsAsync)
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
+
+        authorsGroup.MapGet("{platform}/{idOnPlatform}", PlatformEntityEndpoints<Author>.GetIdByPlatformIdAsync)
+            .MapToApiVersion(1);
     }
 
     private static async Task<Results<Ok<AuthorSimpleDtoV1>, NotFound<ErrorResponseDto>>> GetAuthorAsync(

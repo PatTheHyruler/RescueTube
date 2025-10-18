@@ -17,13 +17,15 @@ public class SubmissionService
     private readonly IEnumerable<IPlatformSubmissionHandler> _submissionHandlers;
     private readonly ILogger<SubmissionService> _logger;
     private readonly IMediator _mediator;
+    private readonly TimeProvider _timeProvider;
 
-    public SubmissionService(AppDbContext dbContext, IEnumerable<IPlatformSubmissionHandler> submissionHandlers, ILogger<SubmissionService> logger, IMediator mediator)
+    public SubmissionService(AppDbContext dbContext, IEnumerable<IPlatformSubmissionHandler> submissionHandlers, ILogger<SubmissionService> logger, IMediator mediator, TimeProvider timeProvider)
     {
         _dbContext = dbContext;
         _submissionHandlers = submissionHandlers;
         _logger = logger;
         _mediator = mediator;
+        _timeProvider = timeProvider;
     }
 
     /// <exception cref="UnrecognizedUrlException">URL was not recognized and can't be archived.</exception>
@@ -84,13 +86,8 @@ public class SubmissionService
 
         await submissionHandler.HandleSubmissionAsync(submission, ct);
 
-        submission.CompletedAt = DateTimeOffset.UtcNow;
+        submission.CompletedAt = _timeProvider.GetUtcNow();
 
-        await _mediator.Publish(new SubmissionHandledEvent
-        {
-            SubmissionId = submissionId,
-            Platform = submission.Platform,
-            EntityType = submission.EntityType,
-        }, ct);
+        await _dbContext.SaveChangesAsync(ct);
     }
 }

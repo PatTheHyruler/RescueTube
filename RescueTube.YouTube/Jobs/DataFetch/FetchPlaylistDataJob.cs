@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
-using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.YouTube.Jobs.DataFetch;
@@ -29,9 +28,7 @@ public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist>, IEntityDat
 
     public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
-        using var transaction = TransactionUtils.NewTransactionScope();
         await _youTubeServices.PlaylistService.UpdatePlaylistAsync(entityId, ct);
         await DataUow.SaveChangesAsync(ct);
-        transaction.Complete();
     }
 }

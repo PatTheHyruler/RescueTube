@@ -106,13 +106,6 @@ public class EntityMapper
         Platform = pl.Platform,
         IdOnPlatform = pl.IdOnPlatform,
 
-        LastSuccessfulFetch = pl.DataFetches!
-            .OrderByDescending(x => x.OccurredAt)
-            .FirstOrDefault(x => x.Success && x.ShouldAffectValidity), // TODO: Make sure these actually compile to SQL
-        LastUnSuccessfulFetch = pl.DataFetches!
-            .OrderByDescending(x => x.OccurredAt)
-            .FirstOrDefault(x => !x.Success && x.ShouldAffectValidity), // TODO: Make sure these actually compile to SQL
-
         AddedToArchiveAt = pl.AddedToArchiveAt,
         CreatedAt = pl.CreatedAt,
         UpdatedAt = pl.UpdatedAt,
@@ -160,12 +153,6 @@ public class EntityMapper
         Platform = comment.Platform,
         IdOnPlatform = comment.IdOnPlatform,
         PrivacyStatusOnPlatform = comment.PrivacyStatusOnPlatform,
-        LastSuccessfulFetch = comment.DataFetches!
-            .OrderByDescending(x => x.OccurredAt)
-            .FirstOrDefault(x => x.Success && x.ShouldAffectValidity), // TODO: Make sure these actually compile to SQL
-        LastUnSuccessfulFetch = comment.DataFetches!
-            .OrderByDescending(x => x.OccurredAt)
-            .FirstOrDefault(x => !x.Success && x.ShouldAffectValidity), // TODO: Make sure these actually compile to SQL
         AddedToArchiveAt = comment.AddedToArchiveAt,
         Author = ToAuthorSimple.Invoke(comment.Author!),
         ConversationReplies = depth < 1

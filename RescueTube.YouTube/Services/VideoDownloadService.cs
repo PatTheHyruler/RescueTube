@@ -67,7 +67,7 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
                 options.Cookies = cookieFilePath;
             }
         }
-        var result = await _youTubeServices.YoutubeDl.RunVideoDownload(
+        var result = await _youTubeServices.YoutubeDl.RunVideoDownloadAsync(
             url: Url.ToVideoUrl(video.IdOnPlatform),
             ct: ct,
             overrideOptions: options,
@@ -77,7 +77,7 @@ public partial class VideoDownloadService : BaseYouTubeService, IPlatformVideoDo
             downloadSpeedMonitor.AverageDownloadSpeed);
         LatestThrottlingAssessment = new ThrottlingAssessmentWithValidity(throttlingAssessment, DateTimeOffset.UtcNow);
 
-        if (!result.Success)
+        if (result is null || !result.Success)
         {
             throw new ApplicationException($"YouTube video download failed: {result.ErrorOutputToString()}");
         }

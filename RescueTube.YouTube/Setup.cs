@@ -8,15 +8,12 @@ using RescueTube.Core.Contracts;
 using RescueTube.Core.DataFetches;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Services;
-using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
-using RescueTube.YouTube.EventHandlers;
 using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Services;
-using YoutubeDLSharp;
-using YouTubeCommentService = RescueTube.YouTube.Services.CommentService;
+using RescueTube.YouTube.Services.External;
 
 namespace RescueTube.YouTube;
 
@@ -49,7 +46,6 @@ public static class Setup
         services.AddPlatformVideoDownloadService<VideoDownloadService>(EPlatform.YouTube);
         services.AddScoped<PlaylistService>();
         services.AddScoped<AuthorService>();
-        services.AddScoped<YouTubeCommentService>();
         services.AddScoped<CookieService>();
 
         services.AddScoped<IThumbnailComparer, ThumbnailComparer>();
@@ -57,23 +53,10 @@ public static class Setup
         services.AddScoped<IPlatformSubmissionHandler, SubmitService>();
         services.AddScoped<IPlatformPresentationHandler, PresentationHandler>();
 
-        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<VideoAddedCommentFetchHandler>(); });
+        services.AddMediatR(cfg => { cfg.RegisterServicesFromAssemblyContaining<IYouTubeAssemblyMarker>(); });
 
-        services.AddScoped(s =>
-        {
-            var youTubeOptions = s.GetService<IOptions<YouTubeOptions>>()?.Value;
-            var binariesDirectory = GetBinariesDirectory(youTubeOptions?.BinariesDirectory);
-
-            return new YoutubeDL
-            {
-                OutputFolder = s.GetRequiredService<AppPaths>().GetVideosDirectory(EPlatform.YouTube),
-                RestrictFilenames = true,
-                YoutubeDLPath = Path.Combine(binariesDirectory, YoutubeDLSharp.Utils.YtDlpBinaryName),
-                FFmpegPath = Path.Combine(binariesDirectory, YoutubeDLSharp.Utils.FfmpegBinaryName),
-                // Can't set ffprobe path??
-                OverwriteFiles = false,
-            };
-        });
+        services.AddScoped<IYouTubeDlClient, YouTubeDlClient>();
+        services.AddScoped<IYouTubeExplodeClient, YouTubeExplodeClient>();
 
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
         services.RegisterYouTubeRecurringJobs();
@@ -114,15 +97,15 @@ public static class Setup
 
         if (!overwriteExistingBinaries)
         {
-            var ytdl = services.GetRequiredService<YoutubeDL>();
-            if (Path.Exists(ytdl.YoutubeDLPath))
+            var ytdl = services.GetRequiredService<IYouTubeDlClient>();
+            if (Path.Exists(ytdl.YouTubeDlPath))
             {
-                await ytdl.RunUpdate();
+                await ytdl.RunUpdateAsync();
             }
         }
     }
 
-    private static string GetBinariesDirectory(string? binariesDirectory)
+    public static string GetBinariesDirectory(string? binariesDirectory)
     {
         if (binariesDirectory != null)
         {

@@ -53,8 +53,6 @@ public class Video : BaseIdDbEntity, IMainArchiveEntity
 
     public VideoArchivalSettings ArchivalSettings { get; set; } = VideoArchivalSettings.CreateDefaultArchivedVideoSettings();
 
-    public ICollection<DataFetch>? DataFetches { get; set; }
-
     public ICollection<VideoAuthor>? VideoAuthors { get; set; }
     public ICollection<VideoCategory>? VideoCategories { get; set; }
     public ICollection<StatusChangeEvent>? StatusChangeEvents { get; set; }

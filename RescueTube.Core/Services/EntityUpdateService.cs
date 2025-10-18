@@ -16,13 +16,15 @@ public class EntityUpdateService
     private readonly IDataUow _dataUow;
     private readonly ILogger<EntityUpdateService> _logger;
     private readonly StatusChangeService _statusChangeService;
+    private readonly TimeProvider _timeProvider;
 
-    public EntityUpdateService(ILogger<EntityUpdateService> logger, IDataUow dataUow, AppDbContext dbCtx, StatusChangeService statusChangeService)
+    public EntityUpdateService(ILogger<EntityUpdateService> logger, IDataUow dataUow, AppDbContext dbCtx, StatusChangeService statusChangeService, TimeProvider timeProvider)
     {
         _logger = logger;
         _dataUow = dataUow;
         _dbCtx = dbCtx;
         _statusChangeService = statusChangeService;
+        _timeProvider = timeProvider;
     }
 
     public void UpdateVideo(Video video, Video newVideoData, bool isNew, EImageUpdateOptions imageUpdateOptions)
@@ -149,7 +151,7 @@ public class EntityUpdateService
     public void UpdateAuthor(Author author, Author newAuthorData, bool isNew, UpdateAuthorOptions options)
     {
         var changed = false;
-        var history = author.ToHistory(newAuthorData);
+        var history = author.ToHistory(_timeProvider.GetUtcNow());
 
         author.UserName = UpdateValueIgnoreNull(author.UserName, newAuthorData.UserName, ref changed);
         author.DisplayName = UpdateValueIgnoreNull(author.DisplayName, newAuthorData.DisplayName, ref changed);
@@ -322,7 +324,7 @@ public class EntityUpdateService
     public void UpdateComment(Comment comment, Comment newCommentData, bool isNew)
     {
         var changed = false;
-        var commentHistory = comment.ToHistory(newCommentData);
+        var commentHistory = comment.ToHistory(_timeProvider.GetUtcNow());
 
         comment.Content = UpdateValueIgnoreNull(comment.Content, newCommentData.Content, ref changed);
 
@@ -395,26 +397,6 @@ public class EntityUpdateService
         }
 
         entity.PrivacyStatusOnPlatform = newEntityData.PrivacyStatusOnPlatform ?? entity.PrivacyStatusOnPlatform;
-
-        if (newEntityData.DataFetches != null)
-        {
-            if (entity.DataFetches == null)
-            {
-                entity.DataFetches = newEntityData.DataFetches;
-                foreach (var dataFetch in newEntityData.DataFetches)
-                {
-                    _dbCtx.Add(dataFetch);
-                }
-            }
-            else
-            {
-                foreach (var dataFetch in newEntityData.DataFetches)
-                {
-                    entity.DataFetches.Add(dataFetch);
-                    _dbCtx.Add(dataFetch);
-                }
-            }
-        }
     }
 
     private static void UpdateChanged(ref bool changed, bool addition)

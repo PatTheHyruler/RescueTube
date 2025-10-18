@@ -42,7 +42,6 @@ public class UpdateImagesResolutionJob
     [Queue(JobQueues.LowerPriority)]
     public async Task UpdateAuthorImagesResolutionsAsync(Guid authorId, CancellationToken ct)
     {
-        using var transaction = TransactionUtils.NewTransactionScope();
         var images = _dataUow.Ctx.Images
             .Where(_dataUow.Images.ShouldAttemptResolutionUpdate)
             .Where(i => i.AuthorImages!.Any(ai => ai.AuthorId == authorId))
@@ -53,14 +52,12 @@ public class UpdateImagesResolutionJob
         }
 
         await _dataUow.SaveChangesAsync(ct);
-        transaction.Complete();
     }
 
     [SkipConcurrent("core:update-video-images-resolutions:{0}")]
     [Queue(JobQueues.LowerPriority)]
     public async Task UpdateVideoImagesResolutionsAsync(Guid videoId, CancellationToken ct)
     {
-        using var transaction = TransactionUtils.NewTransactionScope();
         var images = _dataUow.Ctx.Images
             .Where(_dataUow.Images.ShouldAttemptResolutionUpdate)
             .Where(i => i.VideoImages!.Any(vi => vi.VideoId == videoId))
@@ -71,16 +68,13 @@ public class UpdateImagesResolutionJob
         }
 
         await _dataUow.SaveChangesAsync(ct);
-        transaction.Complete();
     }
 
     [SkipConcurrent("core:update-image-resolution:{0}")]
     [Queue(JobQueues.LowerPriority)]
     public async Task UpdateResolutionAsync(Guid imageId, CancellationToken ct)
     {
-        using var transaction = TransactionUtils.NewTransactionScope();
         await _imageService.TryUpdateResolutionFromFileAsync(imageId, ct);
         await _dataUow.SaveChangesAsync(ct);
-        transaction.Complete();
     }
 }

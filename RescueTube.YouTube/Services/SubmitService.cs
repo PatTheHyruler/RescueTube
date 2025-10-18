@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
+using RescueTube.Core.DataFetches;
 using RescueTube.Core.Exceptions;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;
@@ -16,11 +17,13 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
 {
     private readonly AppDbContext _dbCtx;
     private readonly YouTubeServices _youTubeServices;
+    private readonly DataFetchService _dataFetchService;
 
-    public SubmitService(AppDbContext dbCtx, YouTubeServices youTubeServices)
+    public SubmitService(AppDbContext dbCtx, YouTubeServices youTubeServices, DataFetchService dataFetchService)
     {
         _dbCtx = dbCtx;
         _youTubeServices = youTubeServices;
+        _dataFetchService = dataFetchService;
     }
 
     public bool IsPlatformUrl(string url, [NotNullWhen(true)] out RecognizedPlatformUrl? recognizedPlatformUrl)
@@ -90,14 +93,27 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         var addedOrExistingAuthor = existingAuthor;
         if (addedOrExistingAuthor == null)
         {
+            await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
+                YouTubeConstants.DataFetches.YouTubeExplode.Channel, entityId: null, ct);
+            dataFetchScope.ThrowIfAlreadyFetching();
+
+            var dataFetch = dataFetchScope.DataFetch;
+
             var channel = await _youTubeServices.AuthorService.FetchYouTubeExplodeChannelAsync(idOnPlatform, idType, ct);
 
             if (channel is null)
             {
+                await _dataFetchService.UpdateDataFetchStatusAsync(dataFetch, DataFetchStatus.Failed,
+                    message: "Author not found on platform");
                 throw new ApplicationException("Author not found on platform");
             }
 
-            addedOrExistingAuthor = await _youTubeServices.AuthorService.AddOrGetAuthor(channel, ct);
+            _dataFetchService.CompleteDataFetch(dataFetch);
+
+            addedOrExistingAuthor = await _youTubeServices.AuthorService.AddOrGetAuthor(channel, dataFetch, ct);
+
+            dataFetch.AuthorId ??= addedOrExistingAuthor.Id;
+            dataFetch.Author ??= addedOrExistingAuthor;
         }
 
         if (addedOrExistingAuthor.ArchivalSettings == null)

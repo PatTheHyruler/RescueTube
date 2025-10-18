@@ -1,13 +1,13 @@
 ﻿using RescueTube.Core.Jobs.Filters;
-using YoutubeDLSharp;
+using RescueTube.YouTube.Services.External;
 
 namespace RescueTube.YouTube.Jobs;
 
 public class UpdateYtDlpJob
 {
-    private readonly YoutubeDL _youtubeDl;
+    private readonly IYouTubeDlClient _youtubeDl;
 
-    public UpdateYtDlpJob(YoutubeDL youtubeDl)
+    public UpdateYtDlpJob(IYouTubeDlClient youtubeDl)
     {
         _youtubeDl = youtubeDl;
     }
@@ -15,6 +15,6 @@ public class UpdateYtDlpJob
     [SkipConcurrent("yt:update-youtube-dl")]
     public async Task UpdateYouTubeDlAsync()
     {
-        await _youtubeDl.RunUpdate();
+        await _youtubeDl.RunUpdateAsync();
     }
 }

@@ -35,8 +35,6 @@ public class Author : BaseIdDbEntity, IMainArchiveEntity
     public Guid? ArchivalSettingsId { get; set; }
     public AuthorArchivalSettings? ArchivalSettings { get; set; }
 
-    public ICollection<DataFetch>? DataFetches { get; set; }
-
     [InverseProperty(nameof(Category.Creator))]
     public ICollection<Category>? CreatedCategories { get; set; }
     [InverseProperty(nameof(VideoCategory.AssignedBy))]

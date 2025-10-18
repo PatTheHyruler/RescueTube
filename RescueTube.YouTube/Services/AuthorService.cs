@@ -5,13 +5,14 @@ using RescueTube.Core.Data;
 using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.DataFetches;
 using RescueTube.Core.Events;
-using RescueTube.Core.Mediator;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
 using RescueTube.YouTube.Utils;
 using YoutubeDLSharp.Metadata;
+
+using YouTubeExplodeChannel = YoutubeExplode.Channels.Channel;
 
 namespace RescueTube.YouTube.Services;
 
@@ -21,19 +22,19 @@ public class AuthorService : BaseYouTubeService
     private readonly ILogger<AuthorService> _logger;
     private readonly EntityUpdateService _entityUpdateService;
     private readonly IMediator _mediator;
-    private readonly DataFetchContext _dataFetchContext;
     private readonly YouTubeServices _youTubeServices;
+    private readonly DataFetchService _dataFetchService;
 
     private readonly Dictionary<string, Author> _cachedAuthors = new();
 
-    public AuthorService(AppDbContext dbCtx, ILogger<AuthorService> logger, EntityUpdateService entityUpdateService, IMediator mediator, DataFetchContext dataFetchContext, YouTubeServices youTubeServices)
+    public AuthorService(AppDbContext dbCtx, ILogger<AuthorService> logger, EntityUpdateService entityUpdateService, IMediator mediator, YouTubeServices youTubeServices, DataFetchService dataFetchService)
     {
         _dbCtx = dbCtx;
         _logger = logger;
         _entityUpdateService = entityUpdateService;
         _mediator = mediator;
-        _dataFetchContext = dataFetchContext;
         _youTubeServices = youTubeServices;
+        _dataFetchService = dataFetchService;
     }
 
     /// <summary>
@@ -49,39 +50,38 @@ public class AuthorService : BaseYouTubeService
         var author = await _dbCtx.Authors
             .Where(a => a.Id == authorId)
             .Include(a => a.ArchivalSettings)
-            .Include(a => a.DataFetches)
             .Include(a => a.AuthorImages!)
             .ThenInclude(ai => ai.Image)
             .FirstAsync(ct);
 
-        using var fetchContext = _dataFetchContext.StartDataFetch(
-            dataFetchDefinition, author.IdOnPlatform, throwOnConflict: false);
-        if (fetchContext is null)
+        await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
+            dataFetchDefinition, author, ct);
+        if (dataFetchScope is null)
         {
             _logger.LogWarning("Channel videos data fetch for author {AuthorId} is already ongoing, skipping duplicate fetch", authorId);
             return;
         }
 
+        var dataFetch = dataFetchScope.DataFetch;
+
         _logger.LogInformation("Fetching videos for author {AuthorId}", authorId);
 
-        var authorResult = await _youTubeServices.YoutubeDl.RunVideoDataFetch(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
+        var authorResult = await _youTubeServices.YoutubeDl.RunVideoDataFetchAsync(Url.ToAuthorUrl(author.IdOnPlatform), ct: ct);
 
         _logger.LogInformation("Fetched videos for author {AuthorId}", authorId);
 
         if (authorResult is not { Success: true, Data.Entries: not null, Data.Entries.Length: > 0 })
         {
             _logger.LogError("Failed to fetch videos for author {AuthorId}", authorId);
-            await _mediator.Send(new AddFailedDataFetchRequest
-            {
-                Type = dataFetchDefinition.Type,
-                Source = dataFetchDefinition.Source,
-                ShouldAffectValidity = false,
-                AuthorId = authorId,
-            }, ct);
+            await _dataFetchService.UpdateDataFetchStatusAsync(dataFetch, DataFetchStatus.Failed,
+                message: authorResult?.ErrorOutputToString());
             return;
         }
 
-        var domainAuthorData = authorResult.Data.ToDomainAuthorFromChannel(dataFetchDefinition.Type);
+        _dataFetchService.CompleteDataFetch(dataFetch);
+        _dbCtx.DataFetchResults.Add(new DataFetchResult { Author = author, DataFetch = dataFetch });
+
+        var domainAuthorData = authorResult.Data.ToDomainAuthorFromChannel();
         _entityUpdateService.UpdateAuthor(author, domainAuthorData, false,
             new EntityUpdateService.UpdateAuthorOptions
             {
@@ -89,23 +89,25 @@ public class AuthorService : BaseYouTubeService
             });
 
         await _youTubeServices.VideoService.AddOrUpdateVideosFromAuthorVideosFetchAsync(
-            authorResult.Data, author, dataFetchDefinition.Type, ct);
+            authorResult.Data, author, dataFetch, ct);
+
+        await _dbCtx.SaveChangesAsync(ct);
     }
 
-    public async Task<Author> AddOrGetAuthor(YoutubeExplode.Channels.Channel channel, CancellationToken ct = default)
+    public async Task<Author> AddOrGetAuthor(YouTubeExplodeChannel channel, DataFetch dataFetch, CancellationToken ct = default)
     {
-        return await AddOrGetAuthor(channel.Id, channel.ToDomainAuthor, ct);
+        return await AddOrGetAuthor(channel.Id, channel.ToDomainAuthor, dataFetch, ct);
     }
 
-    public async Task<Author> AddOrGetAuthor(VideoData videoData, string fetchType, CancellationToken ct = default)
+    public async Task<Author> AddOrGetAuthor(VideoData videoData, DataFetch dataFetch, CancellationToken ct = default)
     {
-        return await AddOrGetAuthor(videoData.ChannelID, () => videoData.ToDomainAuthorFromVideo(fetchType), ct);
+        return await AddOrGetAuthor(videoData.ChannelID, videoData.ToDomainAuthorFromVideo, dataFetch, ct);
     }
 
-    public async Task AddAndSetAuthor(Video video, VideoData videoData, string fetchType,
+    public async Task AddAndSetAuthor(Video video, VideoData videoData, DataFetch dataFetch,
         CancellationToken ct = default)
     {
-        var author = await AddOrGetAuthor(videoData, fetchType, ct);
+        var author = await AddOrGetAuthor(videoData, dataFetch, ct);
         await AddAndSetAuthor(video, author, ct);
     }
 
@@ -136,12 +138,13 @@ public class AuthorService : BaseYouTubeService
         }
     }
 
-    private async Task<Author> AddOrGetAuthor(string id, Func<Author> newAuthorFunc, CancellationToken ct = default)
+    private async Task<Author> AddOrGetAuthor(string id, Func<Author> newAuthorFunc, DataFetch dataFetch, CancellationToken ct = default)
     {
-        return (await AddOrGetAuthors([new AuthorFetchArg(id, newAuthorFunc)], ct)).First();
+        return (await AddOrGetAuthors([new AuthorFetchArg(id, newAuthorFunc)], dataFetch, ct)).First();
     }
 
     internal async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs,
+        DataFetch dataFetch,
         CancellationToken ct = default)
     {
         var authors = new List<Author>();
@@ -176,6 +179,9 @@ public class AuthorService : BaseYouTubeService
                 var author = arg.NewAuthorFunc();
 
                 _dbCtx.Authors.Add(author);
+
+                _dbCtx.DataFetchResults.Add(new DataFetchResult { Author = author, DataFetch = dataFetch });
+
                 await _mediator.Publish(new AuthorAddedEvent(
                         author.Id, EPlatform.YouTube, author.IdOnPlatform), ct);
                 _cachedAuthors.TryAdd(arg.AuthorIdOnPlatform, author);
@@ -186,7 +192,7 @@ public class AuthorService : BaseYouTubeService
         return authors;
     }
 
-    public async Task<YoutubeExplode.Channels.Channel?> FetchYouTubeExplodeChannelAsync(
+    public async Task<YouTubeExplodeChannel?> FetchYouTubeExplodeChannelAsync(
         string idOnPlatform, string? idType, CancellationToken ct = default)
     {
         var channel = idType switch
@@ -206,41 +212,31 @@ public class AuthorService : BaseYouTubeService
             .Include(a => a.AuthorImages!)
             .ThenInclude(ai => ai.Image!)
             .FirstAsync(cancellationToken: ct);
-        using var _ = _dataFetchContext.StartDataFetch(
-            YouTubeConstants.DataFetches.YouTubeExplode.Channel, author.IdOnPlatform);
-        var newAuthorData = await TryFetchExtraYouTubeExplodeAuthorDataAsync(author.IdOnPlatform, ct);
-        _entityUpdateService.UpdateAuthor(author, newAuthorData, false, new()
-        {
-            ImageUpdateOptions = EntityUpdateService.EImageUpdateOptions.OnlyAdd,
-        });
-    }
+        var dataFetchDefinition = YouTubeConstants.DataFetches.YouTubeExplode.Channel;
+        await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
+            dataFetchDefinition, author, ct);
+        dataFetchScope.ThrowIfAlreadyFetching();
 
-    private async Task<Author> TryFetchExtraYouTubeExplodeAuthorDataAsync(string idOnPlatform, CancellationToken ct)
-    {
+        var dataFetch = dataFetchScope.DataFetch;
+
         try
         {
-            return await FetchExtraYouTubeExplodeAuthorDataAsync(idOnPlatform, ct);
+            var newAuthorData = await FetchExtraYouTubeExplodeAuthorDataAsync(author.IdOnPlatform, ct);
+
+            _dataFetchService.CompleteDataFetch(dataFetch);
+            _dbCtx.DataFetchResults.Add(new DataFetchResult { Author = author, DataFetch = dataFetch });
+
+            _entityUpdateService.UpdateAuthor(author, newAuthorData, isNew: false, new()
+            {
+                ImageUpdateOptions = EntityUpdateService.EImageUpdateOptions.OnlyAdd,
+            });
+
+            await _dbCtx.SaveChangesAsync(ct);
         }
         catch (Exception e)
         {
-            LastYtExplodeRateLimitHit = DateTimeOffset.UtcNow;
-            _logger.LogError(e, "YouTubeExplode data fetch failed for {Platform} author {AuthorIdOnPlatform}",
-                EPlatform.YouTube, idOnPlatform);
-            return new Author
-            {
-                IdOnPlatform = idOnPlatform,
-                DataFetches =
-                [
-                    new DataFetch
-                    {
-                        OccurredAt = DateTimeOffset.UtcNow,
-                        ShouldAffectValidity = true,
-                        Source = YouTubeConstants.FetchTypes.YouTubeExplode.Source,
-                        Type = YouTubeConstants.FetchTypes.YouTubeExplode.Channel,
-                        Success = false,
-                    },
-                ],
-            };
+            _logger.LogError("Failed to fetch videos for author {AuthorId}", authorId);
+            await _dataFetchService.UpdateDataFetchStatusAsync(dataFetch, DataFetchStatus.Failed, message: e.ToString());
         }
     }
 
@@ -268,17 +264,6 @@ public class AuthorService : BaseYouTubeService
                 })
                 .Select(ImageUtils.TrySetImageType)
                 .ToList(),
-            DataFetches =
-            [
-                new DataFetch
-                {
-                    OccurredAt = DateTimeOffset.UtcNow,
-                    ShouldAffectValidity = true,
-                    Source = YouTubeConstants.FetchTypes.YouTubeExplode.Source,
-                    Type = YouTubeConstants.FetchTypes.YouTubeExplode.Channel,
-                    Success = true,
-                }
-            ],
         };
     }
 }

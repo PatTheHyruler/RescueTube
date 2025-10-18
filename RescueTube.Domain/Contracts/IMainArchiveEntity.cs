@@ -1,8 +1,7 @@
 namespace RescueTube.Domain.Contracts;
 
 public interface IMainArchiveEntity :
-    IIdDatabaseEntity, IPlatformEntity, IPrivacyEntity,
-    IFetchable, IArchiveDateEntity
+    IIdDatabaseEntity, IPlatformEntity, IPrivacyEntity, IArchiveDateEntity
 {
     public DateTimeOffset? CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }

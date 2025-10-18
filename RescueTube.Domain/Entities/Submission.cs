@@ -7,12 +7,12 @@ namespace RescueTube.Domain.Entities;
 
 public class Submission : BaseIdDbEntity
 {
-    public required EPlatform Platform { get; set; }
-    public required string IdOnPlatform { get; set; }
-    public string? IdType { get; set; }
-    public required EEntityType EntityType { get; set; }
+    public required EPlatform Platform { get; init; }
+    public required string IdOnPlatform { get; init; }
+    public string? IdType { get; init; }
+    public required EEntityType EntityType { get; init; }
 
-    public string? Url { get; set; }
+    public string? Url { get; init; }
 
     public Guid AddedById { get; set; }
     public User? AddedBy { get; set; }

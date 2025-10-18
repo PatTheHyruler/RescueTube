@@ -9,6 +9,7 @@ using RescueTube.Core.DataFetches;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Jobs;
 using RescueTube.Core.Utils.Pagination;
+using RescueTube.Domain.Enums;
 using RescueTube.WebApi.ApiModels;
 using RescueTube.WebApi.ApiModels.Mappers;
 
@@ -41,14 +42,18 @@ public static class DataFetchEndpoints
         var query = dataUow.Ctx.DataFetches
             .Where(x => request.Source == null || x.Source == request.Source)
             .Where(x => request.Type == null || x.Type == request.Type)
-            .Where(x => request.OccurredAtFrom == null || x.OccurredAt >= request.OccurredAtFrom)
-            .Where(x => request.OccurredAtTo == null || x.OccurredAt <= request.OccurredAtTo)
-            .Where(x => request.Success == null || x.Success == request.Success);
+            .Where(x => request.StartedAtFrom == null || x.StartedAt >= request.StartedAtFrom)
+            .Where(x => request.StartedAtTo == null || x.StartedAt <= request.StartedAtTo)
+            .Where(x => request.Statuses == null || request.Statuses.Length == 0 ||
+                        request.Statuses.Contains(x.Status))
+            .Where(x => request.Success == null || (request.Success.Value
+                ? x.Status == DataFetchStatus.Succeeded
+                : x.Status != DataFetchStatus.Succeeded));
 
         var orderedQuery = (request.OrderByDescending ?? true) switch
         {
-            true => query.OrderByDescending(x => x.OccurredAt),
-            false => query.OrderBy(x => x.OccurredAt),
+            true => query.OrderByDescending(x => x.StartedAt),
+            false => query.OrderBy(x => x.StartedAt),
         };
         var dataFetches = await orderedQuery
             .Paginate(request)

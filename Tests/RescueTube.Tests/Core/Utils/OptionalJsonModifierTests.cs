@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using RescueTube.Core.Utils;
 
-namespace RescueTube.Core.Tests.Utils;
+namespace RescueTube.Tests.Core.Utils;
 
 public class OptionalJsonModifierTests
 {

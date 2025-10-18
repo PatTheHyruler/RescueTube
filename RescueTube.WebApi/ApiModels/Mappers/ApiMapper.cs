@@ -97,8 +97,6 @@ public static class ApiMapper
             Platform = src.Platform,
             IdOnPlatform = src.IdOnPlatform,
             PrivacyStatusOnPlatform = src.PrivacyStatusOnPlatform,
-            LastSuccessfulFetch = src.LastSuccessfulFetch?.MapDataFetchDtoV1(),
-            LastUnSuccessfulFetch = src.LastUnSuccessfulFetch?.MapDataFetchDtoV1(),
             AddedToArchiveAt = src.AddedToArchiveAt,
             Author = src.Author.MapAuthorSimpleDtoV1(baseUrl),
             ConversationReplies = src.ConversationReplies?
@@ -121,11 +119,12 @@ public static class ApiMapper
     public static DataFetchDtoV1 MapDataFetchDtoV1(this DataFetch src) => new()
     {
         Id = src.Id,
-        OccurredAt = src.OccurredAt,
-        ShouldAffectValidity = src.ShouldAffectValidity,
+        StartedAt = src.StartedAt,
+        StatusUpdatedAt = src.StatusUpdatedAt,
         Source = src.Source,
-        Success = src.Success,
+        Status = src.Status,
         Type = src.Type,
+        Platform = src.Platform,
 
         VideoId = src.VideoId,
         AuthorId = src.AuthorId,

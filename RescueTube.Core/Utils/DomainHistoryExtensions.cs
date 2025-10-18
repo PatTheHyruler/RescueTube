@@ -5,9 +5,9 @@ namespace RescueTube.Core.Utils;
 
 public static class DomainHistoryExtensions
 {
-    public static CommentHistory ToHistory(this Comment comment, Comment newComment)
+    public static CommentHistory ToHistory(this Comment comment, DateTimeOffset currentTime)
     {
-        var history = comment.ToHistoryBase<Comment, CommentHistory>(newComment);
+        var history = comment.ToHistoryBase<Comment, CommentHistory>(currentTime);
         history.LastOfficialValidAt = GetMaxDateTimeOffset(comment.UpdatedAt, comment.CreatedAt);
 
         history.Content = comment.Content;
@@ -18,9 +18,9 @@ public static class DomainHistoryExtensions
         return history;
     }
 
-    public static AuthorHistory ToHistory(this Author author, Author newAuthor)
+    public static AuthorHistory ToHistory(this Author author, DateTimeOffset currentTime)
     {
-        var history = author.ToHistoryBase<Author, AuthorHistory>(newAuthor);
+        var history = author.ToHistoryBase<Author, AuthorHistory>(currentTime);
         history.LastOfficialValidAt = GetMaxDateTimeOffset(author.UpdatedAt, author.CreatedAt);
 
         history.UserName = author.UserName;
@@ -31,25 +31,16 @@ public static class DomainHistoryExtensions
         return history;
     }
 
-    private static THistoryEntity ToHistoryBase<TEntity, THistoryEntity>(this TEntity entity,
-        TEntity newEntity)
+    private static THistoryEntity ToHistoryBase<TEntity, THistoryEntity>(this TEntity entity, DateTimeOffset currentTime)
         where THistoryEntity : IHistoryEntity<TEntity>, new()
-        where TEntity : IIdDatabaseEntity, IFetchable
+        where TEntity : IIdDatabaseEntity
     {
         var history = new THistoryEntity
         {
             CurrentId = entity.Id,
             Current = entity,
-            FirstNotValidAt = newEntity.DataFetches?
-                .Where(x => x is { ShouldAffectValidity: true, Success: true })
-                .Select(x => x.OccurredAt)
-                .DefaultIfEmpty()
-                .Min() ?? DateTimeOffset.UtcNow,
-            LastValidAt = entity.DataFetches?
-                .Where(x => x is { ShouldAffectValidity: true, Success: true })
-                .Select(x => x.OccurredAt)
-                .DefaultIfEmpty()
-                .Max() ?? DateTimeOffset.UtcNow,
+            FirstNotValidAt = currentTime, // TODO: History rework
+            LastValidAt = currentTime, // TODO: History rework
         };
 
         return history;
