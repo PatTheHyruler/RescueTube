@@ -21,6 +21,7 @@ jobs:
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
           cache: true
+          cache-dependency-path: **/packages.lock.json
       
       - name: Run tests
         run: dotnet test -c Release -- --timeout 2m
