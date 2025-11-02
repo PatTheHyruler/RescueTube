@@ -1,20 +1,24 @@
 using System.Linq.Expressions;
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Domain.Entities;
 using RescueTube.YouTube.Services;
 
 namespace RescueTube.YouTube.Jobs.DataFetch;
 
-public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author>, IEntityDataFetchJobWithDefinition
+public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author, FetchYouTubeExplodeAuthorDataJob>, IEntityDataFetchJobWithDefinition, IJob
 {
+    public static string RecurringJobId => "yt:fetch-yt-explode-author-data";
+
     private readonly YouTubeServices _youTubeServices;
     private readonly TimeProvider _timeProvider;
 
     public FetchYouTubeExplodeAuthorDataJob(YouTubeServices youTubeServices, IDataUow dataUow,
-        ILogger<FetchYouTubeExplodeAuthorDataJob> logger, TimeProvider timeProvider)
-        : base(dataUow, logger, JobDefinition.DataFetchDefinition)
+        ILogger<FetchYouTubeExplodeAuthorDataJob> logger, TimeProvider timeProvider, IBackgroundJobClientV2 backgroundJobClient)
+        : base(dataUow, logger, JobDefinition.DataFetchDefinition, backgroundJobClient)
     {
         _youTubeServices = youTubeServices;
         _timeProvider = timeProvider;

@@ -1,13 +1,17 @@
 ﻿using Hangfire;
+using Hangfire.Server;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Utils;
 
 namespace RescueTube.Core.Jobs;
 
-public class EnqueueSubmissionsJob
+public class EnqueueSubmissionsJob : IJob
 {
+    public static string RecurringJobId => "core:enqueue-submissions";
+
     private readonly IBackgroundJobClient _backgroundJobClient;
     private readonly AppDbContext _dbContext;
 
@@ -19,7 +23,7 @@ public class EnqueueSubmissionsJob
 
     [RescheduleConcurrentExecution("enqueue-submissions")]
     [Queue(JobQueues.HighPriority)]
-    public async Task RunAsync(CancellationToken ct)
+    public async Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
         using var transaction = TransactionUtils.NewTransactionScope();
         var submissions = _dbContext.Submissions

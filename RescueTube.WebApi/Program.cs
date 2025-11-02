@@ -13,7 +13,6 @@ using RescueTube.Core;
 using RescueTube.Core.Data;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Jobs;
-using RescueTube.Core.Jobs.Registration;
 using RescueTube.Core.Utils;
 using RescueTube.DAL.EF.MigrationUtils;
 using RescueTube.DAL.EF.Postgres;
@@ -143,7 +142,6 @@ try
 
     await app.SeedIdentityAsync();
     await app.SetupYouTubeAsync();
-    await app.ClearRecurringJobsAsync();
 
     app.UseHttpsRedirection();
 
@@ -226,7 +224,6 @@ try
     baseVersionedApi.MapAuthorEndpoints();
     baseVersionedApi.MapAccountEndpoints();
     baseVersionedApi.MapCommentEndpoints();
-    baseVersionedApi.MapJobEndpoints();
     baseVersionedApi.MapOptionsEndpoints();
     baseVersionedApi.MapStatisticsEndpoints();
     baseVersionedApi.MapSubmissionEndpoints();

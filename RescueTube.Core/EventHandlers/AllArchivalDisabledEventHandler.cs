@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Constants;
 using RescueTube.Core.Events;
-using RescueTube.Core.Jobs.Registration;
+using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.EventHandlers;
@@ -36,13 +36,6 @@ public class AllArchivalDisabledEventHandler : INotificationHandler<SettingChang
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
         var recurringJobsService = scope.ServiceProvider.GetRequiredService<RecurringJobsService>();
 
-        if (newValue)
-        {
-            recurringJobsService.DeleteArchivalRecurringJobs();
-        }
-        else
-        {
-            recurringJobsService.CreateArchivalRecurringJobs();
-        }
+        await recurringJobsService.SetupRecurringJobsAsync(disableAllArchival: newValue, cancellationToken);
     }
 }

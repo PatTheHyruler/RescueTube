@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using Hangfire;
+using Hangfire.Server;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +11,7 @@ using RescueTube.Core.Constants.DataFetches;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
@@ -18,8 +20,10 @@ using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.Jobs;
 
-public class DownloadVideoJob
+public class DownloadVideoJob : IJob
 {
+    public static string RecurringJobId => "core:download-not-downloaded-video";
+
     private readonly ILogger<DownloadVideoJob> _logger;
     private readonly StorageLimitService _storageLimitService;
     private readonly IDataUow _dataUow;
@@ -28,8 +32,9 @@ public class DownloadVideoJob
     private readonly AppPaths _appPaths;
     private readonly ServiceRegistry _serviceRegistry;
     private readonly DataFetchService _dataFetchService;
+    private readonly IBackgroundJobClientV2 _backgroundJobClient;
 
-    public DownloadVideoJob(ILogger<DownloadVideoJob> logger, StorageLimitService storageLimitService, IDataUow dataUow, IServiceProvider serviceProvider, TimeProvider timeProvider, AppPaths appPaths, IOptions<ServiceRegistry> serviceRegistry, DataFetchService dataFetchService)
+    public DownloadVideoJob(ILogger<DownloadVideoJob> logger, StorageLimitService storageLimitService, IDataUow dataUow, IServiceProvider serviceProvider, TimeProvider timeProvider, AppPaths appPaths, IOptions<ServiceRegistry> serviceRegistry, DataFetchService dataFetchService, IBackgroundJobClientV2 backgroundJobClient)
     {
         _logger = logger;
         _storageLimitService = storageLimitService;
@@ -38,13 +43,14 @@ public class DownloadVideoJob
         _timeProvider = timeProvider;
         _appPaths = appPaths;
         _dataFetchService = dataFetchService;
+        _backgroundJobClient = backgroundJobClient;
         _serviceRegistry = serviceRegistry.Value;
     }
 
     private static readonly ConcurrentDictionary<Guid, DateTimeOffset> DownloadingVideoIds = new();
 
     [AutomaticRetry(Attempts = 0)]
-    [DisableConcurrentExecution("download-video:{0}", timeoutSec: 5)]
+    [DisableConcurrentExecution("core:download-video:{0}", timeoutSec: 5)]
     [Queue(JobQueues.Critical)]
     public async Task DownloadVideoAsync(Guid videoId, CancellationToken ct)
     {
@@ -65,7 +71,7 @@ public class DownloadVideoJob
     [AutomaticRetry(Attempts = 0)]
     [SkipConcurrent("core:download-not-downloaded-video-recurring")]
     [Queue(JobQueues.HighPriority)]
-    public async Task DownloadNextNotDownloadedVideoAsync(CancellationToken ct)
+    public async Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
         if (await _storageLimitService.IsVideoDownloadForbiddenAsync(ct))
         {
@@ -75,7 +81,7 @@ public class DownloadVideoJob
 
         var downloadingVideoIds = DownloadingVideoIds.Keys.ToImmutableHashSet();
         var supportedPlatforms = _serviceRegistry.GetSupportedPlatforms<IPlatformVideoDownloadService>().AsEnumerable();
-        var video = await _dataUow.Ctx.Videos
+        var videos = await _dataUow.Ctx.Videos
             .Where(v => supportedPlatforms.Contains(v.Platform))
             .Where(v => v.VideoFiles!.Count == 0)
             .Where(v => _dataUow.Ctx.DataFetches
@@ -88,9 +94,10 @@ public class DownloadVideoJob
             .Include(v => v.VideoFiles)
             .OrderByDescending(v => v.ArchivalSettings.DownloadPriority)
             .ThenBy(v => v.Id)
-            .FirstOrDefaultAsync(ct);
+            .Take(2)
+            .ToArrayAsync(ct);
 
-        if (video is null)
+        if (videos is not [var video, .. var nextVideos])
         {
             return;
         }
@@ -103,6 +110,12 @@ public class DownloadVideoJob
         }
 
         await DownloadVideoAsync(video, ct);
+
+        if (nextVideos.Length > 0)
+        {
+            _backgroundJobClient.ContinueJobWith<IRecurringJobManagerV2>(performContext.BackgroundJob.Id,
+                r => r.Trigger(RecurringJobId));
+        }
     }
 
     private async Task DownloadVideoAsync(Video video, CancellationToken ct)

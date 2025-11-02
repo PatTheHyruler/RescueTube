@@ -1,18 +1,22 @@
 ﻿using System.Linq.Expressions;
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.YouTube.Jobs.DataFetch;
 
-public class FetchVideoDataJob : EntityDataFetchJobBase<Video>, IEntityDataFetchJobWithDefinition
+public class FetchVideoDataJob : EntityDataFetchJobBase<Video, FetchVideoDataJob>, IEntityDataFetchJobWithDefinition, IJob
 {
+    public static string RecurringJobId => "yt:fetch-video-data";
+
     private readonly IDataUow _dataUow;
     private readonly YouTubeServices _youTubeServices;
 
-    public FetchVideoDataJob(IDataUow dataUow, YouTubeServices youTubeServices, ILogger<FetchVideoDataJob> logger)
-        : base(dataUow, logger, JobDefinition.DataFetchDefinition)
+    public FetchVideoDataJob(IDataUow dataUow, YouTubeServices youTubeServices, ILogger<FetchVideoDataJob> logger, IBackgroundJobClientV2 backgroundJobClient)
+        : base(dataUow, logger, JobDefinition.DataFetchDefinition, backgroundJobClient)
     {
         _dataUow = dataUow;
         _youTubeServices = youTubeServices;

@@ -176,11 +176,11 @@ public class TokenService
             .ExecuteDeleteAsync(ct);
     }
 
-    public async Task DeleteExpiredRefreshTokensAsync()
+    public async Task DeleteExpiredRefreshTokensAsync(CancellationToken ct)
     {
         await _identityUow.DbCtx.RefreshTokens
             .Where(r => r.ExpiresAt < DateTimeOffset.UtcNow)
-            .ExecuteDeleteAsync();
+            .ExecuteDeleteAsync(ct);
     }
 
     public DecodedJwt ValidateJwt(

@@ -1,6 +1,15 @@
+using Hangfire.Server;
+
 namespace RescueTube.Core.JobOrchestration;
 
-public interface IJob
+public interface IJobBase
 {
-    public Task<JobExecutionResult> RunAsync(CancellationToken ct);
+    public Task RunAsync(PerformContext performContext, CancellationToken ct);
 }
+
+public interface IJobWithId
+{
+    public static abstract string RecurringJobId { get; }
+}
+
+public interface IJob : IJobBase, IJobWithId;

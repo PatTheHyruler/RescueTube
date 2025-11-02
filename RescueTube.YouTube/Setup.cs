@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -9,6 +10,7 @@ using RescueTube.Core.DataFetches;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils.Validation;
+using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Jobs;
 using RescueTube.YouTube.Jobs.DataFetch;
@@ -59,16 +61,58 @@ public static class Setup
         services.AddScoped<IYouTubeExplodeClient, YouTubeExplodeClient>();
 
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
-        services.RegisterYouTubeRecurringJobs();
-
         services.Configure<JobsConfiguration>(c => c.RegisterJobs(
-            new JobDefinition<FetchPlaylistDataJob>(),
-            new JobDefinition<FetchVideoDataJob>(),
+            new JobDefinition<UpdateYtDlpJob>
+            {
+                IsArchivalJob = true,
+                DefaultSettings = new JobSettings
+                {
+                    JobId = UpdateYtDlpJob.RecurringJobId,
+                    Cron = Cron.Daily(),
+                    IsEnabled = true,
+                },
+            },
+            new JobDefinition<FetchPlaylistDataJob>
+            {
+                IsArchivalJob = true,
+                DefaultSettings = new JobSettings
+                {
+                    JobId = FetchPlaylistDataJob.RecurringJobId,
+                    Cron = "*/10 * * * *", // Every 10th minute
+                    IsEnabled = true,
+                },
+            },
+            new JobDefinition<FetchVideoDataJob>
+            {
+                IsArchivalJob = true,
+                DefaultSettings = new JobSettings
+                {
+                    JobId = FetchVideoDataJob.RecurringJobId,
+                    Cron = "*/10 * * * *", // Every 10th minute
+                    IsEnabled = true,
+                },
+            },
             new JobDefinition<FetchYouTubeExplodeAuthorDataJob>
             {
+                IsArchivalJob = true,
+                DefaultSettings = new JobSettings
+                {
+                    JobId = FetchYouTubeExplodeAuthorDataJob.RecurringJobId,
+                    Cron = "*/10 * * * *", // Every 10th minute
+                    IsEnabled = true,
+                },
                 Priority = -10,
             },
-            new JobDefinition<FetchAuthorVideosJob>()
+            new JobDefinition<FetchAuthorVideosJob>
+            {
+                IsArchivalJob = true,
+                DefaultSettings = new JobSettings
+                {
+                    JobId = FetchAuthorVideosJob.RecurringJobId,
+                    Cron = "*/10 * * * *", // Every 10th minute
+                    IsEnabled = true,
+                },
+            }
         ));
 
         services.Configure<DataFetchJobsConfiguration>(c => c
