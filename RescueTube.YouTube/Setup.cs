@@ -101,7 +101,6 @@ public static class Setup
                     Cron = "*/10 * * * *", // Every 10th minute
                     IsEnabled = true,
                 },
-                Priority = -10,
             },
             new JobDefinition<FetchAuthorVideosJob>
             {

@@ -55,8 +55,6 @@ public static class BuilderExtensions
         services.Configure<JobsConfiguration>(c => c.RegisterJobs(
             new JobDefinition<DownloadImageJob>
             {
-                Priority = -1,
-                PreferredMaxConcurrentExecutions = 10,
                 IsArchivalJob = true,
                 DefaultSettings = new JobSettings
                 {
