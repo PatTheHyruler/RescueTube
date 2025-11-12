@@ -115,7 +115,7 @@ public static class BuilderExtensions
             }
         ));
 
-        services.AddScoped<RecurringJobsService>();
+        services.AddScoped<IRecurringJobsService, RecurringJobsService>();
         services.AddHostedService<SetupRecurringJobsService>();
 
         return services;

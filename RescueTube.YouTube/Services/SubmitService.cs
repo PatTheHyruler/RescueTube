@@ -21,9 +21,9 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
     private readonly AppDbContext _dbCtx;
     private readonly YouTubeServices _youTubeServices;
     private readonly DataFetchService _dataFetchService;
-    private readonly RecurringJobsService _recurringJobsService;
+    private readonly IRecurringJobsService _recurringJobsService;
 
-    public SubmitService(AppDbContext dbCtx, YouTubeServices youTubeServices, DataFetchService dataFetchService, RecurringJobsService recurringJobsService)
+    public SubmitService(AppDbContext dbCtx, YouTubeServices youTubeServices, DataFetchService dataFetchService, IRecurringJobsService recurringJobsService)
     {
         _dbCtx = dbCtx;
         _youTubeServices = youTubeServices;

@@ -34,7 +34,7 @@ public class AllArchivalDisabledEventHandler : INotificationHandler<SettingChang
         };
 
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
-        var recurringJobsService = scope.ServiceProvider.GetRequiredService<RecurringJobsService>();
+        var recurringJobsService = scope.ServiceProvider.GetRequiredService<IRecurringJobsService>();
 
         await recurringJobsService.SetupRecurringJobsAsync(disableAllArchival: newValue, cancellationToken);
     }

@@ -15,7 +15,7 @@ public class SetupRecurringJobsService : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await using var scope = _serviceScopeFactory.CreateAsyncScope();
-        var recurringJobsService = scope.ServiceProvider.GetRequiredService<RecurringJobsService>();
+        var recurringJobsService = scope.ServiceProvider.GetRequiredService<IRecurringJobsService>();
 
         await recurringJobsService.SetupRecurringJobsAsync(cancellationToken);
     }

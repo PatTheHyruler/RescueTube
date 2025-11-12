@@ -9,7 +9,14 @@ using RescueTube.Core.JobOrchestration;
 
 namespace RescueTube.Core.Services;
 
-public class RecurringJobsService
+public interface IRecurringJobsService
+{
+    Task SetupRecurringJobsAsync(CancellationToken ct);
+    Task SetupRecurringJobsAsync(bool disableAllArchival, CancellationToken ct);
+    void TriggerIfNotRunning(params IEnumerable<string> recurringJobIds);
+}
+
+public class RecurringJobsService : IRecurringJobsService
 {
     private readonly IRecurringJobManagerV2 _recurringJobManager;
     private readonly JobsConfiguration _config;
