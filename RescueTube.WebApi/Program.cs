@@ -275,15 +275,5 @@ string GetHangfireConnectionString(WebApplicationBuilder webApplicationBuilder)
         throw new ApplicationException("HangfirePostgres connection string is required");
     }
 
-    if (!s.Contains("Enlist=true"))
-    {
-        if (!s.EndsWith(';'))
-        {
-            s += ';';
-        }
-
-        s += "Enlist=true";
-    }
-
     return s;
 }

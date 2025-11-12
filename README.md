@@ -9,10 +9,6 @@ Web application that archives content from online video platforms (currently onl
 Started as a university homework project.
 
 ## DB
-NB!  
-Postgres' max_prepared_transactions option must be set to higher than the default 0.  
-Preferably at least one per connection?
-
 Start local dev DB:
 `docker compose up db -d`
 

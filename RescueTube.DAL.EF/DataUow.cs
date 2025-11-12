@@ -27,22 +27,4 @@ public class DataUow : IDataUow
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
         _ctx.SaveChangesAsync(cancellationToken);
-
-    public void RegisterSavedChangesCallbackRunOnce(Action callback)
-    {
-        RegisterSavedChangesCallbackRunOnce(_ => callback());
-    }
-
-    private void RegisterSavedChangesCallbackRunOnce(Action<object?> callback)
-    {
-        _ctx.SavedChanges += OnSavedChanges;
-        return;
-
-        void OnSavedChanges(object? sender, EventArgs savedEventArgs)
-        {
-            _ctx.SavedChanges -= OnSavedChanges;
-
-            callback(sender);
-        }
-    }
 }

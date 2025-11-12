@@ -29,14 +29,12 @@ public class SubmissionService
     }
 
     /// <exception cref="UnrecognizedUrlException">URL was not recognized and can't be archived.</exception>
-    public async Task<Submission> SubmitGenericLinkAsync(
-        string url, ClaimsPrincipal user, CancellationToken ct = default)
+    public Submission SubmitGenericLink(string url, ClaimsPrincipal user)
     {
-        return await SubmitGenericLinkAsync(url, user.GetUserId(), autoSubmit: true, ct);
+        return SubmitGenericLink(url, user.GetUserId(), autoSubmit: true);
     }
 
-    private async Task<Submission> SubmitGenericLinkAsync(
-        string url, Guid submitterId, bool autoSubmit, CancellationToken ct = default)
+    private Submission SubmitGenericLink(string url, Guid submitterId, bool autoSubmit)
     {
         foreach (var submissionHandler in _submissionHandlers)
         {
@@ -47,13 +45,13 @@ public class SubmissionService
 
             var submission = new Submission(recognizedPlatformUrl, submitterId, autoSubmit);
             _dbContext.Submissions.Add(submission);
-            await _mediator.Publish(new SubmissionAddedEvent
+            _dbContext.RegisterSavedChangesCallbackRunOnce(() => _mediator.Publish(new SubmissionAddedEvent
             {
                 EntityType = submission.EntityType,
                 Platform = submission.Platform,
                 SubmissionId = submission.Id,
                 AutoSubmit = autoSubmit,
-            }, ct);
+            }));
             return submission;
         }
 

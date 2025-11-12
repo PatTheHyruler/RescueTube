@@ -1,4 +1,5 @@
 using Hangfire;
+using Hangfire.States;
 using Hangfire.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -52,8 +53,7 @@ public class RecurringJobsService
             .ExceptBy(
                 enabledJobsWithSettings
                     .Select(j => j.JobDefinition.JobId),
-                r => r.Id)
-            .Where(j => !j.Removed && j.Job is not null && !string.IsNullOrWhiteSpace(j.Cron));
+                r => r.Id);
         foreach (var recurringJobToRemove in recurringJobsToRemove)
         {
             _recurringJobManager.RemoveIfExists(recurringJobToRemove.Id);
@@ -66,6 +66,23 @@ public class RecurringJobsService
                 jobDefinition.CreateHangfireJob(),
                 jobSetting.Cron,
                 jobDefinition.HangfireRecurringJobOptions);
+        }
+    }
+
+    private static bool IsRealRecurringJob(RecurringJobDto job) =>
+        job is { Removed: false, NextExecution: not null } && !string.IsNullOrWhiteSpace(job.Cron);
+
+    public void TriggerIfNotRunning(params IEnumerable<string> recurringJobIds)
+    {
+        // TODO: If job is already running, enqueue continuation
+        using var connection = _recurringJobManager.Storage.GetReadOnlyConnection();
+        var jobs = connection.GetRecurringJobs(recurringJobIds)
+            .Where(IsRealRecurringJob)
+            .Where(j => j.LastJobState != EnqueuedState.StateName && j.LastJobState != ProcessingState.StateName);
+
+        foreach (var recurringJob in jobs)
+        {
+            _recurringJobManager.TriggerJob(recurringJob.Id);
         }
     }
 }

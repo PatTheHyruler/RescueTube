@@ -1,10 +1,8 @@
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.DataFetches;
-using RescueTube.Core.Events;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
@@ -21,18 +19,16 @@ public class AuthorService : BaseYouTubeService
     private readonly AppDbContext _dbCtx;
     private readonly ILogger<AuthorService> _logger;
     private readonly EntityUpdateService _entityUpdateService;
-    private readonly IMediator _mediator;
     private readonly YouTubeServices _youTubeServices;
     private readonly DataFetchService _dataFetchService;
 
     private readonly Dictionary<string, Author> _cachedAuthors = new();
 
-    public AuthorService(AppDbContext dbCtx, ILogger<AuthorService> logger, EntityUpdateService entityUpdateService, IMediator mediator, YouTubeServices youTubeServices, DataFetchService dataFetchService)
+    public AuthorService(AppDbContext dbCtx, ILogger<AuthorService> logger, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices, DataFetchService dataFetchService)
     {
         _dbCtx = dbCtx;
         _logger = logger;
         _entityUpdateService = entityUpdateService;
-        _mediator = mediator;
         _youTubeServices = youTubeServices;
         _dataFetchService = dataFetchService;
     }
@@ -143,7 +139,7 @@ public class AuthorService : BaseYouTubeService
         return (await AddOrGetAuthors([new AuthorFetchArg(id, newAuthorFunc)], dataFetch, ct)).First();
     }
 
-    internal async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs,
+    private async Task<ICollection<Author>> AddOrGetAuthors(IEnumerable<AuthorFetchArg> authorFetchArgs,
         DataFetch dataFetch,
         CancellationToken ct = default)
     {
@@ -182,8 +178,6 @@ public class AuthorService : BaseYouTubeService
 
                 _dbCtx.DataFetchResults.Add(new DataFetchResult { Author = author, DataFetch = dataFetch });
 
-                await _mediator.Publish(new AuthorAddedEvent(
-                        author.Id, EPlatform.YouTube, author.IdOnPlatform), ct);
                 _cachedAuthors.TryAdd(arg.AuthorIdOnPlatform, author);
                 authors.Add(author);
             }

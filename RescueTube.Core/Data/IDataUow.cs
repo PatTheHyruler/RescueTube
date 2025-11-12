@@ -13,6 +13,4 @@ public interface IDataUow
     public AppDbContext Ctx { get; }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-
-    void RegisterSavedChangesCallbackRunOnce(Action callback);
 }

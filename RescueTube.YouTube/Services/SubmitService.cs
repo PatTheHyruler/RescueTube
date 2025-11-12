@@ -5,10 +5,13 @@ using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
 using RescueTube.Core.Exceptions;
+using RescueTube.Core.Jobs;
+using RescueTube.Core.Services;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
+using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Utils;
 
 namespace RescueTube.YouTube.Services;
@@ -18,12 +21,14 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
     private readonly AppDbContext _dbCtx;
     private readonly YouTubeServices _youTubeServices;
     private readonly DataFetchService _dataFetchService;
+    private readonly RecurringJobsService _recurringJobsService;
 
-    public SubmitService(AppDbContext dbCtx, YouTubeServices youTubeServices, DataFetchService dataFetchService)
+    public SubmitService(AppDbContext dbCtx, YouTubeServices youTubeServices, DataFetchService dataFetchService, RecurringJobsService recurringJobsService)
     {
         _dbCtx = dbCtx;
         _youTubeServices = youTubeServices;
         _dataFetchService = dataFetchService;
+        _recurringJobsService = recurringJobsService;
     }
 
     public bool IsPlatformUrl(string url, [NotNullWhen(true)] out RecognizedPlatformUrl? recognizedPlatformUrl)
@@ -60,17 +65,44 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             case EEntityType.Video:
                 var video = await SubmitVideoAsync(submission.IdOnPlatform, ct);
                 submission.VideoId = video.Id;
+                _dbCtx.RegisterSavedChangesCallbackRunOnce(() =>
+                {
+                    _recurringJobsService.TriggerIfNotRunning(
+                        DownloadVideoJob.RecurringJobId,
+                        DownloadImageJob.RecurringJobId,
+                        UpdateImagesResolutionJob.RecurringJobId,
+                        FetchYouTubeExplodeAuthorDataJob.RecurringJobId
+                    );
+                });
                 break;
             case EEntityType.Playlist:
                 var playlist = await SubmitPlaylistAsync(submission.IdOnPlatform, ct);
                 submission.PlaylistId = playlist.Id;
+                _dbCtx.RegisterSavedChangesCallbackRunOnce(() =>
+                {
+                    _recurringJobsService.TriggerIfNotRunning(
+                        FetchVideoDataJob.RecurringJobId,
+                        DownloadVideoJob.RecurringJobId,
+                        DownloadImageJob.RecurringJobId,
+                        UpdateImagesResolutionJob.RecurringJobId,
+                        FetchYouTubeExplodeAuthorDataJob.RecurringJobId
+                    );
+                });
                 break;
             case EEntityType.Author:
                 var author = await SubmitAuthorAsync(submission.IdOnPlatform, submission.IdType, options: null, ct: ct);
                 submission.AuthorId = author.Id;
+                _recurringJobsService.TriggerIfNotRunning(
+                    FetchAuthorVideosJob.RecurringJobId,
+                    FetchVideoDataJob.RecurringJobId,
+                    DownloadVideoJob.RecurringJobId,
+                    DownloadImageJob.RecurringJobId,
+                    UpdateImagesResolutionJob.RecurringJobId,
+                    FetchYouTubeExplodeAuthorDataJob.RecurringJobId
+                );
                 break;
             default:
-                throw new ApplicationException($"Unsupported entity type {submission.EntityType}");
+                throw new ArgumentException($"Unsupported entity type {submission.EntityType}, submission {submission.Id}", nameof(submission));
         }
     }
 

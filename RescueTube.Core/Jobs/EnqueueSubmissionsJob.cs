@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Jobs.Filters;
-using RescueTube.Core.Utils;
 
 namespace RescueTube.Core.Jobs;
 
@@ -25,7 +24,6 @@ public class EnqueueSubmissionsJob : IJob
     [Queue(JobQueues.HighPriority)]
     public async Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
-        using var transaction = TransactionUtils.NewTransactionScope();
         var submissions = _dbContext.Submissions
             .Where(s => s.ApprovedAt != null && s.CompletedAt == null)
             .AsAsyncEnumerable().WithCancellation(ct);
@@ -34,6 +32,5 @@ public class EnqueueSubmissionsJob : IJob
         {
             _backgroundJobClient.Enqueue<HandleSubmissionJob>(j => j.HandleSubmissionAsync(submission.Id, default));
         }
-        transaction.Complete();
     }
 }

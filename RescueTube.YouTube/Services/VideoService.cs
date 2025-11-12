@@ -1,10 +1,8 @@
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.Data.Extensions;
 using RescueTube.Core.DataFetches;
-using RescueTube.Core.Events;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
@@ -19,14 +17,12 @@ public class VideoService : BaseYouTubeService
     private readonly AppDbContext _dbCtx;
     private readonly EntityUpdateService _entityUpdateService;
     private readonly ILogger<VideoService> _logger;
-    private readonly IMediator _mediator;
     private readonly YouTubeServices _youTubeServices;
     private readonly DataFetchService _dataFetchService;
 
-    public VideoService(ILogger<VideoService> logger, IMediator mediator, AppDbContext dbCtx, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices, DataFetchService dataFetchService)
+    public VideoService(ILogger<VideoService> logger, AppDbContext dbCtx, EntityUpdateService entityUpdateService, YouTubeServices youTubeServices, DataFetchService dataFetchService)
     {
         _logger = logger;
-        _mediator = mediator;
         _dbCtx = dbCtx;
         _entityUpdateService = entityUpdateService;
         _youTubeServices = youTubeServices;
@@ -141,7 +137,6 @@ public class VideoService : BaseYouTubeService
         if (isNew)
         {
             _dbCtx.Videos.Add(video);
-            await _mediator.Publish(new VideoAddedEvent(video.Id, EPlatform.YouTube, video.IdOnPlatform), ct);
         }
 
         return video;

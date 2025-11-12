@@ -81,6 +81,24 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
         }
     }
 
+    public void RegisterSavedChangesCallbackRunOnce(Action callback)
+    {
+        RegisterSavedChangesCallbackRunOnce(_ => callback());
+    }
+
+    private void RegisterSavedChangesCallbackRunOnce(Action<object?> callback)
+    {
+        SavedChanges += OnSavedChanges;
+        return;
+
+        void OnSavedChanges(object? sender, EventArgs savedEventArgs)
+        {
+            SavedChanges -= OnSavedChanges;
+
+            callback(sender);
+        }
+    }
+
     public EntityEntry<TEntity> AddIfTracked<TEntity>(TEntity entity) where TEntity : class
     {
         var entry = Entry(entity);
