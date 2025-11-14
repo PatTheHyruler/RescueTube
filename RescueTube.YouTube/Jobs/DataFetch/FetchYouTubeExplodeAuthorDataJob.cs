@@ -34,15 +34,16 @@ public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author, F
     protected override Expression<Func<Author, bool>> FilterExpression =>
         DataUow.DataFetches.ShouldFetchAuthorData(JobDefinition);
 
-    public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
+    public override async Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         if (AuthorService.LastYtExplodeRateLimitHit > _timeProvider.GetUtcNow().Subtract(TimeSpan.FromHours(1)))
         {
             Logger.LogDebug("Skipping YouTubeExplode data fetch, last rate limit was hit at {LastRateLimitHit}",
                 AuthorService.LastYtExplodeRateLimitHit);
-            return;
+            return EntityDataFetchResult.Throttled;
         }
 
         await _youTubeServices.AuthorService.TryUpdateWithYouTubeExplodeDataAsync(entityId, ct);
+        return EntityDataFetchResult.Completed;
     }
 }

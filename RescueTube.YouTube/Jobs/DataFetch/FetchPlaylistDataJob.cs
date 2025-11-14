@@ -30,9 +30,10 @@ public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist, FetchPlayli
     protected override Expression<Func<Playlist, bool>> FilterExpression =>
         DataUow.DataFetches.ShouldFetchPlaylistData(JobDefinition);
 
-    public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
+    public override async Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         await _youTubeServices.PlaylistService.UpdatePlaylistAsync(entityId, ct);
         await DataUow.SaveChangesAsync(ct);
+        return EntityDataFetchResult.Completed;
     }
 }

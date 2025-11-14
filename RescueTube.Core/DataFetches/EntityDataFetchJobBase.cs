@@ -54,9 +54,9 @@ public abstract class EntityDataFetchJobBase<TEntity, TJob> : IJobBase, IEntityD
             "Executing data fetch {Type} from {Source} for {Platform} {EntityType} {EntityId}",
             DataFetchDefinition.Type, DataFetchDefinition.Source, DataFetchDefinition.Platform,
             DataFetchDefinition.EntityType, entityId);
-        await FetchEntityDataAsync(entityId, ct);
+        var result = await FetchEntityDataAsync(entityId, ct);
 
-        if (nextIds.Length > 0)
+        if (nextIds.Length > 0 && result is not EntityDataFetchResult.Throttled)
         {
             _backgroundJobClient.ContinueJobWith<IRecurringJobManagerV2>(performContext.BackgroundJob.Id,
                 r => r.Trigger(RecurringJobId));
@@ -65,7 +65,7 @@ public abstract class EntityDataFetchJobBase<TEntity, TJob> : IJobBase, IEntityD
 
     protected abstract Expression<Func<TEntity, bool>> FilterExpression { get; }
 
-    public abstract Task FetchEntityDataAsync(Guid entityId, CancellationToken ct);
+    public abstract Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct);
 
     private static bool IsValidEntityType(EEntityType entityType)
     {

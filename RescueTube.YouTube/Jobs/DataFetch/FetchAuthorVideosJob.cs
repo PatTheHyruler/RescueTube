@@ -35,8 +35,9 @@ public class FetchAuthorVideosJob : EntityDataFetchJobBase<Author, FetchAuthorVi
                 && a.ArchivalSettings!.IsEnabledForArchival
                 && a.ArchivalSettings!.ArchiveVideos);
 
-    public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
+    public override async Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         await _youTubeServices.AuthorService.TryFetchAuthorVideosAsync(authorId: entityId, ct: ct);
+        return EntityDataFetchResult.Completed;
     }
 }

@@ -33,9 +33,10 @@ public class FetchVideoDataJob : EntityDataFetchJobBase<Video, FetchVideoDataJob
         DataUow.DataFetches.ShouldFetchVideoData(JobDefinition, v =>
             v.ArchivalSettings.ShouldRegularlyFetchVideoData);
 
-    public override async Task FetchEntityDataAsync(Guid entityId, CancellationToken ct)
+    public override async Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
         await _youTubeServices.VideoService.UpdateVideoAsync(entityId, ct);
         await _dataUow.SaveChangesAsync(ct);
+        return EntityDataFetchResult.Completed;
     }
 }
