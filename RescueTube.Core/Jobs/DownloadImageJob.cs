@@ -13,6 +13,17 @@ public class DownloadImageJob : IJob
 {
     public static string RecurringJobId => "core:download-image";
 
+    public static readonly JobDefinition<DownloadImageJob> JobDefinition = new()
+    {
+        IsArchivalJob = true,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = Cron.Minutely(),
+            IsEnabled = true,
+        },
+    };
+
     private readonly ImageService _imageService;
     private readonly IDataUow _dataUow;
     private readonly IBackgroundJobClientV2 _backgroundJobClient;

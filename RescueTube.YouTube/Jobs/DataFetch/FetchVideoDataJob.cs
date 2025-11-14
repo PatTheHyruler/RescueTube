@@ -12,17 +12,28 @@ public class FetchVideoDataJob : EntityDataFetchJobBase<Video, FetchVideoDataJob
 {
     public static string RecurringJobId => "yt:fetch-video-data";
 
+    public static readonly JobDefinition<FetchVideoDataJob> JobDefinition = new()
+    {
+        IsArchivalJob = true,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = "*/10 * * * *", // Every 10th minute
+            IsEnabled = true,
+        },
+    };
+
     private readonly IDataUow _dataUow;
     private readonly YouTubeServices _youTubeServices;
 
     public FetchVideoDataJob(IDataUow dataUow, YouTubeServices youTubeServices, ILogger<FetchVideoDataJob> logger, IBackgroundJobClientV2 backgroundJobClient)
-        : base(dataUow, logger, JobDefinition.DataFetchDefinition, backgroundJobClient)
+        : base(dataUow, logger, DataFetchJobDefinition.DataFetchDefinition, backgroundJobClient)
     {
         _dataUow = dataUow;
         _youTubeServices = youTubeServices;
     }
 
-    public static DataFetchJobDefinition JobDefinition { get; } = new()
+    public static DataFetchJobDefinition DataFetchJobDefinition { get; } = new()
     {
         DataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.VideoPage,
         SuccessCutoffOffset = TimeSpan.FromDays(10),
@@ -30,7 +41,7 @@ public class FetchVideoDataJob : EntityDataFetchJobBase<Video, FetchVideoDataJob
     };
 
     protected override Expression<Func<Video, bool>> FilterExpression =>
-        DataUow.DataFetches.ShouldFetchVideoData(JobDefinition, v =>
+        DataUow.DataFetches.ShouldFetchVideoData(DataFetchJobDefinition, v =>
             v.ArchivalSettings.ShouldRegularlyFetchVideoData);
 
     public override async Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct)

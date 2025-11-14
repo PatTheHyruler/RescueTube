@@ -13,6 +13,17 @@ public class UpdateImagesResolutionJob : IJob
     public const string RecurringJobId = "core:update-images-resolution-from-file";
     static string IJobWithId.RecurringJobId => RecurringJobId;
 
+    public static readonly JobDefinition<UpdateImagesResolutionJob> JobDefinition = new()
+    {
+        IsArchivalJob = false,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = Cron.Daily(),
+            IsEnabled = true,
+        },
+    };
+
     private readonly IDataUow _dataUow;
     private readonly ImageService _imageService;
     private readonly IBackgroundJobClient _backgroundJobClient;

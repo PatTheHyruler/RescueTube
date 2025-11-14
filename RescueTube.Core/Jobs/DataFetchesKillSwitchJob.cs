@@ -13,6 +13,17 @@ public class DataFetchesKillSwitchJob : IJob
 {
     public static string RecurringJobId => "core:data-fetch-kill-switch-job";
 
+    public static readonly JobDefinition<DataFetchesKillSwitchJob> JobDefinition = new()
+    {
+        IsArchivalJob = false,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = "*/10 * * * *", // Every 10th minute
+            IsEnabled = true,
+        },
+    };
+
     private readonly IDataUow _dataUow;
     private readonly TimeProvider _timeProvider;
     private readonly SettingService _settingService;

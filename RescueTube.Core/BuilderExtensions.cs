@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Constants;
 using RescueTube.Core.Contracts;
@@ -10,7 +9,6 @@ using RescueTube.Core.Services;
 using RescueTube.Core.Services.Startup;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
-using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core;
@@ -53,66 +51,12 @@ public static class BuilderExtensions
 
         services.AddScoped<UpdateImagesResolutionJob>();
         services.Configure<JobsConfiguration>(c => c.RegisterJobs(
-            new JobDefinition<DownloadImageJob>
-            {
-                IsArchivalJob = true,
-                DefaultSettings = new JobSettings
-                {
-                    JobId = DownloadImageJob.RecurringJobId,
-                    Cron = Cron.Minutely(),
-                    IsEnabled = true,
-                },
-            },
-            new JobDefinition<EnqueueSubmissionsJob>
-            {
-                IsArchivalJob = true,
-                DefaultSettings = new JobSettings
-                {
-                    JobId = EnqueueSubmissionsJob.RecurringJobId,
-                    Cron = Cron.Hourly(),
-                    IsEnabled = true,
-                },
-            },
-            new JobDefinition<DownloadVideoJob>
-            {
-                IsArchivalJob = true,
-                DefaultSettings = new JobSettings
-                {
-                    JobId = DownloadVideoJob.RecurringJobId,
-                    Cron = Cron.Minutely(),
-                    IsEnabled = true,
-                },
-            },
-            new JobDefinition<DeleteExpiredRefreshTokensJob>
-            {
-                IsArchivalJob = false,
-                DefaultSettings = new JobSettings
-                {
-                    JobId = DeleteExpiredRefreshTokensJob.RecurringJobId,
-                    Cron = Cron.Daily(),
-                    IsEnabled = true,
-                },
-            },
-            new JobDefinition<UpdateImagesResolutionJob>
-            {
-                IsArchivalJob = false,
-                DefaultSettings = new JobSettings
-                {
-                    JobId = UpdateImagesResolutionJob.RecurringJobId,
-                    Cron = Cron.Daily(),
-                    IsEnabled = true,
-                },
-            },
-            new JobDefinition<DataFetchesKillSwitchJob>
-            {
-                IsArchivalJob = false,
-                DefaultSettings = new JobSettings
-                {
-                    JobId = DataFetchesKillSwitchJob.RecurringJobId,
-                    Cron = "*/10 * * * *", // Every 10th minute
-                    IsEnabled = true,
-                },
-            }
+            DownloadImageJob.JobDefinition,
+            EnqueueSubmissionsJob.JobDefinition,
+            DownloadVideoJob.JobDefinition,
+            DeleteExpiredRefreshTokensJob.JobDefinition,
+            UpdateImagesResolutionJob.JobDefinition,
+            DataFetchesKillSwitchJob.JobDefinition
         ));
 
         services.AddScoped<IRecurringJobsService, RecurringJobsService>();

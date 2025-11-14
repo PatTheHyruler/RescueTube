@@ -10,7 +10,7 @@ public class DataFetchJobsConfiguration
 
     public DataFetchJobsConfiguration RegisterJob<T>() where T : IEntityDataFetchJobWithDefinition
     {
-        _registeredJobs.Add(new DataFetchJobRegistration(typeof(T), T.JobDefinition));
+        _registeredJobs.Add(new DataFetchJobRegistration(typeof(T), T.DataFetchJobDefinition));
         return this;
     }
 

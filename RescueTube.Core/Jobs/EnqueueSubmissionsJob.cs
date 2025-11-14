@@ -11,6 +11,17 @@ public class EnqueueSubmissionsJob : IJob
 {
     public static string RecurringJobId => "core:enqueue-submissions";
 
+    public static readonly JobDefinition<EnqueueSubmissionsJob> JobDefinition = new()
+    {
+        IsArchivalJob = true,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = Cron.Hourly(),
+            IsEnabled = true,
+        },
+    };
+
     private readonly IBackgroundJobClient _backgroundJobClient;
     private readonly AppDbContext _dbContext;
 

@@ -9,6 +9,17 @@ public class UpdateYtDlpJob : IJob
 {
     public static string RecurringJobId => "yt:update-yt-dlp-binary";
 
+    public static readonly JobDefinition<UpdateYtDlpJob> JobDefinition = new()
+    {
+        IsArchivalJob = true,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = Cron.Daily(),
+            IsEnabled = true,
+        },
+    };
+
     private readonly IYouTubeDlClient _youtubeDl;
 
     public UpdateYtDlpJob(IYouTubeDlClient youtubeDl)

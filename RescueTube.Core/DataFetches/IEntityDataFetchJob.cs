@@ -8,5 +8,5 @@ public interface IEntityDataFetchJob
 /// <remarks>This is a separate interface from <see cref="IEntityDataFetchJob"/> only because static abstract interface members don't work well alongside abstract classes.</remarks>
 public interface IEntityDataFetchJobWithDefinition : IEntityDataFetchJob
 {
-    static abstract DataFetchJobDefinition JobDefinition { get; }
+    static abstract DataFetchJobDefinition DataFetchJobDefinition { get; }
 }

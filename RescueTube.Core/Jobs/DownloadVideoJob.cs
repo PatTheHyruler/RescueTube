@@ -24,6 +24,17 @@ public class DownloadVideoJob : IJob
 {
     public static string RecurringJobId => "core:download-not-downloaded-video";
 
+    public static readonly JobDefinition<DownloadVideoJob> JobDefinition = new()
+    {
+        IsArchivalJob = true,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = Cron.Minutely(),
+            IsEnabled = true,
+        },
+    };
+
     private readonly ILogger<DownloadVideoJob> _logger;
     private readonly StorageLimitService _storageLimitService;
     private readonly IDataUow _dataUow;

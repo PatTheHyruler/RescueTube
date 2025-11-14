@@ -13,18 +13,29 @@ public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author, F
 {
     public static string RecurringJobId => "yt:fetch-yt-explode-author-data";
 
+    public static readonly JobDefinition<FetchYouTubeExplodeAuthorDataJob> JobDefinition = new()
+    {
+        IsArchivalJob = true,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = "*/10 * * * *", // Every 10th minute
+            IsEnabled = true,
+        },
+    };
+
     private readonly YouTubeServices _youTubeServices;
     private readonly TimeProvider _timeProvider;
 
     public FetchYouTubeExplodeAuthorDataJob(YouTubeServices youTubeServices, IDataUow dataUow,
         ILogger<FetchYouTubeExplodeAuthorDataJob> logger, TimeProvider timeProvider, IBackgroundJobClientV2 backgroundJobClient)
-        : base(dataUow, logger, JobDefinition.DataFetchDefinition, backgroundJobClient)
+        : base(dataUow, logger, DataFetchJobDefinition.DataFetchDefinition, backgroundJobClient)
     {
         _youTubeServices = youTubeServices;
         _timeProvider = timeProvider;
     }
 
-    public static DataFetchJobDefinition JobDefinition { get; } = new()
+    public static DataFetchJobDefinition DataFetchJobDefinition { get; } = new()
     {
         DataFetchDefinition = YouTubeConstants.DataFetches.YouTubeExplode.Channel,
         SuccessCutoffOffset = TimeSpan.FromDays(10),
@@ -32,7 +43,7 @@ public class FetchYouTubeExplodeAuthorDataJob : EntityDataFetchJobBase<Author, F
     };
 
     protected override Expression<Func<Author, bool>> FilterExpression =>
-        DataUow.DataFetches.ShouldFetchAuthorData(JobDefinition);
+        DataUow.DataFetches.ShouldFetchAuthorData(DataFetchJobDefinition);
 
     public override async Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {

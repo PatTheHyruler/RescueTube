@@ -12,15 +12,26 @@ public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist, FetchPlayli
 {
     public static string RecurringJobId => "yt:fetch-playlist-data";
 
+    public static readonly JobDefinition<FetchPlaylistDataJob> JobDefinition = new()
+    {
+        IsArchivalJob = true,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = "*/10 * * * *", // Every 10th minute
+            IsEnabled = true,
+        },
+    };
+
     private readonly YouTubeServices _youTubeServices;
 
     public FetchPlaylistDataJob(IDataUow dataUow, YouTubeServices youTubeServices, ILogger<FetchPlaylistDataJob> logger, IBackgroundJobClientV2 backgroundJobClient)
-        : base(dataUow, logger, JobDefinition.DataFetchDefinition, backgroundJobClient)
+        : base(dataUow, logger, DataFetchJobDefinition.DataFetchDefinition, backgroundJobClient)
     {
         _youTubeServices = youTubeServices;
     }
 
-    public static DataFetchJobDefinition JobDefinition { get; } = new()
+    public static DataFetchJobDefinition DataFetchJobDefinition { get; } = new()
     {
         DataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.Playlist,
         SuccessCutoffOffset = TimeSpan.FromDays(5),
@@ -28,7 +39,7 @@ public class FetchPlaylistDataJob : EntityDataFetchJobBase<Playlist, FetchPlayli
     };
 
     protected override Expression<Func<Playlist, bool>> FilterExpression =>
-        DataUow.DataFetches.ShouldFetchPlaylistData(JobDefinition);
+        DataUow.DataFetches.ShouldFetchPlaylistData(DataFetchJobDefinition);
 
     public override async Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct)
     {
