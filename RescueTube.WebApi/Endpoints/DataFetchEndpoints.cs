@@ -77,19 +77,19 @@ public static class DataFetchEndpoints
         [FromServices] IOptions<JobsConfiguration> config,
         [FromServices] IBackgroundJobClientV2 backgroundJobClient)
     {
-        var jobName = request.JobName;
+        var jobId = request.JobId;
 
-        var jobDefinition = config.Value.RegisteredJobs.FirstOrDefault(x => x.DataFetchDefinition is not null && x.JobId == jobName);
+        var jobDefinition = config.Value.RegisteredJobs.FirstOrDefault(x => x.DataFetchDefinition is not null && x.JobId == jobId);
         if (jobDefinition is null)
         {
             return TypedResults.BadRequest(new ErrorResponseDto
             {
                 ErrorType = EErrorType.GenericError,
-                Message = $"Job definition with name '{jobName}' not found",
+                Message = $"Job definition with id '{jobId}' not found",
             });
         }
 
-        backgroundJobClient.Enqueue<ManualDataFetchJob>(x => x.FetchEntityDataAsync(jobName, request.EntityId, CancellationToken.None));
+        backgroundJobClient.Enqueue<ManualDataFetchJob>(x => x.FetchEntityDataAsync(jobId, request.EntityId, CancellationToken.None));
         return TypedResults.Ok();
     }
 
@@ -98,7 +98,7 @@ public static class DataFetchEndpoints
         var result = new DataFetchJobDefinitionsResponseDtoV1(JobDefinitions: dataFetchJobsConfig.Value.RegisteredJobs
             .Select(x => new DataFetchJobDefinitionDtoV1(
                 EntityType: x.DataFetchDefinition.AssertNotNull().EntityType,
-                JobName: x.JobId)));
+                JobId: x.JobId)));
         return TypedResults.Ok(result);
     }
 }
