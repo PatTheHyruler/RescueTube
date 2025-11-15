@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using RescueTube.Core.Constants;
 using RescueTube.Core.Data;
 using RescueTube.Core.JobOrchestration;
+using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
 
@@ -14,6 +15,7 @@ public interface IRecurringJobsService
     Task SetupRecurringJobsAsync(CancellationToken ct);
     Task SetupRecurringJobsAsync(bool disableAllArchival, CancellationToken ct);
     void TriggerIfNotRunning(params IEnumerable<string> recurringJobIds);
+    ValueTask<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct);
 }
 
 public class RecurringJobsService : IRecurringJobsService
@@ -91,5 +93,11 @@ public class RecurringJobsService : IRecurringJobsService
         {
             _recurringJobManager.TriggerJob(recurringJob.Id);
         }
+    }
+
+    public async ValueTask<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct)
+    {
+        // TODO: Cache these
+        return await _dataUow.Ctx.JobSettings.FirstOrDefaultAsync(x => x.JobId == jobDefinition.JobId, ct);
     }
 }

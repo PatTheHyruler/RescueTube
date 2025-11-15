@@ -9,7 +9,7 @@ public class UpdateYtDlpJob : IJob
 {
     public static string RecurringJobId => "yt:update-yt-dlp-binary";
 
-    public static readonly JobDefinition<UpdateYtDlpJob> JobDefinition = new()
+    public static JobDefinition JobDefinition { get; } = new JobDefinition<UpdateYtDlpJob>
     {
         IsArchivalJob = true,
         DefaultSettings = new()

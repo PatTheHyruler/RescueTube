@@ -13,7 +13,7 @@ public class DownloadImageJob : IJob
 {
     public static string RecurringJobId => "core:download-image";
 
-    public static readonly JobDefinition<DownloadImageJob> JobDefinition = new()
+    public static JobDefinition JobDefinition { get; } = new JobDefinition<DownloadImageJob>
     {
         IsArchivalJob = true,
         DefaultSettings = new()

@@ -9,5 +9,7 @@ public class JobSettingConfiguration : IEntityTypeConfiguration<JobSettings>
     public void Configure(EntityTypeBuilder<JobSettings> builder)
     {
         builder.HasIndex(x => x.JobId).IsUnique();
+
+        builder.OwnsOne(x => x.DataFetchJobSettings);
     }
 }

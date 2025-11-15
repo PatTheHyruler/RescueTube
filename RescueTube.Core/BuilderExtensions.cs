@@ -24,7 +24,6 @@ public static class BuilderExtensions
 
         services.AddOptions<ServiceRegistry>();
 
-        services.AddOptions<DataFetchJobsConfiguration>();
         services.AddScoped<DataFetchService>();
 
         services.AddScoped<ServiceUow>();

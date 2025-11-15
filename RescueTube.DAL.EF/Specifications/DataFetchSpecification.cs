@@ -29,31 +29,31 @@ public class DataFetchSpecification : IDataFetchSpecification
     private static Expression<Func<DataFetch, Author, bool>> IsAuthorDataFetch =>
         (d, a) => d.AuthorId == a.Id;
 
-    public Expression<Func<Author, bool>> ShouldFetchAuthorData(DataFetchJobDefinition jobDefinition)
+    public Expression<Func<Author, bool>> ShouldFetchAuthorData(DataFetchDefinition dataFetchDefinition, DataFetchJobSettings dataFetchJobSettings)
     {
-        return ShouldFetchData(IsAuthorDataFetch, jobDefinition);
+        return ShouldFetchData(IsAuthorDataFetch, dataFetchDefinition, dataFetchJobSettings);
     }
 
-    public Expression<Func<Playlist, bool>> ShouldFetchPlaylistData(DataFetchJobDefinition jobDefinition)
+    public Expression<Func<Playlist, bool>> ShouldFetchPlaylistData(DataFetchDefinition dataFetchDefinition, DataFetchJobSettings dataFetchJobSettings)
     {
-        return ShouldFetchData(IsPlaylistDataFetch, jobDefinition);
+        return ShouldFetchData(IsPlaylistDataFetch, dataFetchDefinition, dataFetchJobSettings);
     }
 
-    public Expression<Func<Video, bool>> ShouldFetchVideoData(
-        DataFetchJobDefinition jobDefinition, Expression<Func<Video, bool>> allowRegularFetchesPredicate)
+    public Expression<Func<Video, bool>> ShouldFetchVideoData(DataFetchDefinition dataFetchDefinition, DataFetchJobSettings dataFetchJobSettings,
+        Expression<Func<Video, bool>> allowRegularFetchesPredicate)
     {
-        return IsDataFetchAllowed(IsVideoDataFetch, jobDefinition).And(
-            allowRegularFetchesPredicate.And(HasNoTooRecentDataFetches(IsVideoDataFetch, jobDefinition))
-                .Or(HasNoSuccessDataFetchesAndNotBlockedByFailure(IsVideoDataFetch, jobDefinition)));
+        return IsDataFetchAllowed(IsVideoDataFetch, dataFetchDefinition).And(
+            allowRegularFetchesPredicate.And(HasNoTooRecentDataFetches(IsVideoDataFetch, dataFetchDefinition, dataFetchJobSettings))
+                .Or(HasNoSuccessDataFetchesAndNotBlockedByFailure(IsVideoDataFetch, dataFetchDefinition, dataFetchJobSettings)));
     }
 
     private Expression<Func<TEntity, bool>> ShouldFetchData<TEntity>(
         Expression<Func<DataFetch, TEntity, bool>> isEntityDataFetch,
-        DataFetchJobDefinition jobDefinition)
+        DataFetchDefinition dataFetchDefinition, DataFetchJobSettings dataFetchJobSettings)
         where TEntity : IIdDatabaseEntity, IPlatformEntity
     {
-        return IsDataFetchAllowed(isEntityDataFetch, jobDefinition)
-            .And(HasNoTooRecentDataFetches(isEntityDataFetch, jobDefinition));
+        return IsDataFetchAllowed(isEntityDataFetch, dataFetchDefinition)
+            .And(HasNoTooRecentDataFetches(isEntityDataFetch, dataFetchDefinition, dataFetchJobSettings));
     }
 
     public Expression<Func<DataFetch, bool>> IsOngoing(DateTimeOffset currentTime)
@@ -65,12 +65,12 @@ public class DataFetchSpecification : IDataFetchSpecification
     }
 
     private Expression<Func<TEntity, bool>> IsDataFetchAllowed<TEntity>(
-        Expression<Func<DataFetch, TEntity, bool>> isEntityDataFetch, DataFetchJobDefinition jobDefinition)
+        Expression<Func<DataFetch, TEntity, bool>> isEntityDataFetch, DataFetchDefinition dataFetchDefinition)
         where TEntity : IPlatformEntity
     {
         var currentTime = _timeProvider.GetUtcNow();
         return e =>
-            e.Platform == jobDefinition.DataFetchDefinition.Platform
+            e.Platform == dataFetchDefinition.Platform
             && !_dbContext.DataFetches.Any(df =>
                 isEntityDataFetch.Invoke(df, e) &&
                 IsOngoing(currentTime).Invoke(df));
@@ -78,33 +78,33 @@ public class DataFetchSpecification : IDataFetchSpecification
 
     private Expression<Func<TEntity, bool>> HasNoTooRecentDataFetches<TEntity>(
         Expression<Func<DataFetch, TEntity, bool>> isEntityDataFetch,
-        DataFetchJobDefinition jobDefinition)
+        DataFetchDefinition dataFetchDefinition, DataFetchJobSettings dataFetchJobSettings)
     {
         var now = _timeProvider.GetUtcNow();
-        var successCutoff = now.Subtract(jobDefinition.SuccessCutoffOffset);
-        var failureCutoff = now.Subtract(jobDefinition.FailureCutoffOffset);
+        var successCutoff = now.Subtract(dataFetchJobSettings.SuccessCutoffOffset);
+        var failureCutoff = now.Subtract(dataFetchJobSettings.FailureCutoffOffset);
         return e => !_dbContext.DataFetches
             .AsExpandable()
             .Where(d => isEntityDataFetch.Invoke(d, e))
             .Any(d => IsTooRecent(
-                jobDefinition.DataFetchDefinition.Source,
-                jobDefinition.DataFetchDefinition.Type,
+                dataFetchDefinition.Source,
+                dataFetchDefinition.Type,
                 successCutoff,
                 failureCutoff).Invoke(d));
     }
 
     private Expression<Func<TEntity, bool>> HasNoSuccessDataFetchesAndNotBlockedByFailure<TEntity>(
         Expression<Func<DataFetch, TEntity, bool>> isEntityDataFetch,
-        DataFetchJobDefinition jobDefinition)
+        DataFetchDefinition dataFetchDefinition, DataFetchJobSettings dataFetchJobSettings)
     {
         var now = _timeProvider.GetUtcNow();
         var successCutoff = DateTimeOffset.MinValue;
-        var failureCutoff = now.Subtract(jobDefinition.FailureCutoffOffset);
+        var failureCutoff = now.Subtract(dataFetchJobSettings.FailureCutoffOffset);
         return e => !_dbContext.DataFetches
             .Where(d => isEntityDataFetch.Invoke(d, e))
             .Any(d => IsTooRecent(
-                jobDefinition.DataFetchDefinition.Source,
-                jobDefinition.DataFetchDefinition.Type,
+                dataFetchDefinition.Source,
+                dataFetchDefinition.Type,
                 successCutoff,
                 failureCutoff).Invoke(d));
     }

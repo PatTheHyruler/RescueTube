@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.JobOrchestration;
+using RescueTube.Core.Services;
 using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
@@ -19,12 +20,13 @@ public abstract class EntityDataFetchJobBase<TEntity, TJob> : IJobBase, IEntityD
     protected readonly IDataUow DataUow;
     protected readonly ILogger Logger;
     private readonly IBackgroundJobClientV2 _backgroundJobClient;
+    private readonly IRecurringJobsService _recurringJobsService;
 
     private DataFetchDefinition DataFetchDefinition { get; }
 
     private static string RecurringJobId => TJob.RecurringJobId;
 
-    protected EntityDataFetchJobBase(IDataUow dataUow, ILogger logger, DataFetchDefinition dataFetchDefinition, IBackgroundJobClientV2 backgroundJobClient)
+    protected EntityDataFetchJobBase(IDataUow dataUow, ILogger logger, DataFetchDefinition dataFetchDefinition, IBackgroundJobClientV2 backgroundJobClient, IRecurringJobsService recurringJobsService)
     {
         if (!IsValidEntityType(dataFetchDefinition.EntityType))
         {
@@ -34,13 +36,20 @@ public abstract class EntityDataFetchJobBase<TEntity, TJob> : IJobBase, IEntityD
         Logger = logger;
         DataFetchDefinition = dataFetchDefinition;
         _backgroundJobClient = backgroundJobClient;
+        _recurringJobsService = recurringJobsService;
     }
 
     public async Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
+        var jobSettings = await _recurringJobsService.GetJobSettingsAsync(TJob.JobDefinition, ct);
+        var dataFetchJobSettings =
+            jobSettings?.DataFetchJobSettings
+            ?? TJob.JobDefinition.DefaultSettings.DataFetchJobSettings
+            ?? DataFetchJobSettings.Default;
+
         var entityIds = await DataUow.Ctx.Set<TEntity>()
             .AsExpandable()
-            .Where(FilterExpression)
+            .Where(GetFilterExpression(dataFetchJobSettings))
             .OrderBy(x => x.Id)
             .Select(x => x.Id)
             .Take(2)
@@ -63,7 +72,7 @@ public abstract class EntityDataFetchJobBase<TEntity, TJob> : IJobBase, IEntityD
         }
     }
 
-    protected abstract Expression<Func<TEntity, bool>> FilterExpression { get; }
+    protected abstract Expression<Func<TEntity, bool>> GetFilterExpression(DataFetchJobSettings dataFetchJobSettings);
 
     public abstract Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct);
 

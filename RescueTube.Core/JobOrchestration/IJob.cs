@@ -12,4 +12,9 @@ public interface IJobWithId
     public static abstract string RecurringJobId { get; }
 }
 
-public interface IJob : IJobBase, IJobWithId;
+public interface IJobWithDefinition
+{
+    public static abstract JobDefinition JobDefinition { get; }
+}
+
+public interface IJob : IJobBase, IJobWithId, IJobWithDefinition;

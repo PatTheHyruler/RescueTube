@@ -11,7 +11,7 @@ public class EnqueueSubmissionsJob : IJob
 {
     public static string RecurringJobId => "core:enqueue-submissions";
 
-    public static readonly JobDefinition<EnqueueSubmissionsJob> JobDefinition = new()
+    public static JobDefinition JobDefinition { get; } = new JobDefinition<EnqueueSubmissionsJob>
     {
         IsArchivalJob = true,
         DefaultSettings = new()

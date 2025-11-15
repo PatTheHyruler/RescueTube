@@ -9,7 +9,7 @@ public class DeleteExpiredRefreshTokensJob : IJob
 {
     public static string RecurringJobId => "core:delete-expired-refresh-tokens";
 
-    public static readonly JobDefinition<DeleteExpiredRefreshTokensJob> JobDefinition = new()
+    public static JobDefinition JobDefinition { get; } = new JobDefinition<DeleteExpiredRefreshTokensJob>
     {
         IsArchivalJob = false,
         DefaultSettings = new()

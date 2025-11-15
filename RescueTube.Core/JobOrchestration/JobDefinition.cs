@@ -1,3 +1,4 @@
+using RescueTube.Core.DataFetches;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.JobOrchestration;
@@ -15,6 +16,10 @@ public abstract record JobDefinition
     };
 
     public required bool IsArchivalJob { get; init; }
+
+    public abstract Type JobType { get; }
+
+    public DataFetchDefinition? DataFetchDefinition { get; init; }
 }
 
 public record JobDefinition<TJob> : JobDefinition where TJob : IJob
@@ -26,4 +31,6 @@ public record JobDefinition<TJob> : JobDefinition where TJob : IJob
         // TODO: Specify queue
         return Hangfire.Common.Job.FromExpression<TJob>(j => j.RunAsync(null!, CancellationToken.None));
     }
+
+    public override Type JobType => typeof(TJob);
 }

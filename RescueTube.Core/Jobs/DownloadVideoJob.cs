@@ -24,7 +24,7 @@ public class DownloadVideoJob : IJob
 {
     public static string RecurringJobId => "core:download-not-downloaded-video";
 
-    public static readonly JobDefinition<DownloadVideoJob> JobDefinition = new()
+    public static JobDefinition JobDefinition { get; } = new JobDefinition<DownloadVideoJob>
     {
         IsArchivalJob = true,
         DefaultSettings = new()

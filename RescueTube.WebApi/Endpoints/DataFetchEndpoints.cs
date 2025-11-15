@@ -5,9 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Data;
 using RescueTube.Core.Data.Pagination;
-using RescueTube.Core.DataFetches;
 using RescueTube.Core.Identity;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Jobs;
+using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Pagination;
 using RescueTube.Domain.Enums;
 using RescueTube.WebApi.ApiModels;
@@ -73,12 +74,12 @@ public static class DataFetchEndpoints
 
     private static Results<Ok, BadRequest<ErrorResponseDto>> EnqueueDataFetchJob(
         [FromBody] EnqueueDataFetchJobRequestV1 request,
-        [FromServices] IOptions<DataFetchJobsConfiguration> config,
+        [FromServices] IOptions<JobsConfiguration> config,
         [FromServices] IBackgroundJobClientV2 backgroundJobClient)
     {
         var jobName = request.JobName;
 
-        var jobDefinition = config.Value.RegisteredJobs.FirstOrDefault(x => x.JobName == jobName);
+        var jobDefinition = config.Value.RegisteredJobs.FirstOrDefault(x => x.DataFetchDefinition is not null && x.JobId == jobName);
         if (jobDefinition is null)
         {
             return TypedResults.BadRequest(new ErrorResponseDto
@@ -92,12 +93,12 @@ public static class DataFetchEndpoints
         return TypedResults.Ok();
     }
 
-    private static Ok<DataFetchJobDefinitionsResponseDtoV1> GetDataFetchJobDefinitionsAsync(IOptions<DataFetchJobsConfiguration> dataFetchJobsConfig)
+    private static Ok<DataFetchJobDefinitionsResponseDtoV1> GetDataFetchJobDefinitionsAsync(IOptions<JobsConfiguration> dataFetchJobsConfig)
     {
         var result = new DataFetchJobDefinitionsResponseDtoV1(JobDefinitions: dataFetchJobsConfig.Value.RegisteredJobs
             .Select(x => new DataFetchJobDefinitionDtoV1(
-                EntityType: x.Definition.DataFetchDefinition.EntityType,
-                JobName: x.JobName)));
+                EntityType: x.DataFetchDefinition.AssertNotNull().EntityType,
+                JobName: x.JobId)));
         return TypedResults.Ok(result);
     }
 }

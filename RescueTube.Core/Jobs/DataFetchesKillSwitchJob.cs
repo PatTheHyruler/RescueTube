@@ -13,7 +13,7 @@ public class DataFetchesKillSwitchJob : IJob
 {
     public static string RecurringJobId => "core:data-fetch-kill-switch-job";
 
-    public static readonly JobDefinition<DataFetchesKillSwitchJob> JobDefinition = new()
+    public static JobDefinition JobDefinition { get; } = new JobDefinition<DataFetchesKillSwitchJob>
     {
         IsArchivalJob = false,
         DefaultSettings = new()
