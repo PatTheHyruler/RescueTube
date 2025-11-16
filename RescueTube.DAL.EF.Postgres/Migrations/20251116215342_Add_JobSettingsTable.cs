@@ -18,7 +18,9 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     JobId = table.Column<string>(type: "text", nullable: false),
                     IsEnabled = table.Column<bool>(type: "boolean", nullable: false),
-                    Cron = table.Column<string>(type: "text", nullable: false)
+                    Cron = table.Column<string>(type: "text", nullable: false),
+                    DataFetchJobSettings_SuccessCutoffOffset = table.Column<TimeSpan>(type: "interval", nullable: true),
+                    DataFetchJobSettings_FailureCutoffOffset = table.Column<TimeSpan>(type: "interval", nullable: true)
                 },
                 constraints: table =>
                 {

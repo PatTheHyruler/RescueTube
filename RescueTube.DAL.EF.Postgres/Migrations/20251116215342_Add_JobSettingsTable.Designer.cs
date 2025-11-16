@@ -13,7 +13,7 @@ using RescueTube.DAL.EF.Postgres;
 namespace RescueTube.DAL.EF.Postgres.Migrations
 {
     [DbContext(typeof(PostgresAppDbContext))]
-    [Migration("20251102230929_Add_JobSettingsTable")]
+    [Migration("20251116215342_Add_JobSettingsTable")]
     partial class Add_JobSettingsTable
     {
         /// <inheritdoc />
@@ -522,7 +522,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Identity.Role", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -573,7 +572,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.Identity.User", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<int>("AccessFailedCount")
@@ -770,30 +768,6 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
                     b.ToTable("Images");
                 });
 
-            modelBuilder.Entity("RescueTube.Domain.Entities.JobSettings", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Cron")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("JobId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("JobId")
-                        .IsUnique();
-
-                    b.ToTable("JobSettings");
-                });
-
             modelBuilder.Entity("RescueTube.Domain.Entities.Localization.TextTranslation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -830,6 +804,30 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TextTranslationKeys");
+                });
+
+            modelBuilder.Entity("RescueTube.Domain.Entities.PersistedJobSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Cron")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JobId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JobId")
+                        .IsUnique();
+
+                    b.ToTable("JobSettings");
                 });
 
             modelBuilder.Entity("RescueTube.Domain.Entities.Playlist", b =>
@@ -1747,6 +1745,30 @@ namespace RescueTube.DAL.EF.Postgres.Migrations
                         .IsRequired();
 
                     b.Navigation("Key");
+                });
+
+            modelBuilder.Entity("RescueTube.Domain.Entities.PersistedJobSettings", b =>
+                {
+                    b.OwnsOne("RescueTube.Domain.Entities.DataFetchJobSettings", "DataFetchJobSettings", b1 =>
+                        {
+                            b1.Property<Guid>("PersistedJobSettingsId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<TimeSpan>("FailureCutoffOffset")
+                                .HasColumnType("interval");
+
+                            b1.Property<TimeSpan>("SuccessCutoffOffset")
+                                .HasColumnType("interval");
+
+                            b1.HasKey("PersistedJobSettingsId");
+
+                            b1.ToTable("JobSettings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PersistedJobSettingsId");
+                        });
+
+                    b.Navigation("DataFetchJobSettings");
                 });
 
             modelBuilder.Entity("RescueTube.Domain.Entities.Playlist", b =>
