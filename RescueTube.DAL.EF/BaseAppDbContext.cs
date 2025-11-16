@@ -7,7 +7,7 @@ using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.DAL.EF.Converters;
 using RescueTube.Domain;
-using RescueTube.Domain.Base;
+using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Entities.Identity;
 using RescueTube.Domain.Enums;
@@ -49,14 +49,14 @@ public abstract class BaseAppDbContext : AppDbContext
             .Single(m => m.Name == nameof(ConfigureBaseIdDbEntity));
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
-            if (entityType.ClrType.IsAssignableTo(typeof(BaseIdDbEntity)))
+            if (entityType.ClrType.IsAssignableTo(typeof(IIdDatabaseEntity)))
                 configureBaseIdDbEntityMethod.MakeGenericMethod(entityType.ClrType).Invoke(null, [builder]);
         }
 
         builder.ApplyConfigurationsFromAssembly(typeof(BaseAppDbContext).Assembly);
     }
 
-    private static void ConfigureBaseIdDbEntity<TEntity>(ModelBuilder modelBuilder) where TEntity : BaseIdDbEntity
+    private static void ConfigureBaseIdDbEntity<TEntity>(ModelBuilder modelBuilder) where TEntity : class, IIdDatabaseEntity
     {
         modelBuilder.Entity<TEntity>(builder =>
         {

@@ -58,7 +58,7 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     public DbSet<Setting.String> StringSettings => Set<Setting.String>();
     public DbSet<Setting.DataSize> DataSizeSettings => Set<Setting.DataSize>();
 
-    public DbSet<JobSettings> JobSettings => Set<JobSettings>();
+    public DbSet<PersistedJobSettings> JobSettings => Set<PersistedJobSettings>();
 
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;

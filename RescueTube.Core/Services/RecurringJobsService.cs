@@ -19,6 +19,8 @@ public interface IRecurringJobsService
     void TriggerIfNotRunning(params IEnumerable<string> recurringJobIds);
     Task<JobDefinitionWithSettings[]> GetJobDefinitionsWithSettingsAsync(CancellationToken ct);
     Task<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct);
+    Task HandleJobSettingsUpdateAsync(IReadOnlyCollection<JobDefinitionWithSettings> updatedSettings,
+        CancellationToken ct);
 }
 
 public class RecurringJobsService : IRecurringJobsService
@@ -56,17 +58,32 @@ public class RecurringJobsService : IRecurringJobsService
     public async Task SetupRecurringJobsAsync(bool disableAllArchival, CancellationToken ct)
     {
         var jobsWithSettings = await GetJobDefinitionsWithSettingsAsync(ct);
+        SetupRecurringJobs(jobsWithSettings, disableAllArchival, onlyRemoveSpecifiedJobs: false);
+    }
+
+    private void SetupRecurringJobs(
+        IReadOnlyCollection<JobDefinitionWithSettings> jobsWithSettings,
+        bool disableAllArchival, bool onlyRemoveSpecifiedJobs)
+    {
         var enabledJobsWithSettings = jobsWithSettings
             .Where(j => j.JobSettings.IsEnabled)
             .Where(j => !disableAllArchival || !j.JobDefinition.IsArchivalJob)
             .ToArray();
 
         using var jobStorageConnection = _recurringJobManager.Storage.GetConnection();
-        var recurringJobsToRemove = jobStorageConnection.GetRecurringJobs()
+        var recurringJobsToRemove = jobStorageConnection
+            .GetRecurringJobs()
             .ExceptBy(
                 enabledJobsWithSettings
                     .Select(j => j.JobDefinition.JobId),
                 r => r.Id);
+        if (onlyRemoveSpecifiedJobs)
+        {
+            recurringJobsToRemove = recurringJobsToRemove.IntersectBy(
+                jobsWithSettings.Select(x => x.JobDefinition.JobId),
+                r => r.Id);
+        }
+
         foreach (var recurringJobToRemove in recurringJobsToRemove)
         {
             _recurringJobManager.RemoveIfExists(recurringJobToRemove.Id);
@@ -119,10 +136,19 @@ public class RecurringJobsService : IRecurringJobsService
             .Select(j => new JobDefinitionWithSettings
             {
                 JobDefinition = j,
-                JobSettings = jobSettings.GetValueOrDefault(j.JobId, j.DefaultSettings),
+                JobSettings = jobSettings.GetValueOrDefault(j.JobId) ?? j.DefaultSettings,
             })
             .ToArray();
 
         return definitionsWithSettings;
+    }
+
+    public async Task HandleJobSettingsUpdateAsync(IReadOnlyCollection<JobDefinitionWithSettings> updatedSettings,
+        CancellationToken ct)
+    {
+        var disableAllArchival = await _settingService.GetValueAsync(SettingDefinitions.DisableAllArchival, ct)
+                                 ?? SettingDefinitions.DisableAllArchival.DefaultValue;
+        _memoryCache.Remove(CacheKey);
+        SetupRecurringJobs(updatedSettings, disableAllArchival: disableAllArchival, onlyRemoveSpecifiedJobs: true);
     }
 }

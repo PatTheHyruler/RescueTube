@@ -4,9 +4,9 @@ using RescueTube.Domain.Entities;
 
 namespace RescueTube.DAL.EF.Configurations;
 
-public class JobSettingConfiguration : IEntityTypeConfiguration<JobSettings>
+public class PersistedJobSettingsConfiguration : IEntityTypeConfiguration<PersistedJobSettings>
 {
-    public void Configure(EntityTypeBuilder<JobSettings> builder)
+    public void Configure(EntityTypeBuilder<PersistedJobSettings> builder)
     {
         builder.HasIndex(x => x.JobId).IsUnique();
 
