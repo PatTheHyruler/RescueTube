@@ -2,9 +2,11 @@ using Hangfire;
 using Hangfire.States;
 using Hangfire.Storage;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using RescueTube.Core.Constants;
 using RescueTube.Core.Data;
+using RescueTube.Core.DTO;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Domain.Entities;
 
@@ -15,25 +17,31 @@ public interface IRecurringJobsService
     Task SetupRecurringJobsAsync(CancellationToken ct);
     Task SetupRecurringJobsAsync(bool disableAllArchival, CancellationToken ct);
     void TriggerIfNotRunning(params IEnumerable<string> recurringJobIds);
-    ValueTask<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct);
+    Task<JobDefinitionWithSettings[]> GetJobDefinitionsWithSettingsAsync(CancellationToken ct);
+    Task<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct);
 }
 
 public class RecurringJobsService : IRecurringJobsService
 {
+    private const string CacheKey = "JobSettings";
+
     private readonly IRecurringJobManagerV2 _recurringJobManager;
     private readonly JobsConfiguration _config;
     private readonly SettingService _settingService;
     private readonly IDataUow _dataUow;
+    private readonly IMemoryCache _memoryCache;
 
     public RecurringJobsService(
         IRecurringJobManagerV2 recurringJobManager,
         IOptions<JobsConfiguration> config,
         SettingService settingService,
-        IDataUow dataUow)
+        IDataUow dataUow,
+        IMemoryCache memoryCache)
     {
         _recurringJobManager = recurringJobManager;
         _settingService = settingService;
         _dataUow = dataUow;
+        _memoryCache = memoryCache;
         _config = config.Value;
     }
 
@@ -47,13 +55,9 @@ public class RecurringJobsService : IRecurringJobsService
 
     public async Task SetupRecurringJobsAsync(bool disableAllArchival, CancellationToken ct)
     {
-        var registeredJobs = _config.RegisteredJobs;
-        var jobSettings = await _dataUow.Ctx.JobSettings.ToDictionaryAsync(x => x.JobId, ct);
-        var enabledJobsWithSettings = registeredJobs
-            .Select(j => (
-                JobDefinition: j,
-                Settings: jobSettings.GetValueOrDefault(j.JobId, j.DefaultSettings)))
-            .Where(j => j.Settings.IsEnabled)
+        var jobsWithSettings = await GetJobDefinitionsWithSettingsAsync(ct);
+        var enabledJobsWithSettings = jobsWithSettings
+            .Where(j => j.JobSettings.IsEnabled)
             .Where(j => !disableAllArchival || !j.JobDefinition.IsArchivalJob)
             .ToArray();
 
@@ -95,9 +99,30 @@ public class RecurringJobsService : IRecurringJobsService
         }
     }
 
-    public async ValueTask<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct)
+    public async Task<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct)
     {
-        // TODO: Cache these
-        return await _dataUow.Ctx.JobSettings.FirstOrDefaultAsync(x => x.JobId == jobDefinition.JobId, ct);
+        var allJobSettings = await GetJobDefinitionsWithSettingsAsync(ct);
+        return allJobSettings.Select(x => x.JobSettings).FirstOrDefault(x => x.JobId == jobDefinition.JobId);
+    }
+
+    public async Task<JobDefinitionWithSettings[]> GetJobDefinitionsWithSettingsAsync(CancellationToken ct)
+    {
+        return await _memoryCache.GetOrCreateAsync(CacheKey, _ => GetJobSettingsWithoutCacheAsync(ct))
+            ?? await GetJobSettingsWithoutCacheAsync(ct);
+    }
+
+    private async Task<JobDefinitionWithSettings[]> GetJobSettingsWithoutCacheAsync(CancellationToken ct)
+    {
+        var registeredJobs = _config.RegisteredJobs;
+        var jobSettings = await _dataUow.Ctx.JobSettings.ToDictionaryAsync(x => x.JobId, ct);
+        var definitionsWithSettings = registeredJobs
+            .Select(j => new JobDefinitionWithSettings
+            {
+                JobDefinition = j,
+                JobSettings = jobSettings.GetValueOrDefault(j.JobId, j.DefaultSettings),
+            })
+            .ToArray();
+
+        return definitionsWithSettings;
     }
 }

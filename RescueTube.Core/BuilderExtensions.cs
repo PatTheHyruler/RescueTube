@@ -28,6 +28,8 @@ public static class BuilderExtensions
 
         services.AddScoped<ServiceUow>();
 
+        services.AddMemoryCache();
+
         services.AddScoped<SubmissionService>();
         services.AddScoped<ImageService>();
         services.AddScoped<VideoPresentationService>();

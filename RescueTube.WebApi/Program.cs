@@ -232,6 +232,7 @@ try
     baseVersionedApi.MapPlaylistEndpoints();
     baseVersionedApi.MapSettingEndpoints();
     baseVersionedApi.MapDataFetchEndpoints();
+    baseVersionedApi.MapJobEndpoints();
 
     app.MapControllers();
 
