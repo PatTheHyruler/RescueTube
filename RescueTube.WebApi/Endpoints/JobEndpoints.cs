@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
+using RescueTube.Core.DTO;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
@@ -52,17 +53,24 @@ public static class JobEndpoints
                 (updateDto, x) => (JobDefinitionWithSettings: x, UpdateDto: updateDto))
             .ToArray();
 
-        foreach (var ((_, currentSettings), updateDto) in joinedUpdates)
+        var updatedDefinitionsWithSettings = new List<JobDefinitionWithSettings>(joinedUpdates.Length);
+
+        foreach (var (definitionWithSettings, updateDto) in joinedUpdates)
         {
-            if (currentSettings is not PersistedJobSettings persistedJobSettings)
+            if (definitionWithSettings.JobSettings is not PersistedJobSettings persistedJobSettings)
             {
-                persistedJobSettings = currentSettings.CloneToPersistedJobSettings();
+                persistedJobSettings = definitionWithSettings.JobSettings.CloneToPersistedJobSettings();
                 dataUow.Ctx.JobSettings.Add(persistedJobSettings);
             }
             else
             {
                 dataUow.Ctx.Entry(persistedJobSettings).State = EntityState.Unchanged;
             }
+
+            updatedDefinitionsWithSettings.Add(definitionWithSettings with
+            {
+                JobSettings = persistedJobSettings,
+            });
 
             persistedJobSettings.IsEnabled = updateDto.IsEnabled;
             persistedJobSettings.Cron = updateDto.Cron;
@@ -76,8 +84,6 @@ public static class JobEndpoints
 
         await dataUow.SaveChangesAsync(ct);
 
-        await recurringJobsService.HandleJobSettingsUpdateAsync(
-            joinedUpdates.Select(x => x.JobDefinitionWithSettings).ToArray(),
-            ct);
+        await recurringJobsService.HandleJobSettingsUpdateAsync(updatedDefinitionsWithSettings, ct);
     }
 }
