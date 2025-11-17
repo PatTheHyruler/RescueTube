@@ -8,6 +8,7 @@ using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
 using RescueTube.WebApi.ApiModels;
 using RescueTube.WebApi.ApiModels.Mappers;
+using RescueTube.WebApi.Utils.Validation;
 
 namespace RescueTube.WebApi.Endpoints;
 
@@ -38,12 +39,19 @@ public static class JobEndpoints
         return TypedResults.Ok(result);
     }
 
-    private static async Task UpdateJobSettingsAsync(
+    private static async Task<Results<Ok, BadRequest<ErrorResponseDto>>> UpdateJobSettingsAsync(
         [FromBody] JobSettingsUpdateDtoV1[] jobSettingsUpdates,
         [FromServices] IRecurringJobsService recurringJobsService,
         [FromServices] IDataUow dataUow,
         CancellationToken ct)
     {
+        var validator = new JobSettingsUpdateDtoV1CollectionValidator();
+        var validationResult = await validator.ValidateAsync(jobSettingsUpdates, ct);
+        if (!validationResult.IsValid(out var badRequestResponse))
+        {
+            return badRequestResponse;
+        }
+
         var jobDefinitions = await recurringJobsService.GetJobDefinitionsWithSettingsAsync(ct);
 
         var joinedUpdates = jobSettingsUpdates.Join(
@@ -85,5 +93,7 @@ public static class JobEndpoints
         await dataUow.SaveChangesAsync(ct);
 
         await recurringJobsService.HandleJobSettingsUpdateAsync(updatedDefinitionsWithSettings, ct);
+
+        return TypedResults.Ok();
     }
 }

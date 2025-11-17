@@ -1,5 +1,4 @@
 using FluentValidation;
-using RescueTube.WebApi.ApiModels;
 
 namespace RescueTube.WebApi.Utils.Validation;
 
@@ -12,20 +11,9 @@ public class ValidationFilter<TRequest, TValidator> : IEndpointFilter where TVal
         if (data is not null)
         {
             var validationResult = await validator.ValidateAsync(data, context.HttpContext.RequestAborted);
-            if (!validationResult.IsValid)
+            if (!validationResult.IsValid(out var badRequestResponse))
             {
-                return TypedResults.BadRequest(new ErrorResponseDto
-                {
-                    ErrorType = EErrorType.ValidationError,
-                    Message = "Invalid request data",
-                    Details = validationResult.Errors.ToDictionary(v => v.PropertyName, v => new
-                    {
-                        v.PropertyName,
-                        v.AttemptedValue,
-                        v.ErrorCode,
-                        v.ErrorMessage,
-                    }),
-                });
+                return badRequestResponse;
             }
         }
 
