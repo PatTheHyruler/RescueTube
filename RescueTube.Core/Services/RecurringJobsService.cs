@@ -16,7 +16,7 @@ public interface IRecurringJobsService
 {
     Task SetupRecurringJobsAsync(CancellationToken ct);
     Task SetupRecurringJobsAsync(bool disableAllArchival, CancellationToken ct);
-    void TriggerIfNotRunning(params IEnumerable<string> recurringJobIds);
+    string[] TriggerIfNotRunning(params IEnumerable<string> recurringJobIds);
     Task<JobDefinitionWithSettings[]> GetJobDefinitionsWithSettingsAsync(CancellationToken ct);
     Task<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct);
     Task HandleJobSettingsUpdateAsync(IReadOnlyCollection<JobDefinitionWithSettings> updatedSettings,
@@ -102,18 +102,21 @@ public class RecurringJobsService : IRecurringJobsService
     private static bool IsRealRecurringJob(RecurringJobDto job) =>
         job is { Removed: false, NextExecution: not null } && !string.IsNullOrWhiteSpace(job.Cron);
 
-    public void TriggerIfNotRunning(params IEnumerable<string> recurringJobIds)
+    public string[] TriggerIfNotRunning(params IEnumerable<string> recurringJobIds)
     {
         // TODO: If job is already running, enqueue continuation
         using var connection = _recurringJobManager.Storage.GetReadOnlyConnection();
         var jobs = connection.GetRecurringJobs(recurringJobIds)
             .Where(IsRealRecurringJob)
-            .Where(j => j.LastJobState != EnqueuedState.StateName && j.LastJobState != ProcessingState.StateName);
+            .Where(j => j.LastJobState != EnqueuedState.StateName && j.LastJobState != ProcessingState.StateName)
+            .ToArray();
 
         foreach (var recurringJob in jobs)
         {
             _recurringJobManager.TriggerJob(recurringJob.Id);
         }
+
+        return jobs.Select(j => j.Id).ToArray();
     }
 
     public async Task<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct)

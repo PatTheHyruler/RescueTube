@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,10 @@ public static class JobEndpoints
             .HasApiVersion(1);
 
         jobsGroup.MapPut("settings", UpdateJobSettingsAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
+
+        jobsGroup.MapPost("recurring/{recurringJobId}/trigger", TriggerRecurringJob)
             .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
             .HasApiVersion(1);
     }
@@ -95,5 +100,27 @@ public static class JobEndpoints
         await recurringJobsService.HandleJobSettingsUpdateAsync(updatedDefinitionsWithSettings, ct);
 
         return TypedResults.Ok();
+    }
+
+    private static Results<Ok, BadRequest<ErrorResponseDto>> TriggerRecurringJob(
+        [FromRoute] string recurringJobId,
+        [FromServices] IRecurringJobsService recurringJobsService,
+        CancellationToken ct)
+    {
+        var triggeredRecurringJobIds = recurringJobsService.TriggerIfNotRunning(recurringJobId);
+        return triggeredRecurringJobIds switch
+        {
+            [_] => TypedResults.Ok(),
+            [] => TypedResults.BadRequest(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.EntityNotFound,
+                Message = "Recurring job with provided id was not found",
+                Details = new
+                {
+                    recurringJobId,
+                },
+            }),
+            { Length: > 1 } => throw new UnreachableException("Somehow triggered multiple jobs for single recurring job id"),
+        };
     }
 }
