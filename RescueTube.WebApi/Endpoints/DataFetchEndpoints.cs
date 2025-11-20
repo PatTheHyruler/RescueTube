@@ -96,6 +96,7 @@ public static class DataFetchEndpoints
     private static Ok<DataFetchJobDefinitionsResponseDtoV1> GetDataFetchJobDefinitionsAsync(IOptions<JobsConfiguration> dataFetchJobsConfig)
     {
         var result = new DataFetchJobDefinitionsResponseDtoV1(JobDefinitions: dataFetchJobsConfig.Value.RegisteredJobs
+            .Where(d => d.DataFetchDefinition is not null)
             .Select(x => new DataFetchJobDefinitionDtoV1(
                 EntityType: x.DataFetchDefinition.AssertNotNull().EntityType,
                 JobId: x.JobId)));
