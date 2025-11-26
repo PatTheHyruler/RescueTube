@@ -1,7 +1,5 @@
 using System.Security.Claims;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.Core.Events;
@@ -15,15 +13,13 @@ public class SubmissionService
 {
     private readonly AppDbContext _dbContext;
     private readonly IEnumerable<IPlatformSubmissionHandler> _submissionHandlers;
-    private readonly ILogger<SubmissionService> _logger;
     private readonly IMediator _mediator;
     private readonly TimeProvider _timeProvider;
 
-    public SubmissionService(AppDbContext dbContext, IEnumerable<IPlatformSubmissionHandler> submissionHandlers, ILogger<SubmissionService> logger, IMediator mediator, TimeProvider timeProvider)
+    public SubmissionService(AppDbContext dbContext, IEnumerable<IPlatformSubmissionHandler> submissionHandlers, IMediator mediator, TimeProvider timeProvider)
     {
         _dbContext = dbContext;
         _submissionHandlers = submissionHandlers;
-        _logger = logger;
         _mediator = mediator;
         _timeProvider = timeProvider;
     }
@@ -58,24 +54,8 @@ public class SubmissionService
         throw new UnrecognizedUrlException(url);
     }
 
-    public async Task HandleSubmissionAsync(Guid submissionId, CancellationToken ct)
+    public async Task HandleSubmissionAsync(Submission submission, CancellationToken ct)
     {
-        var submission = await _dbContext.Submissions
-            .Where(s => s.Id == submissionId)
-            .FirstAsync(cancellationToken: ct);
-
-        if (submission.ApprovedAt is null)
-        {
-            throw new InvalidOperationException($"Submission {submissionId} not approved");
-        }
-
-        if (submission.CompletedAt != null)
-        {
-            _logger.LogInformation("Submission {SubmissionId} already handled at {CompletedAt}, skipping",
-                submissionId, submission.CompletedAt);
-            return;
-        }
-
         var submissionHandler = _submissionHandlers.FirstOrDefault(x => x.Platform == submission.Platform);
         if (submissionHandler is null)
         {

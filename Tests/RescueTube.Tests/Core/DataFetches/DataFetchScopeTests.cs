@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
+using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.Tests.TestUtils;
 
@@ -17,6 +18,7 @@ public class DataFetchScopeTests : BaseEfPostgresTest
     [Test]
     public async Task Should_UpdateDataFetchStatusToFailed_When_UnhandledErrorOccursWithinScope(CancellationToken ct)
     {
+        // Arrange
         await using var serviceProvider = BuildServiceProvider();
 
         var definition = new DataFetchDefinition
@@ -27,15 +29,33 @@ public class DataFetchScopeTests : BaseEfPostgresTest
             Type = "testtype",
         };
 
-        await Assert.ThrowsAsync<Exception>(async () =>
+        var videoId = Guid.CreateVersion7();
+
+        await using (var setupScope = serviceProvider.CreateAsyncScope())
+        {
+            var dbContext = setupScope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var video = new Video
+            {
+                Id = videoId,
+                IdOnPlatform = "test_123",
+            };
+            dbContext.Videos.Add(video);
+
+            await dbContext.SaveChangesAsync(ct);
+        }
+
+        // Act
+        await Assert.ThrowsAsync<CustomException>(async () =>
         {
             await using var scope = serviceProvider.CreateAsyncScope();
             var dataFetchService = scope.ServiceProvider.GetRequiredService<DataFetchService>();
 
-            await using var dataFetchScope = await dataFetchService.StartDataFetchAsync(definition, entityId: null, ct);
-            throw new Exception("An unhandled error occurred during the data fetch");
+            await using var dataFetchScope = await dataFetchService.StartDataFetchAsync(definition, entityId: videoId, ct);
+            throw new CustomException("An unhandled error occurred during the data fetch");
         });
 
+        // Assert
         await using (var scope = serviceProvider.CreateAsyncScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -47,4 +67,6 @@ public class DataFetchScopeTests : BaseEfPostgresTest
                 .And.Member(x => x.Type, x => x.EqualTo(definition.Type));
         }
     }
+
+    private sealed class CustomException(string message) : Exception(message);
 }

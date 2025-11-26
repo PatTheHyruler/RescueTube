@@ -44,19 +44,28 @@ public class DataFetchService
         return await StartDataFetchAsync(definition, video.Id, ct);
     }
 
-    public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Guid? entityId, CancellationToken ct)
+    public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Submission submission, CancellationToken ct)
     {
-        var hasStartedDataFetch = entityId is not null && await IsFetchingAsync(definition, entityId.Value, ct);
+        var dataFetch = await AddDataFetchAsync(definition, entityId: null, submission, ct);
+        return new DataFetchScope(dataFetch, this, ct);
+    }
+
+    public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Guid entityId, CancellationToken ct)
+    {
+        var hasStartedDataFetch = await IsFetchingAsync(definition, entityId, ct);
         if (hasStartedDataFetch)
         {
             return null;
         }
 
-        var dataFetch = await AddDataFetchAsync(definition, entityId, ct);
+        var dataFetch = await AddDataFetchAsync(definition, entityId, submission: null, ct);
         return new DataFetchScope(dataFetch, this, ct);
     }
 
-    private async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, Guid? entityId, CancellationToken ct)
+    private async Task<DataFetch> AddDataFetchAsync(
+        DataFetchDefinition definition,
+        Guid? entityId, Submission? submission,
+        CancellationToken ct)
     {
         var now = _timeProvider.GetUtcNow();
 
@@ -69,6 +78,8 @@ public class DataFetchService
             LastHeartbeatReceivedAt = now,
             Status = DataFetchStatus.Started,
             DataFetchResults = [],
+            Submission = submission,
+            SubmissionId = submission?.Id,
         };
 
         switch (definition.EntityType)

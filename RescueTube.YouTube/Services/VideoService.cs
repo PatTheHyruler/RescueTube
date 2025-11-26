@@ -49,18 +49,25 @@ public class VideoService : BaseYouTubeService
             .Where(v => v.Id == videoId && v.Platform == EPlatform.YouTube)
             .Select(v => v.IdOnPlatform)
             .FirstAsync(ct);
-        await AddOrUpdateVideoAsync(idOnPlatform, videoId, ct);
-    }
-
-    public Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, CancellationToken ct)
-        => AddOrUpdateVideoAsync(idOnPlatform, videoId: null, ct);
-
-    private async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, Guid? videoId, CancellationToken ct)
-    {
-        var dataFetchDefinition = YouTubeConstants.DataFetches.YtDlp.VideoPage;
 
         await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
-            dataFetchDefinition, videoId, ct);
+            YouTubeConstants.DataFetches.YtDlp.VideoPage, videoId, ct);
+        dataFetchScope.ThrowIfAlreadyFetching();
+
+        await AddOrUpdateVideoAsync(idOnPlatform, dataFetchScope, ct);
+    }
+
+    public async Task<Video?> AddOrUpdateVideoAsync(Submission submission, CancellationToken ct)
+    {
+        await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
+            YouTubeConstants.DataFetches.YtDlp.VideoPage, submission, ct);
+        dataFetchScope.ThrowIfAlreadyFetching();
+
+        return await AddOrUpdateVideoAsync(submission.IdOnPlatform, dataFetchScope, ct);
+    }
+
+    private async Task<Video?> AddOrUpdateVideoAsync(string idOnPlatform, DataFetchScope dataFetchScope, CancellationToken ct)
+    {
         dataFetchScope.ThrowIfAlreadyFetching();
 
         var dataFetch = dataFetchScope.DataFetch;
@@ -79,7 +86,7 @@ public class VideoService : BaseYouTubeService
 
         var video = await AddOrUpdateVideoAsync(videoResult.Data, dataFetch, ct);
 
-        dataFetch.VideoId ??= videoId;
+        dataFetch.VideoId ??= video.Id;
         dataFetch.Video ??= video;
 
         return video;

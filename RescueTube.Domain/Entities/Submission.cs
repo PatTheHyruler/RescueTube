@@ -34,6 +34,8 @@ public class Submission : BaseIdDbEntity
     public Guid? AuthorId { get; set; }
     public Author? Author { get; set; }
 
+    public ICollection<DataFetch>? DataFetches { get; set; }
+
     public Submission()
     {
     }

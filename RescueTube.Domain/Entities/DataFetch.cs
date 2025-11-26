@@ -21,6 +21,9 @@ public class DataFetch : BaseIdDbEntity
     public Guid? PlaylistId { get; set; }
     public Playlist? Playlist { get; set; }
 
+    public Guid? SubmissionId { get; set; }
+    public Submission? Submission { get; set; }
+
     public required EPlatform Platform { get; init; }
 
     public DateTimeOffset? LastHeartbeatReceivedAt { get; set; }

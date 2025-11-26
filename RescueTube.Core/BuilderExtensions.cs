@@ -53,8 +53,8 @@ public static class BuilderExtensions
         services.AddScoped<UpdateImagesResolutionJob>();
         services.Configure<JobsConfiguration>(c => c.RegisterJobs(
             DownloadImageJob.JobDefinition,
-            EnqueueSubmissionsJob.JobDefinition,
             DownloadVideoJob.JobDefinition,
+            HandleNextSubmissionJob.JobDefinition,
             DeleteExpiredRefreshTokensJob.JobDefinition,
             UpdateImagesResolutionJob.JobDefinition,
             DataFetchesKillSwitchJob.JobDefinition
