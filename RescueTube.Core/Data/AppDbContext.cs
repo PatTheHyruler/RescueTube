@@ -43,6 +43,7 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     public DbSet<StatusChangeEvent> StatusChangeEvents => Set<StatusChangeEvent>();
 
     public DbSet<Submission> Submissions => Set<Submission>();
+    public DbSet<SubmissionHandlingFailure> SubmissionHandlingFailures => Set<SubmissionHandlingFailure>();
 
     public DbSet<Playlist> Playlists => Set<Playlist>();
     public DbSet<PlaylistItem> PlaylistItems => Set<PlaylistItem>();

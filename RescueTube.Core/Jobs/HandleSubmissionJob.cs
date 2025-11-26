@@ -35,9 +35,9 @@ public sealed class HandleNextSubmissionJob(
     public async Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
         // TODO: Add throttling check per platform?
-        // TODO: Exclude failed submissions
         var submissions = await dbContext.Submissions
             .Where(s => s.ApprovedAt != null && s.CompletedAt == null)
+            .Where(s => !s.Failures!.Any())
             .Where(s => !SubmissionIdsBeingHandled.Keys.Contains(s.Id))
             .OrderBy(s => s.Id)
             .Take(2)
