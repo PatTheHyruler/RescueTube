@@ -34,7 +34,6 @@ public sealed class HandleNextSubmissionJob(
     [Queue(JobQueues.Critical)]
     public async Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
-        // TODO: Add throttling check per platform?
         var submissions = await dbContext.Submissions
             .Where(s => s.ApprovedAt != null && s.CompletedAt == null)
             .Where(s => !s.Failures!.Any())
