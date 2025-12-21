@@ -101,7 +101,7 @@ public static class JobEndpoints
         return TypedResults.Ok();
     }
 
-    private static Results<Ok, BadRequest<ErrorResponseDto>> TriggerRecurringJob(
+    private static Results<Ok, NotFound<ErrorResponseDto>> TriggerRecurringJob(
         [FromRoute] string recurringJobId,
         [FromServices] IRecurringJobsService recurringJobsService,
         CancellationToken ct)
@@ -110,7 +110,7 @@ public static class JobEndpoints
         return triggeredRecurringJobIds switch
         {
             not null => TypedResults.Ok(),
-            null => TypedResults.BadRequest(new ErrorResponseDto
+            null => TypedResults.NotFound(new ErrorResponseDto
             {
                 ErrorType = EErrorType.EntityNotFound,
                 Message = "Recurring job with provided id was not found",
