@@ -67,12 +67,12 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
                 submission.VideoId = video.Id;
                 _dbCtx.RegisterSavedChangesCallbackRunOnce(() =>
                 {
-                    _recurringJobsService.TriggerIfNotRunning(
+                    _recurringJobsService.TriggerIfNotRunning([
                         DownloadVideoJob.RecurringJobId,
                         DownloadImageJob.RecurringJobId,
                         UpdateImagesResolutionJob.RecurringJobId,
-                        FetchYouTubeExplodeAuthorDataJob.RecurringJobId
-                    );
+                        FetchYouTubeExplodeAuthorDataJob.RecurringJobId,
+                    ]);
                 });
                 break;
             case EEntityType.Playlist:
@@ -80,26 +80,26 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
                 submission.PlaylistId = playlist.Id;
                 _dbCtx.RegisterSavedChangesCallbackRunOnce(() =>
                 {
-                    _recurringJobsService.TriggerIfNotRunning(
+                    _recurringJobsService.TriggerIfNotRunning([
                         FetchVideoDataJob.RecurringJobId,
                         DownloadVideoJob.RecurringJobId,
                         DownloadImageJob.RecurringJobId,
                         UpdateImagesResolutionJob.RecurringJobId,
-                        FetchYouTubeExplodeAuthorDataJob.RecurringJobId
-                    );
+                        FetchYouTubeExplodeAuthorDataJob.RecurringJobId,
+                    ]);
                 });
                 break;
             case EEntityType.Author:
                 var author = await SubmitAuthorAsync(submission, ct);
                 submission.AuthorId = author.Id;
-                _recurringJobsService.TriggerIfNotRunning(
+                _recurringJobsService.TriggerIfNotRunning([
                     FetchAuthorVideosJob.RecurringJobId,
                     FetchVideoDataJob.RecurringJobId,
                     DownloadVideoJob.RecurringJobId,
                     DownloadImageJob.RecurringJobId,
                     UpdateImagesResolutionJob.RecurringJobId,
-                    FetchYouTubeExplodeAuthorDataJob.RecurringJobId
-                );
+                    FetchYouTubeExplodeAuthorDataJob.RecurringJobId,
+                ]);
                 break;
             default:
                 throw new ArgumentException($"Unsupported entity type {submission.EntityType}, submission {submission.Id}", nameof(submission));

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -110,8 +109,8 @@ public static class JobEndpoints
         var triggeredRecurringJobIds = recurringJobsService.TriggerIfNotRunning(recurringJobId);
         return triggeredRecurringJobIds switch
         {
-            [_] => TypedResults.Ok(),
-            [] => TypedResults.BadRequest(new ErrorResponseDto
+            not null => TypedResults.Ok(),
+            null => TypedResults.BadRequest(new ErrorResponseDto
             {
                 ErrorType = EErrorType.EntityNotFound,
                 Message = "Recurring job with provided id was not found",
@@ -120,7 +119,6 @@ public static class JobEndpoints
                     recurringJobId,
                 },
             }),
-            { Length: > 1 } => throw new UnreachableException("Somehow triggered multiple jobs for single recurring job id"),
         };
     }
 }
