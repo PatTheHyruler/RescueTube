@@ -27,7 +27,7 @@ public interface IRecurringJobsService
 
 public class RecurringJobsService : IRecurringJobsService
 {
-    private const string CacheKey = "JobSettings";
+    private const string JobSettingsCacheKey = "JobSettings";
 
     private readonly IRecurringJobManagerV2 _recurringJobManager;
     private readonly IBackgroundJobClientV2 _backgroundJobClient;
@@ -194,7 +194,7 @@ public class RecurringJobsService : IRecurringJobsService
 
     public async Task<JobDefinitionWithSettings[]> GetJobDefinitionsWithSettingsAsync(CancellationToken ct)
     {
-        return await _memoryCache.GetOrCreateAsync(CacheKey, _ => GetJobSettingsWithoutCacheAsync(ct))
+        return await _memoryCache.GetOrCreateAsync(JobSettingsCacheKey, _ => GetJobSettingsWithoutCacheAsync(ct))
             ?? await GetJobSettingsWithoutCacheAsync(ct);
     }
 
@@ -218,7 +218,7 @@ public class RecurringJobsService : IRecurringJobsService
     {
         var disableAllArchival = await _settingService.GetValueAsync(SettingDefinitions.DisableAllArchival, ct)
                                  ?? SettingDefinitions.DisableAllArchival.DefaultValue;
-        _memoryCache.Remove(CacheKey);
+        _memoryCache.Remove(JobSettingsCacheKey);
         SetupRecurringJobs(updatedSettings, disableAllArchival: disableAllArchival, onlyRemoveSpecifiedJobs: true);
     }
 }
