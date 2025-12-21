@@ -34,9 +34,11 @@ public interface IYouTubeDlClient
 public class YouTubeDlClient : IYouTubeDlClient
 {
     private readonly YoutubeDL _youtubeDl;
+    private readonly CookieService _cookieService;
 
-    public YouTubeDlClient(IOptions<YouTubeOptions> youTubeOptions, AppPaths appPaths)
+    public YouTubeDlClient(IOptions<YouTubeOptions> youTubeOptions, AppPaths appPaths, CookieService cookieService)
     {
+        _cookieService = cookieService;
         var binariesDirectory = Setup.GetBinariesDirectory(youTubeOptions.Value.BinariesDirectory);
         _youtubeDl = new YoutubeDL
         {
@@ -51,22 +53,37 @@ public class YouTubeDlClient : IYouTubeDlClient
 
     public string YouTubeDlPath => _youtubeDl.YoutubeDLPath;
 
-    public Task<RunResult<VideoData?>?> RunVideoDataFetchAsync(
+    private OptionSet? _cachedOptions;
+
+    private async ValueTask<OptionSet> GetOptionsAsync(CancellationToken ct)
+    {
+        if (_cachedOptions is not null)
+        {
+            return _cachedOptions;
+        }
+
+        var options = new OptionSet();
+        await _cookieService.ApplyCookieConfigurationAsync(options, ct);
+        _cachedOptions = options;
+        return options;
+    }
+
+    public async Task<RunResult<VideoData?>?> RunVideoDataFetchAsync(
         string url,
         CancellationToken ct = default,
         bool flat = true,
         bool fetchComments = false,
         OptionSet? overrideOptions = null)
     {
-        return _youtubeDl.RunVideoDataFetch(
+        return await _youtubeDl.RunVideoDataFetch(
             url: url,
             ct: ct,
             flat: flat,
             fetchComments: fetchComments,
-            overrideOptions: overrideOptions);
+            overrideOptions: overrideOptions ?? await GetOptionsAsync(ct));
     }
 
-    public Task<RunResult<string?>?> RunVideoDownloadAsync(
+    public async Task<RunResult<string?>?> RunVideoDownloadAsync(
         string url,
         string format = "bestvideo+bestaudio/best",
         DownloadMergeFormat mergeFormat = DownloadMergeFormat.Unspecified,
@@ -76,7 +93,7 @@ public class YouTubeDlClient : IYouTubeDlClient
         IProgress<string>? output = null,
         OptionSet? overrideOptions = null)
     {
-        return _youtubeDl.RunVideoDownload(
+        return await _youtubeDl.RunVideoDownload(
             url: url,
             format: format,
             mergeFormat: mergeFormat,
@@ -84,7 +101,7 @@ public class YouTubeDlClient : IYouTubeDlClient
             ct: ct,
             progress: progress,
             output: output,
-            overrideOptions: overrideOptions);
+            overrideOptions: overrideOptions ?? await GetOptionsAsync(ct));
     }
 
     public Task<string?> RunUpdateAsync()
