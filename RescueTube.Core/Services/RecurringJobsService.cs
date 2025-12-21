@@ -17,8 +17,8 @@ public interface IRecurringJobsService
 {
     Task SetupRecurringJobsAsync(CancellationToken ct);
     Task SetupRecurringJobsAsync(bool disableAllArchival, CancellationToken ct);
-    string? TriggerIfNotRunning(string recurringJobId, bool enqueueContinuationIfNotRunning = true);
-    string[] TriggerIfNotRunning(IEnumerable<string> recurringJobIds, bool enqueueContinuationIfNotRunning = true);
+    string? TriggerIfNotRunning(string recurringJobId, bool enqueueContinuationIfRunning = true);
+    string[] TriggerIfNotRunning(IEnumerable<string> recurringJobIds, bool enqueueContinuationIfRunning = true);
     Task<JobDefinitionWithSettings[]> GetJobDefinitionsWithSettingsAsync(CancellationToken ct);
     Task<JobSettings?> GetJobSettingsAsync(JobDefinition jobDefinition, CancellationToken ct);
     Task HandleJobSettingsUpdateAsync(IReadOnlyCollection<JobDefinitionWithSettings> updatedSettings,
@@ -107,9 +107,9 @@ public class RecurringJobsService : IRecurringJobsService
     private static bool IsRealRecurringJob(RecurringJobDto job) =>
         job is { Removed: false, NextExecution: not null } && !string.IsNullOrWhiteSpace(job.Cron);
 
-    public string? TriggerIfNotRunning(string recurringJobId, bool enqueueContinuationIfNotRunning = true)
+    public string? TriggerIfNotRunning(string recurringJobId, bool enqueueContinuationIfRunning = true)
     {
-        return TriggerIfNotRunning([recurringJobId], enqueueContinuationIfNotRunning).SingleOrDefault();
+        return TriggerIfNotRunning([recurringJobId], enqueueContinuationIfRunning).SingleOrDefault();
     }
 
     public string[] TriggerIfNotRunning(IEnumerable<string> recurringJobIds, bool enqueueContinuationIfRunning = true)
