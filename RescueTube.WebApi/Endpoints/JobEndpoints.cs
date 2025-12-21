@@ -1,7 +1,14 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using RescueTube.Core.JobOrchestration;
+using Microsoft.EntityFrameworkCore;
+using RescueTube.Core.Data;
+using RescueTube.Core.DTO;
+using RescueTube.Core.Identity;
+using RescueTube.Core.Services;
+using RescueTube.Domain.Entities;
+using RescueTube.WebApi.ApiModels;
+using RescueTube.WebApi.ApiModels.Mappers;
+using RescueTube.WebApi.Utils.Validation;
 
 namespace RescueTube.WebApi.Endpoints;
 
@@ -11,34 +18,107 @@ public static class JobEndpoints
     {
         var jobsGroup = app.MapGroup("jobs").WithTags("Jobs");
 
-        jobsGroup.MapGet("stats", GetJobStats).HasApiVersion(1);
+        jobsGroup.MapGet("settings", GetJobSettingsAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
+
+        jobsGroup.MapPut("settings", UpdateJobSettingsAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
+
+        jobsGroup.MapPost("recurring/{recurringJobId}/trigger", TriggerRecurringJob)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
     }
 
-    /// <summary>
-    /// Temporary debug endpoint
-    /// </summary>
-    /// <returns>Some kind of object</returns>
-    private static Ok<object> GetJobStats(
-        [FromServices] JobExecutionRegistry jobExecutionRegistry,
-        [FromServices] IOptions<JobsConfiguration> jobsConfig)
+    private static async Task<Ok<JobSettingsDtoV1[]>> GetJobSettingsAsync(
+        [FromServices] IRecurringJobsService recurringJobsService,
+        CancellationToken ct)
     {
-        return TypedResults.Ok<object>(new
+        var jobDefinitions = await recurringJobsService.GetJobDefinitionsWithSettingsAsync(ct);
+        var result = jobDefinitions
+            .Select(JobSettingMapper.MapToJobSettingsDtoV1)
+            .ToArray();
+
+        return TypedResults.Ok(result);
+    }
+
+    private static async Task<Results<Ok, BadRequest<ErrorResponseDto>>> UpdateJobSettingsAsync(
+        [FromBody] JobSettingsUpdateDtoV1[] jobSettingsUpdates,
+        [FromServices] IRecurringJobsService recurringJobsService,
+        [FromServices] IDataUow dataUow,
+        CancellationToken ct)
+    {
+        var validator = new JobSettingsUpdateDtoV1CollectionValidator();
+        var validationResult = await validator.ValidateAsync(jobSettingsUpdates, ct);
+        if (!validationResult.IsValid(out var badRequestResponse))
         {
-            LatestJobs = jobExecutionRegistry.StartedJobs
-                .SelectMany(x => x.Value.Values
-                    .Select(info => new { Job = x.Key.Name, InvocationInfo = info }))
-                .OrderByDescending(x => x.InvocationInfo.StartedAt)
-                .Take(15),
-            LatestJobsByType = jobExecutionRegistry.StartedJobs.Select(kvp => new
+            return badRequestResponse;
+        }
+
+        var jobDefinitions = await recurringJobsService.GetJobDefinitionsWithSettingsAsync(ct);
+
+        var joinedUpdates = jobSettingsUpdates.Join(
+                jobDefinitions,
+                x => x.JobId,
+                x => x.JobDefinition.JobId,
+                (updateDto, x) => (JobDefinitionWithSettings: x, UpdateDto: updateDto))
+            .ToArray();
+
+        var updatedDefinitionsWithSettings = new List<JobDefinitionWithSettings>(joinedUpdates.Length);
+
+        foreach (var (definitionWithSettings, updateDto) in joinedUpdates)
+        {
+            if (definitionWithSettings.JobSettings is not PersistedJobSettings persistedJobSettings)
             {
-                Job = kvp.Key.Name,
-                Latest = kvp.Value.Values.OrderByDescending(x => x.StartedAt).FirstOrDefault(),
-            }),
-            JobsWithPriority = jobsConfig.Value.RegisteredJobs.Select(j => new
+                persistedJobSettings = definitionWithSettings.JobSettings.CloneToPersistedJobSettings();
+                dataUow.Ctx.JobSettings.Add(persistedJobSettings);
+            }
+            else
             {
-                Job = j.Name,
-                Priority = jobExecutionRegistry.GetJobPriority(j),
+                dataUow.Ctx.Entry(persistedJobSettings).State = EntityState.Unchanged;
+            }
+
+            updatedDefinitionsWithSettings.Add(definitionWithSettings with
+            {
+                JobSettings = persistedJobSettings,
+            });
+
+            persistedJobSettings.IsEnabled = updateDto.IsEnabled;
+            persistedJobSettings.Cron = updateDto.Cron;
+
+            if (persistedJobSettings.DataFetchJobSettings is not null && updateDto.DataFetchJobSettings is not null)
+            {
+                persistedJobSettings.DataFetchJobSettings.SuccessCutoffOffset = updateDto.DataFetchJobSettings.SuccessCutoffOffset;
+                persistedJobSettings.DataFetchJobSettings.FailureCutoffOffset = updateDto.DataFetchJobSettings.FailureCutoffOffset;
+            }
+        }
+
+        await dataUow.SaveChangesAsync(ct);
+
+        await recurringJobsService.HandleJobSettingsUpdateAsync(updatedDefinitionsWithSettings, ct);
+
+        return TypedResults.Ok();
+    }
+
+    private static Results<Ok, NotFound<ErrorResponseDto>> TriggerRecurringJob(
+        [FromRoute] string recurringJobId,
+        [FromServices] IRecurringJobsService recurringJobsService,
+        CancellationToken ct)
+    {
+        var triggeredRecurringJobIds = recurringJobsService.TriggerIfNotRunning(recurringJobId);
+        return triggeredRecurringJobIds switch
+        {
+            not null => TypedResults.Ok(),
+            null => TypedResults.NotFound(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.EntityNotFound,
+                Message = "Recurring job with provided id was not found",
+                Details = new
+                {
+                    recurringJobId,
+                },
             }),
-        });
+        };
     }
 }

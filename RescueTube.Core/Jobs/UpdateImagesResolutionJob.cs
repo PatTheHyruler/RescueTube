@@ -1,14 +1,29 @@
 using Hangfire;
+using Hangfire.Server;
 using Microsoft.EntityFrameworkCore;
 using RescueTube.Core.Data;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Jobs.Filters;
 using RescueTube.Core.Services;
-using RescueTube.Core.Utils;
 
 namespace RescueTube.Core.Jobs;
 
-public class UpdateImagesResolutionJob
+public class UpdateImagesResolutionJob : IJob
 {
+    public const string RecurringJobId = "core:update-images-resolution-from-file";
+    static string IJobWithId.RecurringJobId => RecurringJobId;
+
+    public static JobDefinition JobDefinition { get; } = new JobDefinition<UpdateImagesResolutionJob>
+    {
+        IsArchivalJob = false,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = Cron.Hourly(),
+            IsEnabled = true,
+        },
+    };
+
     private readonly IDataUow _dataUow;
     private readonly ImageService _imageService;
     private readonly IBackgroundJobClient _backgroundJobClient;
@@ -19,62 +34,30 @@ public class UpdateImagesResolutionJob
         _dataUow = dataUow;
         _imageService = imageService;
         _backgroundJobClient = backgroundJobClient;
-    } 
-
-    [RescheduleConcurrentExecution("core:update-images-resolution-enqueue")]
-    [Queue(JobQueues.LowerPriority)]
-    public async Task EnqueueAsync(CancellationToken ct)
-    {
-        using var transaction = TransactionUtils.NewTransactionScope();
-        var imageIds = _dataUow.Ctx.Images
-            .Where(_dataUow.Images.ShouldAttemptResolutionUpdate)
-            .Select(i => i.Id)
-            .AsAsyncEnumerable().WithCancellation(ct);
-        await foreach (var imageId in imageIds)
-        {
-            _backgroundJobClient.Enqueue<UpdateImagesResolutionJob>(
-                x => x.UpdateResolutionAsync(imageId, default));
-        }
-        transaction.Complete();
     }
 
-    [SkipConcurrent("core:update-author-images-resolutions:{0}")]
+    [SkipConcurrent(RecurringJobId)]
     [Queue(JobQueues.LowerPriority)]
-    public async Task UpdateAuthorImagesResolutionsAsync(Guid authorId, CancellationToken ct)
+    public async Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
-        var images = _dataUow.Ctx.Images
+        var images = await _dataUow.Ctx.Images
             .Where(_dataUow.Images.ShouldAttemptResolutionUpdate)
-            .Where(i => i.AuthorImages!.Any(ai => ai.AuthorId == authorId))
-            .AsAsyncEnumerable().WithCancellation(ct);
-        await foreach (var image in images)
+            .Take(100)
+            .ToArrayAsync(ct);
+
+        if (images.Length == 0)
         {
-            await _imageService.TryUpdateResolutionFromFileAsync(image, ct);
+            return;
+        }
+
+        foreach (var imageId in images)
+        {
+            await _imageService.TryUpdateResolutionFromFileAsync(imageId, ct);
         }
 
         await _dataUow.SaveChangesAsync(ct);
-    }
 
-    [SkipConcurrent("core:update-video-images-resolutions:{0}")]
-    [Queue(JobQueues.LowerPriority)]
-    public async Task UpdateVideoImagesResolutionsAsync(Guid videoId, CancellationToken ct)
-    {
-        var images = _dataUow.Ctx.Images
-            .Where(_dataUow.Images.ShouldAttemptResolutionUpdate)
-            .Where(i => i.VideoImages!.Any(vi => vi.VideoId == videoId))
-            .AsAsyncEnumerable().WithCancellation(ct);
-        await foreach (var image in images)
-        {
-            await _imageService.TryUpdateResolutionFromFileAsync(image, ct);
-        }
-
-        await _dataUow.SaveChangesAsync(ct);
-    }
-
-    [SkipConcurrent("core:update-image-resolution:{0}")]
-    [Queue(JobQueues.LowerPriority)]
-    public async Task UpdateResolutionAsync(Guid imageId, CancellationToken ct)
-    {
-        await _imageService.TryUpdateResolutionFromFileAsync(imageId, ct);
-        await _dataUow.SaveChangesAsync(ct);
+        _backgroundJobClient.ContinueJobWith<IRecurringJobManagerV2>(performContext.BackgroundJob.Id,
+            r => r.Trigger(RecurringJobId));
     }
 }

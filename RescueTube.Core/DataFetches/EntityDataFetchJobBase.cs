@@ -1,24 +1,32 @@
 using System.Linq.Expressions;
+using Hangfire;
+using Hangfire.Server;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.JobOrchestration;
+using RescueTube.Core.Services;
 using RescueTube.Domain.Contracts;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 
 namespace RescueTube.Core.DataFetches;
 
-public abstract class EntityDataFetchJobBase<TEntity> : IJob, IEntityDataFetchJob
+public abstract class EntityDataFetchJobBase<TEntity, TJob> : IJobBase, IEntityDataFetchJob
     where TEntity : class, IIdDatabaseEntity, IPlatformEntity
+    where TJob : EntityDataFetchJobBase<TEntity, TJob>, IJob
 {
     protected readonly IDataUow DataUow;
     protected readonly ILogger Logger;
+    private readonly IBackgroundJobClientV2 _backgroundJobClient;
+    private readonly IRecurringJobsService _recurringJobsService;
 
     private DataFetchDefinition DataFetchDefinition { get; }
 
-    protected EntityDataFetchJobBase(IDataUow dataUow, ILogger logger, DataFetchDefinition dataFetchDefinition)
+    private static string RecurringJobId => TJob.RecurringJobId;
+
+    protected EntityDataFetchJobBase(IDataUow dataUow, ILogger logger, DataFetchDefinition dataFetchDefinition, IBackgroundJobClientV2 backgroundJobClient, IRecurringJobsService recurringJobsService)
     {
         if (!IsValidEntityType(dataFetchDefinition.EntityType))
         {
@@ -27,33 +35,46 @@ public abstract class EntityDataFetchJobBase<TEntity> : IJob, IEntityDataFetchJo
         DataUow = dataUow;
         Logger = logger;
         DataFetchDefinition = dataFetchDefinition;
+        _backgroundJobClient = backgroundJobClient;
+        _recurringJobsService = recurringJobsService;
     }
 
-    public async Task<JobExecutionResult> RunAsync(CancellationToken ct)
+    public async Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
+        var jobSettings = await _recurringJobsService.GetJobSettingsAsync(TJob.JobDefinition, ct);
+        var dataFetchJobSettings =
+            jobSettings?.DataFetchJobSettings
+            ?? TJob.JobDefinition.DefaultSettings.DataFetchJobSettings
+            ?? DataFetchJobSettings.Default;
+
         var entityIds = await DataUow.Ctx.Set<TEntity>()
             .AsExpandable()
-            .Where(FilterExpression)
+            .Where(GetFilterExpression(dataFetchJobSettings))
             .OrderBy(x => x.Id)
             .Select(x => x.Id)
             .Take(2)
             .ToArrayAsync(ct);
         if (entityIds is not [var entityId, .. var nextIds])
         {
-            return JobExecutionResult.NothingToProcess;
+            return;
         }
 
         Logger.LogInformation(
             "Executing data fetch {Type} from {Source} for {Platform} {EntityType} {EntityId}",
             DataFetchDefinition.Type, DataFetchDefinition.Source, DataFetchDefinition.Platform,
             DataFetchDefinition.EntityType, entityId);
-        await FetchEntityDataAsync(entityId, ct);
-        return nextIds.Length != 0 ? JobExecutionResult.HasMoreToProcess : JobExecutionResult.Succeeded;
+        var result = await FetchEntityDataAsync(entityId, ct);
+
+        if (nextIds.Length > 0 && result is not EntityDataFetchResult.Throttled)
+        {
+            _backgroundJobClient.ContinueJobWith<IRecurringJobManagerV2>(performContext.BackgroundJob.Id,
+                r => r.Trigger(RecurringJobId));
+        }
     }
 
-    protected abstract Expression<Func<TEntity, bool>> FilterExpression { get; }
+    protected abstract Expression<Func<TEntity, bool>> GetFilterExpression(DataFetchJobSettings dataFetchJobSettings);
 
-    public abstract Task FetchEntityDataAsync(Guid entityId, CancellationToken ct);
+    public abstract Task<EntityDataFetchResult> FetchEntityDataAsync(Guid entityId, CancellationToken ct);
 
     private static bool IsValidEntityType(EEntityType entityType)
     {

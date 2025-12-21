@@ -5,8 +5,8 @@ using RescueTube.Core.Data.Mappers;
 using RescueTube.Core.DataFetches;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Jobs;
-using RescueTube.Core.Jobs.Registration;
 using RescueTube.Core.Services;
+using RescueTube.Core.Services.Startup;
 using RescueTube.Core.Utils;
 using RescueTube.Core.Utils.Validation;
 using RescueTube.Domain.Enums;
@@ -20,15 +20,15 @@ public static class BuilderExtensions
         services.AddOptionsFull<AppPathOptions>(AppPathOptions.Section);
         services.AddSingleton<AppPaths>();
 
-        services.AddSingleton<JobExecutionRegistry>();
         services.AddOptions<JobsConfiguration>();
 
         services.AddOptions<ServiceRegistry>();
 
-        services.AddOptions<DataFetchJobsConfiguration>();
         services.AddScoped<DataFetchService>();
 
         services.AddScoped<ServiceUow>();
+
+        services.AddMemoryCache();
 
         services.AddScoped<SubmissionService>();
         services.AddScoped<ImageService>();
@@ -52,18 +52,16 @@ public static class BuilderExtensions
 
         services.AddScoped<UpdateImagesResolutionJob>();
         services.Configure<JobsConfiguration>(c => c.RegisterJobs(
-            new JobDefinition<DownloadImageJob>
-            {
-                Priority = -1,
-                PreferredMaxConcurrentExecutions = 10,
-            }
+            DownloadImageJob.JobDefinition,
+            DownloadVideoJob.JobDefinition,
+            HandleNextSubmissionJob.JobDefinition,
+            DeleteExpiredRefreshTokensJob.JobDefinition,
+            UpdateImagesResolutionJob.JobDefinition,
+            DataFetchesKillSwitchJob.JobDefinition
         ));
 
-        services.AddOptions<HangfireRecurringJobRegistry>();
-        services.RegisterBllRecurringJobs();
-
-        services.AddScoped<RecurringJobsService>();
-        services.AddHostedService<RegisterRecurringJobsService>();
+        services.AddScoped<IRecurringJobsService, RecurringJobsService>();
+        services.AddHostedService<SetupRecurringJobsService>();
 
         return services;
     }

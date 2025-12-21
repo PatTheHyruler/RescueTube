@@ -13,7 +13,6 @@ using RescueTube.Core;
 using RescueTube.Core.Data;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Jobs;
-using RescueTube.Core.Jobs.Registration;
 using RescueTube.Core.Utils;
 using RescueTube.DAL.EF.MigrationUtils;
 using RescueTube.DAL.EF.Postgres;
@@ -143,7 +142,6 @@ try
 
     await app.SeedIdentityAsync();
     await app.SetupYouTubeAsync();
-    await app.ClearRecurringJobsAsync();
 
     app.UseHttpsRedirection();
 
@@ -226,7 +224,6 @@ try
     baseVersionedApi.MapAuthorEndpoints();
     baseVersionedApi.MapAccountEndpoints();
     baseVersionedApi.MapCommentEndpoints();
-    baseVersionedApi.MapJobEndpoints();
     baseVersionedApi.MapOptionsEndpoints();
     baseVersionedApi.MapStatisticsEndpoints();
     baseVersionedApi.MapSubmissionEndpoints();
@@ -235,6 +232,7 @@ try
     baseVersionedApi.MapPlaylistEndpoints();
     baseVersionedApi.MapSettingEndpoints();
     baseVersionedApi.MapDataFetchEndpoints();
+    baseVersionedApi.MapJobEndpoints();
 
     app.MapControllers();
 
@@ -276,16 +274,6 @@ string GetHangfireConnectionString(WebApplicationBuilder webApplicationBuilder)
     if (string.IsNullOrWhiteSpace(s))
     {
         throw new ApplicationException("HangfirePostgres connection string is required");
-    }
-
-    if (!s.Contains("Enlist=true"))
-    {
-        if (!s.EndsWith(';'))
-        {
-            s += ';';
-        }
-
-        s += "Enlist=true";
     }
 
     return s;

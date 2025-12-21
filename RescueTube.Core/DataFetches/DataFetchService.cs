@@ -1,9 +1,7 @@
-using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using RescueTube.Core.Data;
 using RescueTube.Core.Data.Specifications;
 using RescueTube.Domain.Entities;
@@ -17,18 +15,14 @@ public class DataFetchService
     private readonly IDataFetchSpecification _dataFetchSpecification;
     private readonly TimeProvider _timeProvider;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ILogger<DataFetchService> _logger;
 
-    public DataFetchService(AppDbContext dbCtx, IDataFetchSpecification dataFetchSpecification, TimeProvider timeProvider, IServiceScopeFactory serviceScopeFactory, ILogger<DataFetchService> logger)
+    public DataFetchService(AppDbContext dbCtx, IDataFetchSpecification dataFetchSpecification, TimeProvider timeProvider, IServiceScopeFactory serviceScopeFactory)
     {
         _dbCtx = dbCtx;
         _dataFetchSpecification = dataFetchSpecification;
         _timeProvider = timeProvider;
         _serviceScopeFactory = serviceScopeFactory;
-        _logger = logger;
     }
-
-    private static readonly ConcurrentDictionary<DataFetchDefinition, byte> DataFetchStartLocks = [];
 
     public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Author author, CancellationToken ct)
     {
@@ -50,38 +44,28 @@ public class DataFetchService
         return await StartDataFetchAsync(definition, video.Id, ct);
     }
 
-    public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Guid? entityId, CancellationToken ct)
+    public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Submission submission, CancellationToken ct)
     {
-        // Short-lived lock, used to avoid race condition between IsFetching check and adding new DataFetch.
-        // Not a distributed-safe check, and assumes that this is the only place that adds "Starting" DataFetches.
-        var lockSuccessfullyAcquired = DataFetchStartLocks.TryAdd(definition, byte.MinValue);
-        if (!lockSuccessfullyAcquired)
+        var dataFetch = await AddDataFetchAsync(definition, entityId: null, submission, ct);
+        return new DataFetchScope(dataFetch, this, ct);
+    }
+
+    public async Task<DataFetchScope?> StartDataFetchAsync(DataFetchDefinition definition, Guid entityId, CancellationToken ct)
+    {
+        var hasStartedDataFetch = await IsFetchingAsync(definition, entityId, ct);
+        if (hasStartedDataFetch)
         {
             return null;
         }
 
-        try
-        {
-            var hasStartedDataFetch = entityId is not null && await IsFetchingAsync(definition, entityId.Value, ct);
-            if (hasStartedDataFetch)
-            {
-                return null;
-            }
-
-            var dataFetch = await AddDataFetchAsync(definition, entityId, ct);
-            return new DataFetchScope(dataFetch, this, ct);
-        }
-        finally
-        {
-            var lockSuccessfullyReleased = DataFetchStartLocks.TryRemove(definition, out _);
-            if (!lockSuccessfullyReleased)
-            {
-                _logger.LogError("Failed to release lock for {DataFetchDefinition}, {EntityId}", definition, entityId);
-            }
-        }
+        var dataFetch = await AddDataFetchAsync(definition, entityId, submission: null, ct);
+        return new DataFetchScope(dataFetch, this, ct);
     }
 
-    private async Task<DataFetch> AddDataFetchAsync(DataFetchDefinition definition, Guid? entityId, CancellationToken ct)
+    private async Task<DataFetch> AddDataFetchAsync(
+        DataFetchDefinition definition,
+        Guid? entityId, Submission? submission,
+        CancellationToken ct)
     {
         var now = _timeProvider.GetUtcNow();
 
@@ -94,6 +78,8 @@ public class DataFetchService
             LastHeartbeatReceivedAt = now,
             Status = DataFetchStatus.Started,
             DataFetchResults = [],
+            Submission = submission,
+            SubmissionId = submission?.Id,
         };
 
         switch (definition.EntityType)
@@ -131,11 +117,17 @@ public class DataFetchService
                 .SetProperty(d => d.Message, message)
                 .SetProperty(d => d.StatusUpdatedAt, now));
 
+        var dataFetchEntry = _dbCtx.Entry(dataFetch);
+
         dataFetch.Status = status;
-        _dbCtx.Entry(dataFetch).Property(x => x.Status).IsModified = false;
+        var statusEntry = dataFetchEntry.Property(x => x.Status);
+        statusEntry.OriginalValue = status;
+        statusEntry.IsModified = false;
 
         dataFetch.Message = message;
-        _dbCtx.Entry(dataFetch).Property(x => x.Message).IsModified = false;
+        var messageEntry = _dbCtx.Entry(dataFetch).Property(x => x.Message);
+        messageEntry.OriginalValue = message;
+        messageEntry.IsModified = false;
     }
 
     public async Task SendDataFetchHeartbeatAsync(DataFetch dataFetch, CancellationToken ct)

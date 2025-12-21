@@ -1,24 +1,17 @@
-﻿using Hangfire;
-using MediatR;
+﻿using MediatR;
 using RescueTube.Core.Events;
 using RescueTube.Core.Jobs;
+using RescueTube.Core.Services;
 
 namespace RescueTube.Core.EventHandlers;
 
-public class SubmissionAddedEventHandler : INotificationHandler<SubmissionAddedEvent>
+public class SubmissionAddedEventHandler(IRecurringJobsService recurringJobsService) : INotificationHandler<SubmissionAddedEvent>
 {
-    private readonly IBackgroundJobClient _backgroundJobClient;
-
-    public SubmissionAddedEventHandler(IBackgroundJobClient backgroundJobClient)
-    {
-        _backgroundJobClient = backgroundJobClient;
-    }
-
     public Task Handle(SubmissionAddedEvent notification, CancellationToken cancellationToken)
     {
         if (notification is { AutoSubmit: true })
         {
-            _backgroundJobClient.Enqueue<HandleSubmissionJob>(x => x.HandleSubmissionAsync(notification.SubmissionId, CancellationToken.None));
+            recurringJobsService.TriggerIfNotRunning(HandleNextSubmissionJob.RecurringJobId);
         }
 
         return Task.CompletedTask;

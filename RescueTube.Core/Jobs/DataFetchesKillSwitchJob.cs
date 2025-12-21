@@ -1,13 +1,29 @@
+using Hangfire;
+using Hangfire.Server;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RescueTube.Core.Constants;
 using RescueTube.Core.Data;
+using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Services;
 
 namespace RescueTube.Core.Jobs;
 
-public class DataFetchesKillSwitchJob
+public class DataFetchesKillSwitchJob : IJob
 {
+    public static string RecurringJobId => "core:data-fetch-kill-switch-job";
+
+    public static JobDefinition JobDefinition { get; } = new JobDefinition<DataFetchesKillSwitchJob>
+    {
+        IsArchivalJob = false,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = "*/10 * * * *", // Every 10th minute
+            IsEnabled = true,
+        },
+    };
+
     private readonly IDataUow _dataUow;
     private readonly TimeProvider _timeProvider;
     private readonly SettingService _settingService;
@@ -21,7 +37,8 @@ public class DataFetchesKillSwitchJob
         _logger = logger;
     }
 
-    public async Task CheckDataFetchAmountAsync(CancellationToken ct)
+    [Queue(JobQueues.Critical)]
+    public async Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
         var now = _timeProvider.GetUtcNow();
         var offsetMinutes =

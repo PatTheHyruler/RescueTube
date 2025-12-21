@@ -1,9 +1,25 @@
-﻿using RescueTube.Core.Identity.Services;
+﻿using Hangfire;
+using Hangfire.Server;
+using RescueTube.Core.Identity.Services;
+using RescueTube.Core.JobOrchestration;
 
 namespace RescueTube.Core.Jobs;
 
-public class DeleteExpiredRefreshTokensJob
+public class DeleteExpiredRefreshTokensJob : IJob
 {
+    public static string RecurringJobId => "core:delete-expired-refresh-tokens";
+
+    public static JobDefinition JobDefinition { get; } = new JobDefinition<DeleteExpiredRefreshTokensJob>
+    {
+        IsArchivalJob = false,
+        DefaultSettings = new()
+        {
+            JobId = RecurringJobId,
+            Cron = Cron.Daily(),
+            IsEnabled = true,
+        },
+    };
+
     private readonly TokenService _tokenService;
 
     public DeleteExpiredRefreshTokensJob(TokenService tokenService)
@@ -11,8 +27,8 @@ public class DeleteExpiredRefreshTokensJob
         _tokenService = tokenService;
     }
 
-    public async Task DeleteExpiredRefreshTokens()
+    public Task RunAsync(PerformContext performContext, CancellationToken ct)
     {
-        await _tokenService.DeleteExpiredRefreshTokensAsync();
+        return _tokenService.DeleteExpiredRefreshTokensAsync(ct);
     }
 }

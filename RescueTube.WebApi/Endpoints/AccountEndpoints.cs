@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core.Identity;
 using RescueTube.Core.Identity.Exceptions;
 using RescueTube.Core.Identity.Services;
-using RescueTube.Core.Utils;
 using RescueTube.WebApi.ApiModels;
 using RescueTube.WebApi.ApiModels.Auth;
 using RescueTube.WebApi.Auth;
@@ -56,29 +55,21 @@ public static class AccountEndpoints
     {
         try
         {
-            using (var transaction = TransactionUtils.NewTransactionScope())
-            {
-                await identityUow.UserService.RegisterUserAsync(
-                    username: registrationData.Username,
-                    password: registrationData.Password);
-                await identityUow.SaveChangesAsync(ct);
-                transaction.Complete();
-            }
+            await identityUow.UserService.RegisterUserAsync(
+                username: registrationData.Username,
+                password: registrationData.Password);
+            await identityUow.SaveChangesAsync(ct);
 
-            using (var transaction = TransactionUtils.NewTransactionScope())
-            {
-                var jwtResult =
-                    await identityUow.UserService.SignInJwtAsync(registrationData.Username, registrationData.Password);
-                await identityUow.SaveChangesAsync(ct);
-                transaction.Complete();
+            var jwtResult =
+                await identityUow.UserService.SignInJwtAsync(registrationData.Username, registrationData.Password);
+            await identityUow.SaveChangesAsync(ct);
 
-                return TypedResults.Ok(new JwtResponseDtoV1
-                {
-                    Jwt = jwtResult.Jwt,
-                    RefreshToken = jwtResult.RefreshToken.Token,
-                    RefreshTokenExpiresAt = jwtResult.RefreshToken.ExpiresAt,
-                });
-            }
+            return TypedResults.Ok(new JwtResponseDtoV1
+            {
+                Jwt = jwtResult.Jwt,
+                RefreshToken = jwtResult.RefreshToken.Token,
+                RefreshTokenExpiresAt = jwtResult.RefreshToken.ExpiresAt,
+            });
         }
         catch (IdentityOperationFailedException e)
         {
@@ -118,10 +109,8 @@ public static class AccountEndpoints
     {
         try
         {
-            using var transaction = TransactionUtils.NewTransactionScope();
             var jwtResult = await identityUow.UserService.SignInJwtAsync(loginData.Username, loginData.Password);
             await identityUow.SaveChangesAsync(ct);
-            transaction.Complete();
 
             return TypedResults.Ok(new JwtResponseDtoV1
             {
@@ -168,12 +157,10 @@ public static class AccountEndpoints
     {
         try
         {
-            using var transaction = TransactionUtils.NewTransactionScope();
             var jwtResult = await identityUow.TokenService.RefreshTokenAsync(
                 jwt: refreshTokenModel.Jwt,
                 refreshToken: refreshTokenModel.RefreshToken);
             await identityUow.SaveChangesAsync(ct);
-            transaction.Complete();
 
             return TypedResults.Ok(new JwtResponseDtoV1
             {

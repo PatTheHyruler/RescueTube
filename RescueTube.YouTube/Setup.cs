@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using RescueTube.Core;
 using RescueTube.Core.Contracts;
-using RescueTube.Core.DataFetches;
 using RescueTube.Core.JobOrchestration;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils.Validation;
@@ -59,23 +58,13 @@ public static class Setup
         services.AddScoped<IYouTubeExplodeClient, YouTubeExplodeClient>();
 
         services.AddScoped<FetchYouTubeExplodeAuthorDataJob>();
-        services.RegisterYouTubeRecurringJobs();
-
         services.Configure<JobsConfiguration>(c => c.RegisterJobs(
-            new JobDefinition<FetchPlaylistDataJob>(),
-            new JobDefinition<FetchVideoDataJob>(),
-            new JobDefinition<FetchYouTubeExplodeAuthorDataJob>
-            {
-                Priority = -10,
-            },
-            new JobDefinition<FetchAuthorVideosJob>()
+            UpdateYtDlpJob.JobDefinition,
+            FetchPlaylistDataJob.JobDefinition,
+            FetchVideoDataJob.JobDefinition,
+            FetchYouTubeExplodeAuthorDataJob.JobDefinition,
+            FetchAuthorVideosJob.JobDefinition
         ));
-
-        services.Configure<DataFetchJobsConfiguration>(c => c
-            .RegisterJob<FetchPlaylistDataJob>()
-            .RegisterJob<FetchVideoDataJob>()
-            .RegisterJob<FetchYouTubeExplodeAuthorDataJob>()
-            .RegisterJob<FetchAuthorVideosJob>());
 
         services.Configure<SettingRegistry>(x => x.RegisterDefinitions(YouTubeSettingDefinitions.AllDefinitions));
     }

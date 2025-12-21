@@ -3,18 +3,21 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RescueTube.DAL.EF.Postgres;
 
 #nullable disable
 
-namespace DAL.EF.Migrations
+namespace RescueTube.DAL.EF.Postgres.Migrations
 {
     [DbContext(typeof(PostgresAppDbContext))]
-    partial class PostgresAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251116215342_Add_JobSettingsTable")]
+    partial class Add_JobSettingsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -437,9 +440,6 @@ namespace DAL.EF.Migrations
                     b.Property<DateTimeOffset?>("StatusUpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("SubmissionId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("text");
@@ -452,8 +452,6 @@ namespace DAL.EF.Migrations
                     b.HasIndex("AuthorId");
 
                     b.HasIndex("PlaylistId");
-
-                    b.HasIndex("SubmissionId");
 
                     b.HasIndex("VideoId");
 
@@ -1118,28 +1116,6 @@ namespace DAL.EF.Migrations
                     b.ToTable("Submissions");
                 });
 
-            modelBuilder.Entity("RescueTube.Domain.Entities.SubmissionHandlingFailure", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("OccurredAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("SubmissionId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SubmissionId");
-
-                    b.ToTable("SubmissionHandlingFailures");
-                });
-
             modelBuilder.Entity("RescueTube.Domain.Entities.Video", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1635,11 +1611,6 @@ namespace DAL.EF.Migrations
                         .HasForeignKey("PlaylistId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("RescueTube.Domain.Entities.Submission", "Submission")
-                        .WithMany("DataFetches")
-                        .HasForeignKey("SubmissionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("RescueTube.Domain.Entities.Video", "Video")
                         .WithMany()
                         .HasForeignKey("VideoId")
@@ -1648,8 +1619,6 @@ namespace DAL.EF.Migrations
                     b.Navigation("Author");
 
                     b.Navigation("Playlist");
-
-                    b.Navigation("Submission");
 
                     b.Navigation("Video");
                 });
@@ -1949,17 +1918,6 @@ namespace DAL.EF.Migrations
                     b.Navigation("Video");
                 });
 
-            modelBuilder.Entity("RescueTube.Domain.Entities.SubmissionHandlingFailure", b =>
-                {
-                    b.HasOne("RescueTube.Domain.Entities.Submission", "Submission")
-                        .WithMany("Failures")
-                        .HasForeignKey("SubmissionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Submission");
-                });
-
             modelBuilder.Entity("RescueTube.Domain.Entities.Video", b =>
                 {
                     b.HasOne("RescueTube.Domain.Entities.Localization.TextTranslationKey", "Description")
@@ -2163,13 +2121,6 @@ namespace DAL.EF.Migrations
             modelBuilder.Entity("RescueTube.Domain.Entities.PlaylistItem", b =>
                 {
                     b.Navigation("PositionHistories");
-                });
-
-            modelBuilder.Entity("RescueTube.Domain.Entities.Submission", b =>
-                {
-                    b.Navigation("DataFetches");
-
-                    b.Navigation("Failures");
                 });
 
             modelBuilder.Entity("RescueTube.Domain.Entities.Video", b =>

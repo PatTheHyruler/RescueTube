@@ -43,6 +43,7 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     public DbSet<StatusChangeEvent> StatusChangeEvents => Set<StatusChangeEvent>();
 
     public DbSet<Submission> Submissions => Set<Submission>();
+    public DbSet<SubmissionHandlingFailure> SubmissionHandlingFailures => Set<SubmissionHandlingFailure>();
 
     public DbSet<Playlist> Playlists => Set<Playlist>();
     public DbSet<PlaylistItem> PlaylistItems => Set<PlaylistItem>();
@@ -57,6 +58,8 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
     public DbSet<Setting.Bool> BoolSettings => Set<Setting.Bool>();
     public DbSet<Setting.String> StringSettings => Set<Setting.String>();
     public DbSet<Setting.DataSize> DataSizeSettings => Set<Setting.DataSize>();
+
+    public DbSet<PersistedJobSettings> JobSettings => Set<PersistedJobSettings>();
 
     private readonly ILoggerFactory? _loggerFactory;
     private readonly DbLoggingOptions? _dbLoggingOptions;
@@ -76,6 +79,24 @@ public abstract class AppDbContext : IdentityDbContext<User, Role, Guid, UserCla
         if (_dbLoggingOptions?.SensitiveDataLogging ?? false)
         {
             optionsBuilder.EnableSensitiveDataLogging();
+        }
+    }
+
+    public void RegisterSavedChangesCallbackRunOnce(Action callback)
+    {
+        RegisterSavedChangesCallbackRunOnce(_ => callback());
+    }
+
+    private void RegisterSavedChangesCallbackRunOnce(Action<object?> callback)
+    {
+        SavedChanges += OnSavedChanges;
+        return;
+
+        void OnSavedChanges(object? sender, EventArgs savedEventArgs)
+        {
+            SavedChanges -= OnSavedChanges;
+
+            callback(sender);
         }
     }
 

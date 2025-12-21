@@ -31,6 +31,7 @@ public class SubmitServiceTests : BaseEfPostgresTest
         ServiceCollection.AddScoped<DataFetchService>();
         ServiceCollection.AddScoped<EntityUpdateService>();
         ServiceCollection.AddScoped<StatusChangeService>();
+        ServiceCollection.AddSingleton(Substitute.For<IRecurringJobsService>());
         ServiceCollection.AddMediatR(cfg =>
         {
             cfg

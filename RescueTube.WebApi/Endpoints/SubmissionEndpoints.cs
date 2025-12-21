@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using RescueTube.Core;
 using RescueTube.Core.Exceptions;
-using RescueTube.Core.Utils;
 using RescueTube.WebApi.ApiModels;
 
 namespace RescueTube.WebApi.Endpoints;
@@ -29,10 +28,8 @@ public static class SubmissionEndpoints
     {
         try
         {
-            using var transaction = TransactionUtils.NewTransactionScope();
-            var submission = await serviceUow.SubmissionService.SubmitGenericLinkAsync(input.Url, user, ct);
+            var submission = serviceUow.SubmissionService.SubmitGenericLink(input.Url, user);
             await serviceUow.SaveChangesAsync(ct);
-            transaction.Complete();
 
             return TypedResults.Ok(new LinkSubmissionResponseDtoV1
             {

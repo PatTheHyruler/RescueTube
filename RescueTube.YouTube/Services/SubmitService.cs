@@ -5,10 +5,13 @@ using RescueTube.Core.Contracts;
 using RescueTube.Core.Data;
 using RescueTube.Core.DataFetches;
 using RescueTube.Core.Exceptions;
+using RescueTube.Core.Jobs;
+using RescueTube.Core.Services;
 using RescueTube.Domain;
 using RescueTube.Domain.Entities;
 using RescueTube.Domain.Enums;
 using RescueTube.YouTube.Base;
+using RescueTube.YouTube.Jobs.DataFetch;
 using RescueTube.YouTube.Utils;
 
 namespace RescueTube.YouTube.Services;
@@ -18,12 +21,14 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
     private readonly AppDbContext _dbCtx;
     private readonly YouTubeServices _youTubeServices;
     private readonly DataFetchService _dataFetchService;
+    private readonly IRecurringJobsService _recurringJobsService;
 
-    public SubmitService(AppDbContext dbCtx, YouTubeServices youTubeServices, DataFetchService dataFetchService)
+    public SubmitService(AppDbContext dbCtx, YouTubeServices youTubeServices, DataFetchService dataFetchService, IRecurringJobsService recurringJobsService)
     {
         _dbCtx = dbCtx;
         _youTubeServices = youTubeServices;
         _dataFetchService = dataFetchService;
+        _recurringJobsService = recurringJobsService;
     }
 
     public bool IsPlatformUrl(string url, [NotNullWhen(true)] out RecognizedPlatformUrl? recognizedPlatformUrl)
@@ -58,31 +63,56 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         switch (submission.EntityType)
         {
             case EEntityType.Video:
-                var video = await SubmitVideoAsync(submission.IdOnPlatform, ct);
+                var video = await SubmitVideoAsync(submission, ct);
                 submission.VideoId = video.Id;
+                _dbCtx.RegisterSavedChangesCallbackRunOnce(() =>
+                {
+                    _recurringJobsService.TriggerIfNotRunning([
+                        DownloadVideoJob.RecurringJobId,
+                        DownloadImageJob.RecurringJobId,
+                        UpdateImagesResolutionJob.RecurringJobId,
+                        FetchYouTubeExplodeAuthorDataJob.RecurringJobId,
+                    ]);
+                });
                 break;
             case EEntityType.Playlist:
-                var playlist = await SubmitPlaylistAsync(submission.IdOnPlatform, ct);
+                var playlist = await SubmitPlaylistAsync(submission, ct);
                 submission.PlaylistId = playlist.Id;
+                _dbCtx.RegisterSavedChangesCallbackRunOnce(() =>
+                {
+                    _recurringJobsService.TriggerIfNotRunning([
+                        FetchVideoDataJob.RecurringJobId,
+                        DownloadVideoJob.RecurringJobId,
+                        DownloadImageJob.RecurringJobId,
+                        UpdateImagesResolutionJob.RecurringJobId,
+                        FetchYouTubeExplodeAuthorDataJob.RecurringJobId,
+                    ]);
+                });
                 break;
             case EEntityType.Author:
-                var author = await SubmitAuthorAsync(submission.IdOnPlatform, submission.IdType, options: null, ct: ct);
+                var author = await SubmitAuthorAsync(submission, ct);
                 submission.AuthorId = author.Id;
+                _recurringJobsService.TriggerIfNotRunning([
+                    FetchAuthorVideosJob.RecurringJobId,
+                    FetchVideoDataJob.RecurringJobId,
+                    DownloadVideoJob.RecurringJobId,
+                    DownloadImageJob.RecurringJobId,
+                    UpdateImagesResolutionJob.RecurringJobId,
+                    FetchYouTubeExplodeAuthorDataJob.RecurringJobId,
+                ]);
                 break;
             default:
-                throw new ApplicationException($"Unsupported entity type {submission.EntityType}");
+                throw new ArgumentException($"Unsupported entity type {submission.EntityType}, submission {submission.Id}", nameof(submission));
         }
     }
 
-    private async Task<Author> SubmitAuthorAsync(string idOnPlatform, string? idType,
-        AuthorArchivalSettings? options = null,
-        CancellationToken ct = default)
+    private async Task<Author> SubmitAuthorAsync(Submission submission, CancellationToken ct)
     {
-        Expression<Func<Author, bool>> existingAuthorFilter = idType switch
+        Expression<Func<Author, bool>> existingAuthorFilter = submission.IdType switch
         {
-            YouTubeConstants.IdTypes.Author.Handle => author => author.UserName == idOnPlatform,
-            null => author => author.IdOnPlatform == idOnPlatform,
-            _ => throw new ArgumentException($"Unsupported ID type '{idType}'", nameof(idType)),
+            YouTubeConstants.IdTypes.Author.Handle => author => author.UserName == submission.IdOnPlatform,
+            null => author => author.IdOnPlatform == submission.IdOnPlatform,
+            _ => throw new ArgumentException($"Unsupported ID type '{submission.IdType}' for submission {submission.Id}", nameof(submission)),
         };
         var existingAuthor = await _dbCtx.Authors
             .Where(a => a.Platform == EPlatform.YouTube)
@@ -94,12 +124,13 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
         if (addedOrExistingAuthor == null)
         {
             await using var dataFetchScope = await _dataFetchService.StartDataFetchAsync(
-                YouTubeConstants.DataFetches.YouTubeExplode.Channel, entityId: null, ct);
+                YouTubeConstants.DataFetches.YouTubeExplode.Channel, submission, ct);
             dataFetchScope.ThrowIfAlreadyFetching();
 
             var dataFetch = dataFetchScope.DataFetch;
 
-            var channel = await _youTubeServices.AuthorService.FetchYouTubeExplodeChannelAsync(idOnPlatform, idType, ct);
+            var channel = await _youTubeServices.AuthorService.FetchYouTubeExplodeChannelAsync(
+                idOnPlatform: submission.IdOnPlatform, idType: submission.IdType, ct);
 
             if (channel is null)
             {
@@ -126,38 +157,37 @@ public class SubmitService : BaseYouTubeService, IPlatformSubmissionHandler
             _dbCtx.Remove(addedOrExistingAuthor.ArchivalSettings);
         }
 
-        addedOrExistingAuthor.ArchivalSettings =
-            options ?? AuthorArchivalSettings.CreateDefaultArchivedAuthorSettings(); // TODO: Better logic for this
+        addedOrExistingAuthor.ArchivalSettings = AuthorArchivalSettings.CreateDefaultArchivedAuthorSettings();
         _dbCtx.Add(addedOrExistingAuthor.ArchivalSettings);
 
         return addedOrExistingAuthor;
     }
 
-    private async Task<Video> SubmitVideoAsync(string videoIdOnPlatform, CancellationToken ct)
+    private async Task<Video> SubmitVideoAsync(Submission submission, CancellationToken ct)
     {
         var existingVideo = await _dbCtx.Videos
-            .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == videoIdOnPlatform)
+            .Where(v => v.Platform == EPlatform.YouTube && v.IdOnPlatform == submission.IdOnPlatform)
             .FirstOrDefaultAsync(cancellationToken: ct);
         if (existingVideo != null)
         {
             return existingVideo;
         }
 
-        var addedVideo = await _youTubeServices.VideoService.AddOrUpdateVideoAsync(videoIdOnPlatform, ct);
+        var addedVideo = await _youTubeServices.VideoService.AddOrUpdateVideoAsync(submission, ct);
         return addedVideo ?? throw new VideoNotFoundOnPlatformException();
     }
 
-    private async Task<Playlist> SubmitPlaylistAsync(string playlistIdOnPlatform, CancellationToken ct)
+    private async Task<Playlist> SubmitPlaylistAsync(Submission submission, CancellationToken ct)
     {
         var existingPlaylist = await _dbCtx.Playlists
-            .Where(p => p.Platform == EPlatform.YouTube && p.IdOnPlatform == playlistIdOnPlatform)
+            .Where(p => p.Platform == EPlatform.YouTube && p.IdOnPlatform == submission.IdOnPlatform)
             .FirstOrDefaultAsync(ct);
         if (existingPlaylist != null)
         {
             return existingPlaylist;
         }
 
-        var addedPlaylist = await _youTubeServices.PlaylistService.AddOrUpdatePlaylistAsync(playlistIdOnPlatform, ct);
+        var addedPlaylist = await _youTubeServices.PlaylistService.AddOrUpdatePlaylistAsync(submission, ct);
         return addedPlaylist ?? throw new ApplicationException("Playlist not found on platform");
     }
 }
