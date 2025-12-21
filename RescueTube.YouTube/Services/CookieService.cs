@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using RescueTube.Core.Services;
 using RescueTube.Core.Utils;
 
 namespace RescueTube.YouTube.Services;
@@ -7,17 +8,19 @@ public sealed class CookieService
 {
     private readonly IOptions<YouTubeOptions> _options;
     private readonly AppPaths _appPaths;
+    private readonly SettingService _settingService;
 
-    public CookieService(IOptions<YouTubeOptions> options, AppPaths appPaths)
+    public CookieService(IOptions<YouTubeOptions> options, AppPaths appPaths, SettingService settingService)
     {
         _options = options;
         _appPaths = appPaths;
+        _settingService = settingService;
     }
 
     private string CookiesDirectory => _appPaths.GetAbsolutePathFromContentRoot(_options.Value.CookiesDirectory);
     private const string DefaultCookieFileName = "cookies.txt";
 
-    public string? GetFirstCookieFilePath()
+    private string? GetFirstCookieFilePath()
     {
         if (!Directory.Exists(CookiesDirectory))
         {
@@ -93,5 +96,23 @@ public sealed class CookieService
     private bool IsFilePathInCookiesDirectory(string filePath)
     {
         return Path.GetDirectoryName(filePath)?.TrimEnd('/') == CookiesDirectory.TrimEnd('/');
+    }
+
+    public async Task ApplyCookieConfigurationAsync(YoutubeDLSharp.Options.OptionSet options, CancellationToken ct)
+    {
+        var shouldUseCookieFile = await _settingService.GetValueAsync(YouTubeSettingDefinitions.UseCookieFile, ct)
+                                  ?? YouTubeSettingDefinitions.UseCookieFile.DefaultValue;
+        if (!shouldUseCookieFile)
+        {
+            return;
+        }
+
+        var cookieFilePath = GetFirstCookieFilePath();
+        if (cookieFilePath is null)
+        {
+            return;
+        }
+
+        options.Cookies = cookieFilePath;
     }
 }
