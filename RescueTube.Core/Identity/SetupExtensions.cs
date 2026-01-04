@@ -139,6 +139,7 @@ public static class SetupExtensions
             {
                 user = new User
                 {
+                    Id = Guid.CreateVersion7(),
                     UserName = userOptions.UserName,
                     IsApproved = true,
                 };
@@ -171,6 +172,7 @@ public static class SetupExtensions
             if (role != null) continue;
             role = new Role
             {
+                Id = Guid.CreateVersion7(),
                 Name = roleName,
             };
             var result = await roleManager.CreateAsync(role);
