@@ -436,13 +436,13 @@
       },
       "Riok.Mapperly": {
         "type": "Transitive",
-        "resolved": "4.2.1",
-        "contentHash": "UZeQSieVlHr48t64J4k2s/lvbMeCXvzsXqV2A/0wyNdPpW8Cyn47+9mfWFJjouPxoSFfEhDbxg+WRbFIHvq4Zw=="
+        "resolved": "4.3.1",
+        "contentHash": "oSE+OVLHyiojrws0QVbQaAT2YKsYbyHqJXPdV7EhGseR/dYgeWS2x1T5qY5I4E+RJkJqMSG+FyZOq4SljWgJWQ=="
       },
       "SixLabors.ImageSharp": {
         "type": "Transitive",
-        "resolved": "3.1.11",
-        "contentHash": "JfPLyigLthuE50yi6tMt7Amrenr/fA31t2CvJyhy/kQmfulIBAqo5T/YFUSRHtuYPXRSaUHygFeh6Qd933EoSw=="
+        "resolved": "3.1.12",
+        "contentHash": "iAg6zifihXEFS/t7fiHhZBGAdCp3FavsF4i2ZIDp0JfeYeDVzvmlbY1CNhhIKimaIzrzSi5M/NBFcWvZT2rB/A=="
       },
       "System.IdentityModel.Tokens.Jwt": {
         "type": "Transitive",
@@ -462,8 +462,8 @@
           "MediatR": "[12.5.0, 12.5.0]",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[9.0.10, )",
           "RescueTube.Domain": "[1.0.0, )",
-          "Riok.Mapperly": "[4.2.1, )",
-          "SixLabors.ImageSharp": "[3.1.11, )"
+          "Riok.Mapperly": "[4.3.1, )",
+          "SixLabors.ImageSharp": "[3.1.12, )"
         }
       },
       "rescuetube.domain": {

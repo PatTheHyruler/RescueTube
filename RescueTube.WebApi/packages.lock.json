@@ -543,8 +543,8 @@
       },
       "Riok.Mapperly": {
         "type": "Transitive",
-        "resolved": "4.2.1",
-        "contentHash": "UZeQSieVlHr48t64J4k2s/lvbMeCXvzsXqV2A/0wyNdPpW8Cyn47+9mfWFJjouPxoSFfEhDbxg+WRbFIHvq4Zw=="
+        "resolved": "4.3.1",
+        "contentHash": "oSE+OVLHyiojrws0QVbQaAT2YKsYbyHqJXPdV7EhGseR/dYgeWS2x1T5qY5I4E+RJkJqMSG+FyZOq4SljWgJWQ=="
       },
       "Serilog.Extensions.Hosting": {
         "type": "Transitive",
@@ -581,8 +581,8 @@
       },
       "SixLabors.ImageSharp": {
         "type": "Transitive",
-        "resolved": "3.1.11",
-        "contentHash": "JfPLyigLthuE50yi6tMt7Amrenr/fA31t2CvJyhy/kQmfulIBAqo5T/YFUSRHtuYPXRSaUHygFeh6Qd933EoSw=="
+        "resolved": "3.1.12",
+        "contentHash": "iAg6zifihXEFS/t7fiHhZBGAdCp3FavsF4i2ZIDp0JfeYeDVzvmlbY1CNhhIKimaIzrzSi5M/NBFcWvZT2rB/A=="
       },
       "System.CodeDom": {
         "type": "Transitive",
@@ -697,16 +697,16 @@
       },
       "YoutubeDLSharp": {
         "type": "Transitive",
-        "resolved": "1.1.2",
-        "contentHash": "PYcZLUqayicAHsi9k0Uprkd0I54hCTZ41pbwslT4QE7CwlceXv+gZr5nMKsifPOeYXwzgOvf1YmQF4W4uklzeA==",
+        "resolved": "1.2.0",
+        "contentHash": "esghiFEljotgAIQN30+fgv9sfHp7RIpqXzrtg/rEvmNjpKMDhE5nL0eiufWV29I8lAY9EcSC8w+5rjAY7vmC2w==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3"
         }
       },
       "YoutubeExplode": {
         "type": "Transitive",
-        "resolved": "6.5.5",
-        "contentHash": "DDFZ020zmDxBWAYcHIaP8RyGg2R4suVEBOdyHhYQlUPjZGlOn+//xatvhGxCuLxM8DTIeffMrptq2P9Hs0liBg==",
+        "resolved": "6.5.6",
+        "contentHash": "W0iR/zLll4UwgsfPvgGkNtn+f01ut8Mm3lDrU2V3iujRmQSnelKUXWsFvZYojw/gPD+pvTS4/MMYNkDvwocbvg==",
         "dependencies": {
           "AngleSharp": "1.3.0"
         }
@@ -720,8 +720,8 @@
           "MediatR": "[12.5.0, 12.5.0]",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[9.0.10, )",
           "RescueTube.Domain": "[1.0.0, )",
-          "Riok.Mapperly": "[4.2.1, )",
-          "SixLabors.ImageSharp": "[3.1.11, )"
+          "Riok.Mapperly": "[4.3.1, )",
+          "SixLabors.ImageSharp": "[3.1.12, )"
         }
       },
       "rescuetube.dal.ef": {
@@ -752,8 +752,8 @@
         "dependencies": {
           "MediatR": "[12.5.0, 12.5.0]",
           "RescueTube.Core": "[1.0.0, )",
-          "YoutubeDLSharp": "[1.1.2, )",
-          "YoutubeExplode": "[6.5.5, )"
+          "YoutubeDLSharp": "[1.2.0, )",
+          "YoutubeExplode": "[6.5.6, )"
         }
       }
     }

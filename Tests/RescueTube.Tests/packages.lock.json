@@ -10,13 +10,13 @@
       },
       "Microsoft.Testing.Extensions.CodeCoverage": {
         "type": "Direct",
-        "requested": "[18.1.0, )",
-        "resolved": "18.1.0",
-        "contentHash": "FJUCocHSPSjbeoGE/OojOhVUXwDng3VdNlwqzif9hMS2eFcG0f8RdjLM537aBsjP7zLHvGnWXbnUnc61v/EFCA==",
+        "requested": "[18.3.1, )",
+        "resolved": "18.3.1",
+        "contentHash": "kjIVTE93IKEK6ZPZCD95Ahq9mWBmQBB0C1RJzO1eFQDx8bsKLsl6U3EdXjqkiMX/CSGQLC45un/lqtWIicgkwQ==",
         "dependencies": {
           "Microsoft.DiaSymReader": "2.0.0",
           "Microsoft.Extensions.DependencyModel": "6.0.2",
-          "Microsoft.Testing.Platform": "2.0.0"
+          "Microsoft.Testing.Platform": "2.0.2"
         }
       },
       "Microsoft.Testing.Extensions.TrxReport": {
@@ -55,15 +55,15 @@
       },
       "TUnit": {
         "type": "Direct",
-        "requested": "[1.9.2, )",
-        "resolved": "1.9.2",
-        "contentHash": "4ovaOWfwMucDNsiZrztS4qeVPXdAk3UPbU/M+ACeg+r7nDmm3xO+15MKARqmJV4YRlYnKzvvA+ClG09KTawoQw==",
+        "requested": "[1.9.26, )",
+        "resolved": "1.9.26",
+        "contentHash": "dudfOaihZGlHG5QmNLBT3S3MLBanM4CZSG7N5dTxKBOafop4DPgCj8MLufTsd1MqsEbvsQOFwKKs0dguVJcixQ==",
         "dependencies": {
           "Microsoft.Testing.Extensions.CodeCoverage": "18.1.0",
           "Microsoft.Testing.Extensions.Telemetry": "2.0.2",
           "Microsoft.Testing.Extensions.TrxReport": "2.0.2",
-          "TUnit.Assertions": "1.9.2",
-          "TUnit.Engine": "1.9.2"
+          "TUnit.Assertions": "1.9.26",
+          "TUnit.Engine": "1.9.26"
         }
       },
       "AngleSharp": {
@@ -589,8 +589,8 @@
       },
       "Riok.Mapperly": {
         "type": "Transitive",
-        "resolved": "4.2.1",
-        "contentHash": "UZeQSieVlHr48t64J4k2s/lvbMeCXvzsXqV2A/0wyNdPpW8Cyn47+9mfWFJjouPxoSFfEhDbxg+WRbFIHvq4Zw=="
+        "resolved": "4.3.1",
+        "contentHash": "oSE+OVLHyiojrws0QVbQaAT2YKsYbyHqJXPdV7EhGseR/dYgeWS2x1T5qY5I4E+RJkJqMSG+FyZOq4SljWgJWQ=="
       },
       "SharpZipLib": {
         "type": "Transitive",
@@ -599,8 +599,8 @@
       },
       "SixLabors.ImageSharp": {
         "type": "Transitive",
-        "resolved": "3.1.11",
-        "contentHash": "JfPLyigLthuE50yi6tMt7Amrenr/fA31t2CvJyhy/kQmfulIBAqo5T/YFUSRHtuYPXRSaUHygFeh6Qd933EoSw=="
+        "resolved": "3.1.12",
+        "contentHash": "iAg6zifihXEFS/t7fiHhZBGAdCp3FavsF4i2ZIDp0JfeYeDVzvmlbY1CNhhIKimaIzrzSi5M/NBFcWvZT2rB/A=="
       },
       "SSH.NET": {
         "type": "Transitive",
@@ -639,38 +639,38 @@
       },
       "TUnit.Assertions": {
         "type": "Transitive",
-        "resolved": "1.9.2",
-        "contentHash": "cFHm3mUoHqbjnPZvliLgJLrLRaQ5V7/ufkdz0FtyVha7NVZwOhoVETfSVUsvqFMiOVbRQmko3hDnXSBlGjxZHg=="
+        "resolved": "1.9.26",
+        "contentHash": "8UYt8TKY8fdzyKo6exJ3FkSWGOHbKUtayNatwcuSdTDzehDohGLEJvROd42FH7UfMrOJhfQ+/4L9w79itFFbWw=="
       },
       "TUnit.Core": {
         "type": "Transitive",
-        "resolved": "1.9.2",
-        "contentHash": "RkLdRmi1WSzrNQUgEzvn7HHA0Mf0mUBmZ3+MGHu7HPi93k/ohMnCCMvkg+Tmbhc7eElSqoHOupcvkKUiW5COdw=="
+        "resolved": "1.9.26",
+        "contentHash": "4zwtyADeXYGZUtJSrjzbDnJK7Gh+8jfxk5m7MfSXtZR9zk1eAD17SR1h3Sl4Idaf0F397wU3/pqqzgftJCPVdQ=="
       },
       "TUnit.Engine": {
         "type": "Transitive",
-        "resolved": "1.9.2",
-        "contentHash": "v9cctPBeCddektOMC36sTa1/TwjxDpVYYeA8Nqqcsi6RgGrk6HgFxvfwh8HnPmig3x9VlrCQDGMW4VZwu+TWbg==",
+        "resolved": "1.9.26",
+        "contentHash": "5UIvpYbdB+Yqga+8v4lIe5yRjyGEciGwR92OD5cCtEPtRSPnaK5jw91vKYEA8FxvLOpf0QVuyoeK1D+M7ALdkw==",
         "dependencies": {
           "EnumerableAsyncProcessor": "3.8.4",
           "Microsoft.Testing.Extensions.TrxReport.Abstractions": "2.0.2",
           "Microsoft.Testing.Platform": "2.0.2",
           "Microsoft.Testing.Platform.MSBuild": "2.0.2",
-          "TUnit.Core": "1.9.2"
+          "TUnit.Core": "1.9.26"
         }
       },
       "YoutubeDLSharp": {
         "type": "Transitive",
-        "resolved": "1.1.2",
-        "contentHash": "PYcZLUqayicAHsi9k0Uprkd0I54hCTZ41pbwslT4QE7CwlceXv+gZr5nMKsifPOeYXwzgOvf1YmQF4W4uklzeA==",
+        "resolved": "1.2.0",
+        "contentHash": "esghiFEljotgAIQN30+fgv9sfHp7RIpqXzrtg/rEvmNjpKMDhE5nL0eiufWV29I8lAY9EcSC8w+5rjAY7vmC2w==",
         "dependencies": {
           "Newtonsoft.Json": "13.0.3"
         }
       },
       "YoutubeExplode": {
         "type": "Transitive",
-        "resolved": "6.5.5",
-        "contentHash": "DDFZ020zmDxBWAYcHIaP8RyGg2R4suVEBOdyHhYQlUPjZGlOn+//xatvhGxCuLxM8DTIeffMrptq2P9Hs0liBg==",
+        "resolved": "6.5.6",
+        "contentHash": "W0iR/zLll4UwgsfPvgGkNtn+f01ut8Mm3lDrU2V3iujRmQSnelKUXWsFvZYojw/gPD+pvTS4/MMYNkDvwocbvg==",
         "dependencies": {
           "AngleSharp": "1.3.0"
         }
@@ -684,8 +684,8 @@
           "MediatR": "[12.5.0, 12.5.0]",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[9.0.10, )",
           "RescueTube.Domain": "[1.0.0, )",
-          "Riok.Mapperly": "[4.2.1, )",
-          "SixLabors.ImageSharp": "[3.1.11, )"
+          "Riok.Mapperly": "[4.3.1, )",
+          "SixLabors.ImageSharp": "[3.1.12, )"
         }
       },
       "rescuetube.dal.ef": {
@@ -722,8 +722,8 @@
         "dependencies": {
           "MediatR": "[12.5.0, 12.5.0]",
           "RescueTube.Core": "[1.0.0, )",
-          "YoutubeDLSharp": "[1.1.2, )",
-          "YoutubeExplode": "[6.5.5, )"
+          "YoutubeDLSharp": "[1.2.0, )",
+          "YoutubeExplode": "[6.5.6, )"
         }
       }
     }
