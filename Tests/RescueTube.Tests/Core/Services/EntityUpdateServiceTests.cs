@@ -85,9 +85,9 @@ public class EntityUpdateServiceTests
 
         await Assert.That(video.Title.Translations)
             .IsNotNull()
-            .And.HasCount(2)
-            .And.Contains((TextTranslation t) => t.Content == firstTranslationContent)
-            .And.Contains((TextTranslation t) => t.Content == secondTranslationContent);
+            .And.Count().IsEqualTo(2)
+            .And.Contains(t => t.Content == firstTranslationContent)
+            .And.Contains(t => t.Content == secondTranslationContent);
 
         var firstTranslationValidUntil =
             video.Title.Translations
@@ -151,9 +151,9 @@ public class EntityUpdateServiceTests
 
         await Assert.That(video.Title.Translations)
             .IsNotNull()
-            .And.HasCount(2)
-            .And.Contains((TextTranslation t) => t.Content == firstTranslationContent)
-            .And.Contains((TextTranslation t) => t.Content == secondTranslationContent);
+            .And.Count().IsEqualTo(2)
+            .And.Contains(t => t.Content == firstTranslationContent)
+            .And.Contains(t => t.Content == secondTranslationContent);
 
         var firstTranslationValidUntil =
             video.Title.Translations
@@ -212,8 +212,8 @@ public class EntityUpdateServiceTests
         await Assert.That(originalTranslationKey).IsSameReferenceAs(video.Title);
 
         await Assert.That(video.Title.Translations)
-            .HasCount(1)
-            .And.ContainsOnly((TextTranslation t) => t.Content == translationContent);
+            .Count().IsEqualTo(1)
+            .And.ContainsOnly(t => t.Content == translationContent);
 
         var translationValidUntil =
             video.Title.Translations
@@ -250,8 +250,8 @@ public class EntityUpdateServiceTests
 
         await Assert.That(video.Title?.Translations)
             .IsNotNull()
-            .And.HasCount(1)
-            .And.ContainsOnly((TextTranslation t) => t.Content == translationContent);
+            .And.Count().IsEqualTo(1)
+            .And.ContainsOnly(t => t.Content == translationContent);
     }
 
     [Test]
