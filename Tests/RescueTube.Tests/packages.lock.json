@@ -10,9 +10,9 @@
       },
       "Microsoft.Testing.Extensions.CodeCoverage": {
         "type": "Direct",
-        "requested": "[18.3.1, )",
-        "resolved": "18.3.1",
-        "contentHash": "kjIVTE93IKEK6ZPZCD95Ahq9mWBmQBB0C1RJzO1eFQDx8bsKLsl6U3EdXjqkiMX/CSGQLC45un/lqtWIicgkwQ==",
+        "requested": "[18.3.2, )",
+        "resolved": "18.3.2",
+        "contentHash": "EQ/Xt/zJzbFUfY9XFYjdPcKIPcSmE7xUS57CiiBK8tQ4LO1l2zs37ZXqCTYukBQbaGN0yT/OT5HIE+hJnNwkcw==",
         "dependencies": {
           "Microsoft.DiaSymReader": "2.0.0",
           "Microsoft.Extensions.DependencyModel": "6.0.2",
@@ -55,15 +55,15 @@
       },
       "TUnit": {
         "type": "Direct",
-        "requested": "[1.9.26, )",
-        "resolved": "1.9.26",
-        "contentHash": "dudfOaihZGlHG5QmNLBT3S3MLBanM4CZSG7N5dTxKBOafop4DPgCj8MLufTsd1MqsEbvsQOFwKKs0dguVJcixQ==",
+        "requested": "[1.9.45, )",
+        "resolved": "1.9.45",
+        "contentHash": "o39XTVEbj1EbcOD368yDnAu3/SzO+8pdspPqS5TYxnANOBM5D9O9/ZZ20zNxbJkUbhBk9Vkx7zUAbdQwHOa0wA==",
         "dependencies": {
-          "Microsoft.Testing.Extensions.CodeCoverage": "18.1.0",
+          "Microsoft.Testing.Extensions.CodeCoverage": "18.3.2",
           "Microsoft.Testing.Extensions.Telemetry": "2.0.2",
           "Microsoft.Testing.Extensions.TrxReport": "2.0.2",
-          "TUnit.Assertions": "1.9.26",
-          "TUnit.Engine": "1.9.26"
+          "TUnit.Assertions": "1.9.45",
+          "TUnit.Engine": "1.9.45"
         }
       },
       "AngleSharp": {
@@ -200,8 +200,8 @@
       },
       "Microsoft.AspNetCore.Authentication.JwtBearer": {
         "type": "Transitive",
-        "resolved": "9.0.10",
-        "contentHash": "lf82sEH4eETi8DBfV7UIkAYPKJuU9OT0Xpw7OcWC5dHWNZYnxVqhT6jM3Y1Hz3yXhbhTRTmcz4U/+VfcZCBkSA==",
+        "resolved": "10.0.1",
+        "contentHash": "lvyUEBVv7V1/UvGxfOV3a0kyaQatPAU+ZHru7xha6WVOpa+7aJtKehbiu9VpAt/G50FR+hUwL4nTY33ijsCXwA==",
         "dependencies": {
           "Microsoft.IdentityModel.Protocols.OpenIdConnect": "8.0.1"
         }
@@ -639,24 +639,24 @@
       },
       "TUnit.Assertions": {
         "type": "Transitive",
-        "resolved": "1.9.26",
-        "contentHash": "8UYt8TKY8fdzyKo6exJ3FkSWGOHbKUtayNatwcuSdTDzehDohGLEJvROd42FH7UfMrOJhfQ+/4L9w79itFFbWw=="
+        "resolved": "1.9.45",
+        "contentHash": "SX+ojI5QJ5YlIMIftZLcJJnFa3Lqt7se2JGdfztGLj4JdOJjsetJQWRBzIQJJr4k6rLzyvhYgall3O41rGVizA=="
       },
       "TUnit.Core": {
         "type": "Transitive",
-        "resolved": "1.9.26",
-        "contentHash": "4zwtyADeXYGZUtJSrjzbDnJK7Gh+8jfxk5m7MfSXtZR9zk1eAD17SR1h3Sl4Idaf0F397wU3/pqqzgftJCPVdQ=="
+        "resolved": "1.9.45",
+        "contentHash": "p2ruOkYt0Nc2OnI9+EcAJsnJiMxZWNVgGc3+2fzG5nhIa7usG69nARlGQ12A9159J9Ss7UkmAQ8bQjHxUFcC1g=="
       },
       "TUnit.Engine": {
         "type": "Transitive",
-        "resolved": "1.9.26",
-        "contentHash": "5UIvpYbdB+Yqga+8v4lIe5yRjyGEciGwR92OD5cCtEPtRSPnaK5jw91vKYEA8FxvLOpf0QVuyoeK1D+M7ALdkw==",
+        "resolved": "1.9.45",
+        "contentHash": "eSSJA1td+wYaYlcHYcyrVNB40JNMWE2QUmIJx5hMPl8t89/nRdlh/0DNNa8p4Szz9HdQvOY/t22W8fkCNs9A/w==",
         "dependencies": {
           "EnumerableAsyncProcessor": "3.8.4",
           "Microsoft.Testing.Extensions.TrxReport.Abstractions": "2.0.2",
           "Microsoft.Testing.Platform": "2.0.2",
           "Microsoft.Testing.Platform.MSBuild": "2.0.2",
-          "TUnit.Core": "1.9.26"
+          "TUnit.Core": "1.9.45"
         }
       },
       "YoutubeDLSharp": {
@@ -682,7 +682,7 @@
           "Hangfire.PostgreSql": "[1.20.13, )",
           "LinqKit.Microsoft.EntityFrameworkCore": "[10.0.9, )",
           "MediatR": "[12.5.0, 12.5.0]",
-          "Microsoft.AspNetCore.Authentication.JwtBearer": "[9.0.10, )",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.1, )",
           "RescueTube.Domain": "[1.0.0, )",
           "Riok.Mapperly": "[4.3.1, )",
           "SixLabors.ImageSharp": "[3.1.12, )"

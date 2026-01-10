@@ -718,7 +718,7 @@
           "Hangfire.PostgreSql": "[1.20.13, )",
           "LinqKit.Microsoft.EntityFrameworkCore": "[10.0.9, )",
           "MediatR": "[12.5.0, 12.5.0]",
-          "Microsoft.AspNetCore.Authentication.JwtBearer": "[9.0.10, )",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.1, )",
           "RescueTube.Domain": "[1.0.0, )",
           "Riok.Mapperly": "[4.3.1, )",
           "SixLabors.ImageSharp": "[3.1.12, )"

@@ -112,8 +112,8 @@
       },
       "Microsoft.AspNetCore.Authentication.JwtBearer": {
         "type": "Transitive",
-        "resolved": "9.0.10",
-        "contentHash": "lf82sEH4eETi8DBfV7UIkAYPKJuU9OT0Xpw7OcWC5dHWNZYnxVqhT6jM3Y1Hz3yXhbhTRTmcz4U/+VfcZCBkSA==",
+        "resolved": "10.0.1",
+        "contentHash": "lvyUEBVv7V1/UvGxfOV3a0kyaQatPAU+ZHru7xha6WVOpa+7aJtKehbiu9VpAt/G50FR+hUwL4nTY33ijsCXwA==",
         "dependencies": {
           "Microsoft.IdentityModel.Protocols.OpenIdConnect": "8.0.1"
         }
@@ -235,7 +235,7 @@
           "Hangfire.PostgreSql": "[1.20.13, )",
           "LinqKit.Microsoft.EntityFrameworkCore": "[10.0.9, )",
           "MediatR": "[12.5.0, 12.5.0]",
-          "Microsoft.AspNetCore.Authentication.JwtBearer": "[9.0.10, )",
+          "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.1, )",
           "RescueTube.Domain": "[1.0.0, )",
           "Riok.Mapperly": "[4.3.1, )",
           "SixLabors.ImageSharp": "[3.1.12, )"
