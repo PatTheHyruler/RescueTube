@@ -8,7 +8,7 @@ public class PostgresFactory : IAsyncInitializer, IAsyncDisposable
     private const string Username = "rescue_tube";
     private const string Password = "password123";
 
-    public PostgreSqlContainer PostgreSqlContainer { get; } = new PostgreSqlBuilder()
+    public PostgreSqlContainer PostgreSqlContainer { get; } = new PostgreSqlBuilder("postgres:16.4-bullseye")
         .WithUsername(Username)
         .WithPassword(Password)
         .Build();

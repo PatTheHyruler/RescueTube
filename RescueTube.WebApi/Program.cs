@@ -8,7 +8,6 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Options;
 using RescueTube.Core;
 using RescueTube.Core.Data;
 using RescueTube.Core.Identity;
@@ -21,11 +20,10 @@ using RescueTube.WebApi.Auth;
 using RescueTube.WebApi.Endpoints;
 using RescueTube.WebApi.Utils;
 using RescueTube.WebApi.Utils.Logging;
-using RescueTube.WebApi.Utils.Swagger;
+using RescueTube.WebApi.Utils.OpenApi;
 using RescueTube.YouTube;
 using Serilog;
 using Serilog.Settings.Configuration;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,8 +85,11 @@ apiVersioningBuilder.AddApiExplorer(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi(openApiOptions =>
+{
+    openApiOptions.AddDocumentTransformer<SecuritySchemeDocumentTransformer>();
+    openApiOptions.AddSchemaTransformer<CommaSeparatedGuidArraySchemaTransformer>();
+});
 
 const string corsAllowAllName = AuthHelpers.CorsPolicies.CorsAllowAll;
 const string corsAllowCredentialsName = AuthHelpers.CorsPolicies.CorsAllowCredentials;
@@ -238,12 +239,12 @@ try
 
     if (app.Environment.IsDevelopment())
     {
-        app.UseSwagger();
+        app.MapOpenApi();
         app.UseSwaggerUI(options =>
         {
             foreach (var description in app.DescribeApiVersions())
             {
-                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName);
+                options.SwaggerEndpoint($"/openapi/{description.GroupName}.json", description.GroupName);
             }
         });
     }

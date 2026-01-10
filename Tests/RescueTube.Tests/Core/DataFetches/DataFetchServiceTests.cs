@@ -113,7 +113,7 @@ public class DataFetchServiceTests : BaseEfPostgresTest
 
             await Assert.That(dataFetch)
                 .Member(x => x.Status, x => x.EqualTo(DataFetchStatus.Failed))
-                .And.Member(x => x.Message, x => x.EqualTo(customErrorMessage));
+                .And.Member(x => x.Message!, x => x.EqualTo(customErrorMessage));
         }
     }
 }

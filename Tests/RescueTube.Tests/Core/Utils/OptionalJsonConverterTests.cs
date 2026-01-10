@@ -87,8 +87,8 @@ public class OptionalJsonConverterTests
         await Assert.That(result.IntNullable.HasValue).IsTrue();
         await Assert.That(result.StringNullable.HasValue).IsTrue();
 
-        await Assert.That(result.IntNullable.Value).IsEqualTo(null);
-        await Assert.That(result.StringNullable.Value).IsEqualTo(null);
+        await Assert.That(result.IntNullable.Value).IsNull();
+        await Assert.That(result.StringNullable.Value).IsNull();
     }
 
     public record PartialTestDto

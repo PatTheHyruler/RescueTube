@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        dotnet-version: [9]
+        dotnet-version: [10]
     
     steps:
       - name: Checkout code
@@ -24,4 +24,4 @@ jobs:
           cache-dependency-path: "./**/packages.lock.json"
       
       - name: Run tests
-        run: dotnet test -c Release -- --timeout 2m
+        run: dotnet test -c Release --timeout 2m
