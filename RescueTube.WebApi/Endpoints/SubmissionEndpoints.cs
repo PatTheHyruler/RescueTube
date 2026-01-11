@@ -74,12 +74,14 @@ public static class SubmissionEndpoints
         var submissionsQuery = dbContext.Submissions
             .Include(s => s.AddedBy)
             .Include(s => s.ApprovedBy)
-            .Include(s => s.Failures)
+            .Include(s => s.Failures!.OrderByDescending(f => f.OccurredAt))
             .Where(s => isAdmin || s.AddedById == userId)
             .Where(s => request.Completed == null || s.CompletedAt.HasValue == request.Completed);
 
         var count = await submissionsQuery.CountAsync(ct);
         var submissions = await submissionsQuery
+            .OrderByDescending(s => s.AddedAt)
+            .ThenByDescending(s => s.Id)
             .Paginate(paginationQuery)
             .ToArrayAsync(ct);
 
