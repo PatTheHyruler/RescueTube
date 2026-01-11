@@ -1,9 +1,15 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RescueTube.Core;
+using RescueTube.Core.Data;
+using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.Exceptions;
+using RescueTube.Core.Identity.Services;
+using RescueTube.Core.Utils.Pagination;
 using RescueTube.WebApi.ApiModels;
+using RescueTube.WebApi.ApiModels.Mappers;
 
 namespace RescueTube.WebApi.Endpoints;
 
@@ -11,9 +17,10 @@ public static class SubmissionEndpoints
 {
     public static void MapSubmissionEndpoints(this IEndpointRouteBuilder app)
     {
-        var optionsGroup = app.MapGroup("submissions").WithTags("Submissions");
+        var submissionsGroup = app.MapGroup("submissions").WithTags("Submissions");
 
-        optionsGroup.MapPost("create", CreateSubmissionAsync).HasApiVersion(1);
+        submissionsGroup.MapPost("create", CreateSubmissionAsync).HasApiVersion(1);
+        submissionsGroup.MapGet("", GetSubmissionsAsync).HasApiVersion(1);
     }
 
     /// <summary>
@@ -51,5 +58,43 @@ public static class SubmissionEndpoints
                 },
             });
         }
+    }
+
+    private static async Task<Ok<SubmissionSearchResponseDtoV1>> GetSubmissionsAsync(
+        [FromServices] AppDbContext dbContext,
+        [AsParameters] SubmissionSearchDtoV1 request,
+        ClaimsPrincipal principal,
+        CancellationToken ct)
+    {
+        var isAdmin = principal.IsAdmin();
+        var userId = principal.GetUserId();
+
+        var paginationQuery = request.ToClamped();
+
+        var submissionsQuery = dbContext.Submissions
+            .Include(s => s.AddedBy)
+            .Include(s => s.ApprovedBy)
+            .Include(s => s.Failures)
+            .Where(s => isAdmin || s.AddedById == userId)
+            .Where(s => request.Completed == null || s.CompletedAt.HasValue == request.Completed);
+
+        var count = await submissionsQuery.CountAsync(ct);
+        var submissions = await submissionsQuery
+            .Paginate(paginationQuery)
+            .ToArrayAsync(ct);
+
+        var result = new SubmissionSearchResponseDtoV1
+        {
+            PaginationResult = new PaginationResultDtoV1
+            {
+                AmountOnPage = submissions.Length,
+                Limit = paginationQuery.Limit,
+                Page = paginationQuery.Page,
+                TotalResults = count,
+            },
+            Results = submissions.Select(ApiMapper.MapToSubmissionDtoV1),
+        };
+
+        return TypedResults.Ok(result);
     }
 }

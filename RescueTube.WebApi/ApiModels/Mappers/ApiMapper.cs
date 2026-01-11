@@ -2,14 +2,18 @@
 using RescueTube.Core.DTO.Videos;
 using RescueTube.Core.Services;
 using RescueTube.Domain.Entities;
+using RescueTube.Domain.Entities.Identity;
 using RescueTube.Domain.Entities.Localization;
+using RescueTube.WebApi.ApiModels.Auth;
 using RescueTube.WebApi.ApiModels.Playlists;
 using RescueTube.WebApi.ApiModels.Statistics;
 using RescueTube.WebApi.Utils;
+using Riok.Mapperly.Abstractions;
 
 namespace RescueTube.WebApi.ApiModels.Mappers;
 
-public static class ApiMapper
+[Mapper]
+public static partial class ApiMapper
 {
     public static VideoSimpleDtoV1 MapToVideoSimpleDtoV1(this VideoSimple srcVid, string? baseUrl)
     {
@@ -236,4 +240,31 @@ public static class ApiMapper
             RemovedAt = src.RemovedAt,
         };
     }
+
+#pragma warning disable RMG020 // Source member is not mapped to any target member
+    private static partial UserSimpleDtoV1 MapToUserSimpleDtoV1(this User src);
+
+    private static partial SubmissionHandlingFailureDtoV1 MapToSubmissionHandlingFailureDtoV1(
+        this SubmissionHandlingFailure src);
+#pragma warning restore RMG020
+
+    public static SubmissionDtoV1 MapToSubmissionDtoV1(this Submission src) => new()
+    {
+        Id = src.Id,
+        Platform = src.Platform,
+        IdOnPlatform = src.IdOnPlatform,
+        IdType = src.IdType,
+        EntityType = src.EntityType,
+        Url = src.Url,
+        AddedBy = src.AddedBy!.MapToUserSimpleDtoV1(),
+        AddedAt = src.AddedAt,
+        ApprovedBy = src.ApprovedBy?.MapToUserSimpleDtoV1(),
+        ApprovedAt = src.ApprovedAt,
+        GrantAccess = src.GrantAccess,
+        CompletedAt = src.CompletedAt,
+        VideoId = src.VideoId,
+        PlaylistId = src.PlaylistId,
+        AuthorId = src.AuthorId,
+        Failures = src.Failures!.Select(MapToSubmissionHandlingFailureDtoV1).ToArray(),
+    };
 }
