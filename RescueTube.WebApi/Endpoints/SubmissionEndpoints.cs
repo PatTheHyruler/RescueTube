@@ -6,7 +6,9 @@ using RescueTube.Core;
 using RescueTube.Core.Data;
 using RescueTube.Core.Data.Pagination;
 using RescueTube.Core.Exceptions;
+using RescueTube.Core.Identity;
 using RescueTube.Core.Identity.Services;
+using RescueTube.Core.Services;
 using RescueTube.Core.Utils.Pagination;
 using RescueTube.WebApi.ApiModels;
 using RescueTube.WebApi.ApiModels.Mappers;
@@ -21,6 +23,9 @@ public static class SubmissionEndpoints
 
         submissionsGroup.MapPost("create", CreateSubmissionAsync).HasApiVersion(1);
         submissionsGroup.MapGet("", GetSubmissionsAsync).HasApiVersion(1);
+        submissionsGroup.MapPost("{submissionId:guid}/handle", HandleSubmissionAsync)
+            .RequireAuthorization(p => p.RequireRole(RoleNames.AdminRoles))
+            .HasApiVersion(1);
     }
 
     /// <summary>
@@ -63,11 +68,11 @@ public static class SubmissionEndpoints
     private static async Task<Ok<SubmissionSearchResponseDtoV1>> GetSubmissionsAsync(
         [FromServices] AppDbContext dbContext,
         [AsParameters] SubmissionSearchDtoV1 request,
-        ClaimsPrincipal principal,
+        ClaimsPrincipal claimsPrincipal,
         CancellationToken ct)
     {
-        var isAdmin = principal.IsAdmin();
-        var userId = principal.GetUserId();
+        var isAdmin = claimsPrincipal.IsAdmin();
+        var userId = claimsPrincipal.GetUserId();
 
         var paginationQuery = request.ToClamped();
 
@@ -98,5 +103,59 @@ public static class SubmissionEndpoints
         };
 
         return TypedResults.Ok(result);
+    }
+
+    private static async Task<Results<
+        Ok,
+        NotFound<ErrorResponseDto>,
+        BadRequest<ErrorResponseDto>,
+        InternalServerError<ErrorResponseDto>
+    >> HandleSubmissionAsync(
+        [FromRoute] Guid submissionId,
+        ClaimsPrincipal claimsPrincipal,
+        [FromServices] SubmissionService submissionService,
+        [FromServices] AppDbContext dbContext,
+        [FromServices] TimeProvider timeProvider,
+        CancellationToken ct)
+    {
+        var userId = claimsPrincipal.GetUserId();
+
+        var submission = await dbContext.Submissions.FirstOrDefaultAsync(s => s.Id == submissionId, ct);
+
+        if (submission is null)
+        {
+            return TypedResults.NotFound(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.EntityNotFound,
+                Message = $"Submission {submissionId} not found",
+            });
+        }
+
+        if (submission.CompletedAt is not null)
+        {
+            return TypedResults.BadRequest(new ErrorResponseDto
+            {
+                ErrorType = EErrorType.GenericError,
+                Message = $"Submission {submissionId} has already been completed at {submission.CompletedAt}",
+            });
+        }
+
+        if (submission.ApprovedAt is null)
+        {
+            submission.ApprovedById = userId;
+            submission.ApprovedAt = timeProvider.GetUtcNow();
+        }
+
+        var result = await submissionService.HandleSubmissionAsync(submission, ct);
+        if (result.Success)
+        {
+            return TypedResults.Ok();
+        }
+
+        return TypedResults.InternalServerError(new ErrorResponseDto
+        {
+            ErrorType = EErrorType.GenericError,
+            Message = $"Handling submission failed: {result.Error.Reason}",
+        });
     }
 }
