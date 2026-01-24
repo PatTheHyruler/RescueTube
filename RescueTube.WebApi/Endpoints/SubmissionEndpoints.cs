@@ -10,6 +10,7 @@ using RescueTube.Core.Identity;
 using RescueTube.Core.Identity.Services;
 using RescueTube.Core.Services;
 using RescueTube.Core.Utils.Pagination;
+using RescueTube.Domain.Entities;
 using RescueTube.WebApi.ApiModels;
 using RescueTube.WebApi.ApiModels.Mappers;
 
@@ -84,9 +85,9 @@ public static class SubmissionEndpoints
             .Where(s => request.Completed == null || s.CompletedAt.HasValue == request.Completed);
 
         var count = await submissionsQuery.CountAsync(ct);
+
         var submissions = await submissionsQuery
-            .OrderByDescending(s => s.AddedAt)
-            .ThenByDescending(s => s.Id)
+            .OrderByWithConfiguration(request.OrderBy?.Value, SubmissionOrderingConfig)
             .Paginate(paginationQuery)
             .ToArrayAsync(ct);
 
@@ -104,6 +105,25 @@ public static class SubmissionEndpoints
 
         return TypedResults.Ok(result);
     }
+
+    private static readonly OrderingConfiguration<Submission> SubmissionOrderingConfig = new()
+    {
+        DefaultOrdering =
+        [
+            new OrderByPropertyDtoV1("addedAt", true),
+            new OrderByPropertyDtoV1("id", true)
+        ],
+        RequiredProperty = new OrderByPropertyDtoV1("id", true),
+        PropertyMap = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["id"] = static s => s.Id,
+            ["addedAt"] = static s => s.AddedAt,
+            ["approvedAt"] = static s => s.ApprovedAt ?? DateTimeOffset.MaxValue,
+            ["completedAt"] = static s => s.CompletedAt ?? DateTimeOffset.MaxValue,
+            ["platform"] = static s => s.Platform,
+            ["entityType"] = static s => s.EntityType,
+        }
+    };
 
     private static async Task<Results<
         Ok,

@@ -7,6 +7,8 @@ public class SubmissionSearchDtoV1 : IPaginationQueryOptionalDtoV1
 
     public bool? Completed { get; init; }
 
+    public CommaSeparatedOrderByPropertyArray? OrderBy { get; init; }
+
     public int DefaultPage => 0;
     public int DefaultLimit => 50;
 }
