@@ -1,54 +1,10 @@
+using System.Linq.Expressions;
 using RescueTube.Core.Utils.Pagination;
 
 namespace RescueTube.Core.Data.Pagination;
 
 public static class PaginationExtensions
 {
-    public static IOrderedQueryable<TEntity> OrderBy<TEntity>(
-        this IQueryable<TEntity> query,
-        SortOptions sortOptions,
-        SortBehaviour<TEntity> sortBehaviour)
-    {
-        if (sortOptions.Descending != null)
-        {
-            sortBehaviour = sortBehaviour with { Descending = sortOptions.Descending.Value };
-        }
-
-        return sortBehaviour.Descending
-            ? query.OrderByDescending(sortBehaviour.OrderExpression)
-            : query.OrderBy(sortBehaviour.OrderExpression);
-    }
-
-    public static IOrderedEnumerable<TEntity> OrderBy<TEntity>(
-        this IEnumerable<TEntity> query,
-        SortOptions sortOptions,
-        SortBehaviour<TEntity> sortBehaviour)
-    {
-        if (sortOptions.Descending != null)
-        {
-            sortBehaviour = sortBehaviour with { Descending = sortOptions.Descending.Value };
-        }
-
-        return sortBehaviour.Descending
-            ? query.OrderByDescending(sortBehaviour.OrderExpression.Compile())
-            : query.OrderBy(sortBehaviour.OrderExpression.Compile());
-    }
-
-    public static IOrderedQueryable<TEntity> ThenBy<TEntity>(
-        this IOrderedQueryable<TEntity> query,
-        SortOptions sortOptions,
-        SortBehaviour<TEntity> sortBehaviour)
-    {
-        if (sortOptions.Descending != null)
-        {
-            sortBehaviour = sortBehaviour with { Descending = sortOptions.Descending.Value };
-        }
-
-        return sortBehaviour.Descending
-            ? query.ThenByDescending(sortBehaviour.OrderExpression)
-            : query.ThenBy(sortBehaviour.OrderExpression);
-    }
-
     public static IQueryable<TEntity> Paginate<TEntity>(
         this IQueryable<TEntity> query,
         IPaginationQuery paginationParams)
@@ -59,13 +15,66 @@ public static class PaginationExtensions
         return query.Skip(skipAmount).Take(paginationParams.Limit);
     }
 
-    public static IEnumerable<TEntity> Paginate<TEntity>(
-        this IEnumerable<TEntity> query,
-        IPaginationQuery paginationParams)
+    private static IOrderedQueryable<TEntity>? OrderBy<TEntity>(
+        this IQueryable<TEntity> query,
+        ReadOnlySpan<IOrderByProperty> properties,
+        Func<IOrderByProperty, Expression<Func<TEntity, dynamic?>>?> mapper)
     {
-        paginationParams = paginationParams.ToClamped();
-        var skipAmount = paginationParams.GetSkipAmount();
+        IOrderedQueryable<TEntity>? orderedQuery = null;
 
-        return query.Skip(skipAmount).Take(paginationParams.Limit);
+        foreach (var property in properties)
+        {
+            var propertyExpression = mapper(property);
+            if (propertyExpression is null)
+            {
+                continue;
+            }
+
+            if (orderedQuery is null)
+            {
+                orderedQuery = property.Descending
+                    ? query.OrderByDescending(propertyExpression)
+                    : query.OrderBy(propertyExpression);
+            }
+            else
+            {
+                orderedQuery = property.Descending
+                    ? orderedQuery.ThenByDescending(propertyExpression)
+                    : orderedQuery.ThenBy(propertyExpression);
+            }
+        }
+
+        return orderedQuery;
+    }
+
+    public static IOrderedQueryable<TEntity> OrderByWithConfiguration<TEntity>(
+        this IQueryable<TEntity> query,
+        ReadOnlySpan<IOrderByProperty> userProperties,
+        OrderingConfiguration<TEntity> config)
+    {
+        var orderedQuery = query.OrderBy(userProperties, property => 
+            config.PropertyMap.GetValueOrDefault(property.PropertyName));
+
+        if (orderedQuery is null)
+        {
+            return query.OrderBy(config.DefaultOrdering.AsSpan(), property =>
+                               config.PropertyMap.GetValueOrDefault(property.PropertyName))
+                           ?? throw new InvalidOperationException(
+                               "No valid ordering properties found in configuration");
+        }
+
+        var hasRequiredProperty = userProperties.ToArray().Any(p => 
+            p.PropertyName.Equals(config.RequiredProperty.PropertyName, StringComparison.OrdinalIgnoreCase));
+        if (hasRequiredProperty)
+        {
+            return orderedQuery;
+        }
+
+        var requiredExpression = config.PropertyMap[config.RequiredProperty.PropertyName];
+        orderedQuery = config.RequiredProperty.Descending
+            ? orderedQuery.ThenByDescending(requiredExpression)
+            : orderedQuery.ThenBy(requiredExpression);
+
+        return orderedQuery;
     }
 }

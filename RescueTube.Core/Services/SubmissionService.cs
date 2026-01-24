@@ -6,6 +6,7 @@ using RescueTube.Core.Data;
 using RescueTube.Core.Events;
 using RescueTube.Core.Exceptions;
 using RescueTube.Core.Identity.Services;
+using RescueTube.Core.Utils;
 using RescueTube.Domain.Entities;
 
 namespace RescueTube.Core.Services;
@@ -57,20 +58,22 @@ public class SubmissionService
         throw new UnrecognizedUrlException(url);
     }
 
-    public async Task HandleSubmissionAsync(Submission submission, CancellationToken ct)
+    public async Task<VoidResult<SubmissionHandlingFailure>> HandleSubmissionAsync(Submission submission, CancellationToken ct)
     {
         var submissionHandler = _submissionHandlers.FirstOrDefault(x => x.Platform == submission.Platform);
         if (submissionHandler is null)
         {
-            _dbContext.SubmissionHandlingFailures.Add(new SubmissionHandlingFailure
+            var submissionHandlingFailure = new SubmissionHandlingFailure
             {
                 Submission = submission,
                 SubmissionId = submission.Id,
                 OccurredAt = _timeProvider.GetUtcNow(),
                 Reason = $"No submission handler for platform {submission.Platform}",
-            });
+            };
+            _dbContext.SubmissionHandlingFailures.Add(submissionHandlingFailure);
+            await _dbContext.SaveChangesAsync(ct);
 
-            return;
+            return Result.Fail(submissionHandlingFailure);
         }
 
         try
@@ -81,15 +84,22 @@ public class SubmissionService
         catch (Exception e)
         {
             _logger.LogError(e, "An error occurred handling submission {SubmissionId}", submission.Id);
-            _dbContext.SubmissionHandlingFailures.Add(new SubmissionHandlingFailure
+            var submissionHandlingFailure = new SubmissionHandlingFailure
             {
                 Submission = submission,
                 SubmissionId = submission.Id,
                 OccurredAt = _timeProvider.GetUtcNow(),
                 Reason = $"{e.GetType().FullName}: '{e.Message}'",
-            });
+            };
+            _dbContext.SubmissionHandlingFailures.Add(submissionHandlingFailure);
+
+            await _dbContext.SaveChangesAsync(ct);
+
+            return Result.Fail(submissionHandlingFailure);
         }
 
         await _dbContext.SaveChangesAsync(ct);
+
+        return Result.Ok();
     }
 }
