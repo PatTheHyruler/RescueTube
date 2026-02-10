@@ -186,6 +186,28 @@
           "Microsoft.AspNetCore.Cryptography.Internal": "10.0.1"
         }
       },
+      "Microsoft.CodeAnalysis.Analyzers": {
+        "type": "Transitive",
+        "resolved": "3.11.0",
+        "contentHash": "v/EW3UE8/lbEYHoC2Qq7AR/DnmvpgdtAMndfQNmpuIMx/Mto8L5JnuCfdBYtgvalQOtfNCnxFejxuRrryvUTsg=="
+      },
+      "Microsoft.CodeAnalysis.Common": {
+        "type": "Transitive",
+        "resolved": "5.0.0",
+        "contentHash": "ZXRAdvH6GiDeHRyd3q/km8Z44RoM6FBWHd+gen/la81mVnAdHTEsEkO5J0TCNXBymAcx5UYKt5TvgKBhaLJEow==",
+        "dependencies": {
+          "Microsoft.CodeAnalysis.Analyzers": "3.11.0"
+        }
+      },
+      "Microsoft.CodeAnalysis.CSharp": {
+        "type": "Transitive",
+        "resolved": "5.0.0",
+        "contentHash": "5DSyJ9bk+ATuDy7fp2Zt0mJStDVKbBoiz1DyfAwSa+k4H4IwykAUcV3URelw5b8/iVbfSaOwkwmPUZH6opZKCw==",
+        "dependencies": {
+          "Microsoft.CodeAnalysis.Analyzers": "3.11.0",
+          "Microsoft.CodeAnalysis.Common": "[5.0.0]"
+        }
+      },
       "Microsoft.EntityFrameworkCore": {
         "type": "Transitive",
         "resolved": "10.0.1",
@@ -453,6 +475,12 @@
           "Microsoft.IdentityModel.Tokens": "8.0.1"
         }
       },
+      "rescuetube.analyzers": {
+        "type": "Project",
+        "dependencies": {
+          "Microsoft.CodeAnalysis.CSharp": "[5.0.0, )"
+        }
+      },
       "rescuetube.core": {
         "type": "Project",
         "dependencies": {
@@ -461,6 +489,7 @@
           "LinqKit.Microsoft.EntityFrameworkCore": "[10.0.9, )",
           "MediatR": "[12.5.0, 12.5.0]",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "[10.0.1, )",
+          "RescueTube.Analyzers": "[1.0.0, )",
           "RescueTube.Domain": "[1.0.0, )",
           "Riok.Mapperly": "[4.3.1, )",
           "SixLabors.ImageSharp": "[3.1.12, )"
@@ -469,7 +498,8 @@
       "rescuetube.domain": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[10.0.1, )"
+          "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[10.0.1, )",
+          "RescueTube.Analyzers": "[1.0.0, )"
         }
       }
     }

@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/App/">
+    <Project Path="RescueTube.Analyzers/RescueTube.Analyzers.csproj" />
     <Project Path="RescueTube.Core/RescueTube.Core.csproj" />
     <Project Path="RescueTube.DAL.EF.Postgres/RescueTube.DAL.EF.Postgres.csproj" />
     <Project Path="RescueTube.DAL.EF/RescueTube.DAL.EF.csproj" />
